@@ -173,6 +173,7 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
       localStorage.setItem('quantum_blogs', JSON.stringify(defaultPosts));
       setPosts(defaultPosts);
     }
+    setIsLoading(false);
   };
 
   // Submit passcode
