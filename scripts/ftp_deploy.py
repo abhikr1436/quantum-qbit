@@ -83,8 +83,12 @@ def main():
 
     # Navigate to public_html
     print("\nNavigating to public_html...")
-    ftp.cwd('public_html')
-    print(f"Now in: {ftp.pwd()}")
+    try:
+        ftp.cwd('public_html')
+        print(f"Now in: {ftp.pwd()}")
+    except ftplib.error_perm as e:
+        print(f"Could not change directory to public_html: {e}")
+        print("Deploying to the current root directory.")
 
     print("\n=== public_html CURRENT FILES ===")
     ftp.retrlines('LIST')
