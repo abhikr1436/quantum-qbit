@@ -28,13 +28,21 @@ jobs:
       - name: Build application
         run: npm run build
 
-      - name: Upload files via SFTP to Hostinger
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+      - name: Parse FTP Host
+        id: parse-host
+        run: |
+          # Strip protocol prefix (e.g. ftp://) and trailing port if they exist
+          HOST=$(echo "${{ secrets.SFTP_SERVER }}" | sed -e 's|^[^/]*//||' -e 's|:[0-9]*$||')
+          echo "CLEAN_HOST=$HOST" >> $GITHUB_ENV
+
+      - name: Upload files via FTP to Hostinger
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
+          server: ${{ env.CLEAN_HOST }}
           username: ${{ secrets.SFTP_USERNAME }}
-          server: ${{ secrets.SFTP_SERVER }}
-          port: ${{ secrets.SFTP_PORT || 22 }}
           password: ${{ secrets.SFTP_PASSWORD }}
-          local_path: './dist/'
-          remote_path: './public_html/'
-          sftp_only: true
+          port: ${{ secrets.SFTP_PORT || 21 }}
+          protocol: ftp
+          local-dir: ./dist/
+          server-dir: public_html/
+          dangerous-clean-slate: false
