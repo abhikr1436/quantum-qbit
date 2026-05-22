@@ -28,27 +28,24 @@ jobs:
       - name: Build application
         run: npm run build
 
-      - name: Parse FTP Host
-        id: parse-host
+      - name: Deploy via FTP to Hostinger
         run: |
-          # Strip protocol prefix (e.g. ftp://) and trailing port if they exist
-          HOST=$(echo "${{ secrets.SFTP_SERVER }}" | sed -e 's|^[^/]*//||' -e 's|:[0-9]*$||')
-          echo "CLEAN_HOST=$HOST" >> $GITHUB_ENV
-          echo "Resolved FTP host: $HOST"
+          # Install lftp
+          sudo apt-get install -y lftp
 
-      - name: Upload files via FTP to Hostinger
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ env.CLEAN_HOST }}
-          username: ${{ secrets.SFTP_USERNAME }}
-          password: ${{ secrets.SFTP_PASSWORD }}
-          port: 21
-          protocol: ftp
-          local-dir: ./dist/
-          server-dir: /public_html/
-          dangerous-clean-slate: true
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            .ftp-deploy-sync-state.json
+          # Strip ftp:// prefix from host if present
+          HOST=$(echo "${{ secrets.SFTP_SERVER }}" | sed -e 's|^[^/]*//||' -e 's|:[0-9]*$||')
+          echo "Deploying to: $HOST"
+
+          # Mirror local dist/ to remote public_html/
+          # --reverse: local → remote
+          # --delete: remove remote files not in local
+          # --verbose: show what's being uploaded
+          # --no-perms: skip permission sync (avoids Hostinger permission errors)
+          lftp -u "${{ secrets.SFTP_USERNAME }}","${{ secrets.SFTP_PASSWORD }}" "ftp://$HOST" <<'FTPEOF'
+          set ftp:ssl-allow no
+          set net:timeout 30
+          set net:max-retries 3
+          mirror --reverse --delete --verbose --no-perms ./dist/ /public_html/
+          bye
+          FTPEOF
