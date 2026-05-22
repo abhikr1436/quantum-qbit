@@ -1,7 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { X } from 'lucide-react';
 
-const SHOW_ADS = true; // Set to false to disable ads globally
+const SHOW_SQUARE_AD = false; // Toggle to enable Square Ads
+const SHOW_BANNER_AD = false; // Toggle to enable Banner Ads
+const SHOW_SIDEBAR_AD = false; // Toggle to enable Sidebar Ads
+const SHOW_POPUP_AD = false; // Toggle to enable Popup Ads
 
 // ==========================================
 // 1. SQUARE AD (Google AdSense Slot 9567651830)
@@ -13,7 +16,7 @@ interface SquareAdProps {
 }
 
 export const SquareAd: React.FC<SquareAdProps> = ({ id, className = '', style }) => {
-  if (!SHOW_ADS) return null;
+  if (!SHOW_SQUARE_AD) return null;
 
   const adRef = useRef<HTMLModElement>(null);
 
@@ -53,7 +56,7 @@ interface BannerAdProps {
 }
 
 export const BannerAd: React.FC<BannerAdProps> = ({ id, className = '', style }) => {
-  if (!SHOW_ADS) return null;
+  if (!SHOW_BANNER_AD) return null;
 
   const [isVisible, setIsVisible] = useState(true);
   const [hasContent, setHasContent] = useState(false);
@@ -110,9 +113,21 @@ export const BannerAd: React.FC<BannerAdProps> = ({ id, className = '', style })
       <div style={hasContent ? bannerFlexStyle : { display: 'none' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexGrow: 1, justifyContent: 'center' }}>
           <span style={hasContent ? bannerBadgeStyle : { display: 'none' }}>SPONSOR AD</span>
-          <div ref={bannerRef} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60px', width: '100%', maxWidth: '728px' }}>
-            {!hasContent && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Loading ad...</span>}
-          </div>
+          
+          {/* Keep the loading indicator outside of the ref'd container, to avoid React DOM reconciliation crashes when the script injects items */}
+          {!hasContent && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Loading ad...</span>}
+          
+          <div 
+            ref={bannerRef} 
+            style={{ 
+              display: hasContent ? 'flex' : 'none', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              minHeight: '60px', 
+              width: '100%', 
+              maxWidth: '728px' 
+            }} 
+          />
         </div>
         <div style={hasContent ? { display: 'flex', alignItems: 'center', gap: '15px' } : { display: 'none' }}>
           <button onClick={handleClose} style={closeBtnStyle} title="Dismiss Ad">
@@ -134,7 +149,7 @@ interface SidebarAdProps {
 }
 
 export const SidebarAd: React.FC<SidebarAdProps> = ({ id, className = '', style }) => {
-  if (!SHOW_ADS) return null;
+  if (!SHOW_SIDEBAR_AD) return null;
 
   const adRef = useRef<HTMLModElement>(null);
 
@@ -173,7 +188,7 @@ interface PopupAdProps {
 }
 
 export const PopupAd: React.FC<PopupAdProps> = ({ id, delayMs = 4000 }) => {
-  if (!SHOW_ADS) return null;
+  if (!SHOW_POPUP_AD) return null;
 
   const [isVisible, setIsVisible] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
