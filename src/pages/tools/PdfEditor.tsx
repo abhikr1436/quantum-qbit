@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import SquareAd from '../../components/Ads';
 import { FileText, Image as ImageIcon, Upload, Trash, ArrowUp, ArrowDown, Download, Check, Copy, Settings, RefreshCw, FileCode } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import confetti from 'canvas-confetti';
@@ -1425,6 +1426,9 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
           </div>
         </div>
       )}
+      <div style={{ marginTop: '40px', width: '100%' }}>
+        <SquareAd id="pdf-editor-square-ad" />
+      </div>
     </div>
   );
 };

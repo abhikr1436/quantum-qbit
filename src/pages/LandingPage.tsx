@@ -1,6 +1,7 @@
 import React from 'react';
 import { Cpu, Image, FileText, Calculator, ShieldCheck, Zap, Lock, ArrowRight, BookOpen } from 'lucide-react';
 import { navigate } from '../utils/router';
+import SquareAd from '../components/Ads';
 
 export const LandingPage: React.FC = () => {
   const features = [
@@ -96,6 +97,13 @@ export const LandingPage: React.FC = () => {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Sponsor Ad Section */}
+      <section style={{ padding: '20px 0' }}>
+        <div className="container">
+          <SquareAd id="landing-square-ad" />
         </div>
       </section>
 

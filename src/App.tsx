@@ -9,7 +9,7 @@ import ContactUs from './pages/ContactUs';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
 import Admin from './pages/Admin';
-import AdSlot from './components/AdSlot';
+import { SidebarAd, BannerAd, PopupAd } from './components/Ads';
 import Sidebar from './components/Sidebar';
 import { usePath, navigate } from './utils/router';
 import { updateSEO } from './utils/seo';
@@ -218,12 +218,7 @@ function App() {
         
         {page !== 'admin' && page !== 'landing' && (
           <aside className="right-ad-sidebar" style={styles.adSidebarWrapper}>
-            <AdSlot 
-              id="sidebar-vertical-ad" 
-              type="sidebar" 
-              adClient="ca-pub-6096598752695949" 
-              adSlotId="1928374650"
-            />
+            <SidebarAd id="sidebar-vertical-ad" />
           </aside>
         )}
       </div>
@@ -233,8 +228,8 @@ function App() {
       {/* Dynamic Ad Slots (excluding Admin workspace for a clean portal experience) */}
       {page !== 'admin' && (
         <>
-          <AdSlot id="bottom-sticky-banner-ad" type="banner" />
-          <AdSlot id="interstitial-popup-ad" type="popup" />
+          <BannerAd id="bottom-sticky-banner-ad" />
+          <PopupAd id="interstitial-popup-ad" />
         </>
       )}
     </div>
