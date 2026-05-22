@@ -212,11 +212,14 @@ const adSenseContainerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  padding: '10px',
-  background: 'var(--bg-card)',
-  border: '1px solid var(--border-glass)',
-  borderRadius: 'var(--radius-md)',
+  padding: '16px',
+  background: 'rgba(10, 12, 22, 0.4)',
+  backdropFilter: 'blur(12px)',
+  border: '1px solid var(--border-glass-active)',
+  borderRadius: 'var(--radius-lg)',
   overflow: 'hidden',
+  boxShadow: 'var(--shadow-card), 0 0 15px rgba(0, 242, 254, 0.05)',
+  transition: 'var(--transition-smooth)',
 };
 
 const sponsorTextStyle: React.CSSProperties = {
@@ -225,7 +228,7 @@ const sponsorTextStyle: React.CSSProperties = {
   letterSpacing: '0.15em',
   fontWeight: 600,
   fontFamily: 'var(--font-heading)',
-  marginBottom: '6px',
+  marginBottom: '10px',
   opacity: 0.8,
   textShadow: '0 0 8px var(--primary-glow)',
 };
@@ -235,12 +238,16 @@ const sidebarFallbackStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   padding: '24px 20px',
-  border: '1px solid var(--border-glass)',
+  background: 'rgba(10, 12, 22, 0.4)',
+  backdropFilter: 'blur(12px)',
+  border: '1px solid var(--border-glass-active)',
   borderRadius: 'var(--radius-lg)',
   overflow: 'hidden',
   position: 'relative',
   minHeight: '280px',
   justifyContent: 'space-between',
+  boxShadow: 'var(--shadow-card), 0 0 15px rgba(0, 242, 254, 0.05)',
+  transition: 'var(--transition-smooth)',
 };
 
 const glowBgStyle: React.CSSProperties = {
@@ -317,12 +324,13 @@ const bannerFallbackStyle: React.CSSProperties = {
   maxWidth: '900px',
   padding: '12px 24px',
   border: '1px solid var(--border-glass-active)',
-  background: 'rgba(5, 6, 11, 0.9)',
+  background: 'rgba(10, 12, 22, 0.85)',
   borderRadius: 'var(--radius-lg)',
   boxShadow: '0 10px 40px rgba(0, 0, 0, 0.8), var(--shadow-glow)',
   backdropFilter: 'blur(20px)',
   zIndex: 1000,
   overflow: 'hidden',
+  transition: 'var(--transition-smooth)',
 };
 
 const bannerGlowStyle: React.CSSProperties = {

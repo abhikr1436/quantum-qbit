@@ -211,9 +211,22 @@ function App() {
         />
       )}
       
-      <main style={styles.mainContent}>
-        {renderPage()}
-      </main>
+      <div className="content-layout">
+        <main style={styles.mainContent} className="main-content-area">
+          {renderPage()}
+        </main>
+        
+        {page !== 'admin' && page !== 'landing' && (
+          <aside className="right-ad-sidebar" style={styles.adSidebarWrapper}>
+            <AdSlot 
+              id="sidebar-vertical-ad" 
+              type="sidebar" 
+              adClient="ca-pub-6096598752695949" 
+              adSlotId="1928374650"
+            />
+          </aside>
+        )}
+      </div>
 
       <Footer setCurrentPage={handleSetCurrentPage} />
 
@@ -239,6 +252,14 @@ const styles = {
     flexGrow: 1,
     display: 'flex',
     flexDirection: 'column' as const,
+  },
+  adSidebarWrapper: {
+    paddingTop: '100px',
+    paddingRight: '24px',
+    height: 'fit-content',
+    position: 'sticky' as const,
+    top: '0px',
+    zIndex: 5,
   },
 };
 
