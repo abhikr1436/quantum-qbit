@@ -9,10 +9,14 @@ import ContactUs from './pages/ContactUs';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
 import Admin from './pages/Admin';
+import AdSlot from './components/AdSlot';
+import Sidebar from './components/Sidebar';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<string>('landing');
   const [selectedTool, setSelectedTool] = useState<string>('none');
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const [blogCategory, setBlogCategory] = useState<string>('all');
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('theme');
     return (saved === 'light' || saved === 'dark') ? saved : 'dark';
@@ -44,7 +48,12 @@ function App() {
           />
         );
       case 'blogs':
-        return <Blogs />;
+        return (
+          <Blogs 
+            selectedCategory={blogCategory} 
+            setSelectedCategory={setBlogCategory} 
+          />
+        );
       case 'about':
         return <AboutUs />;
       case 'contact':
@@ -72,13 +81,35 @@ function App() {
         setCurrentPage={setCurrentPage} 
         theme={theme} 
         toggleTheme={toggleTheme} 
+        setSidebarOpen={setSidebarOpen}
       />
+      
+      {currentPage !== 'admin' && (
+        <Sidebar 
+          isOpen={sidebarOpen} 
+          onClose={() => setSidebarOpen(false)}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          selectedTool={selectedTool}
+          setSelectedTool={setSelectedTool}
+          selectedCategory={blogCategory}
+          setSelectedCategory={setBlogCategory}
+        />
+      )}
       
       <main style={styles.mainContent}>
         {renderPage()}
       </main>
 
       <Footer setCurrentPage={setCurrentPage} />
+
+      {/* Dynamic Ad Slots (excluding Admin workspace for a clean portal experience) */}
+      {currentPage !== 'admin' && (
+        <>
+          <AdSlot id="bottom-sticky-banner-ad" type="banner" />
+          <AdSlot id="interstitial-popup-ad" type="popup" />
+        </>
+      )}
     </div>
   );
 }

@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Key, LogOut, FileText, Settings, Plus, Edit, Trash2, 
-  Check, AlertCircle, Trash, Eye, EyeOff, Save, X 
+  Check, AlertCircle, Trash, Eye, EyeOff, Save, X, Tag, Database
 } from 'lucide-react';
 
 interface BlogPost {
   id: string;
   title: string;
   excerpt: string;
-  content: string[];
+  content: string | string[];
   author: string;
   date: string;
   readTime: string;
   category: string;
+  category_id?: string;
   imageGlow: string;
 }
 
@@ -24,9 +25,9 @@ const defaultBlogTemplate = {
   title: '',
   excerpt: '',
   author: 'Quantum Engineering Team',
-  category: 'Privacy & Security',
+  category_id: 'privacy-security',
   imageGlow: 'rgba(0, 242, 254, 0.1)',
-  content: ['']
+  content: ''
 };
 
 export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
@@ -38,11 +39,36 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
   const [isLocalMode, setIsLocalMode] = useState<boolean>(false); // Fallback for local Vite dev server
   
   // Dashboard Tabs
-  const [activeTab, setActiveTab] = useState<'posts' | 'settings'>('posts');
+  const [activeTab, setActiveTab] = useState<'posts' | 'categories' | 'settings'>('posts');
   
   // Blogs state
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  
+  // Categories state
+  const [categories, setCategories] = useState<{id: string, name: string}[]>([]);
+  const [newCategoryName, setNewCategoryName] = useState<string>('');
+  const [categoryError, setCategoryError] = useState<string>('');
+  const [categorySuccess, setCategorySuccess] = useState<string>('');
+  const [isSavingCategory, setIsSavingCategory] = useState<boolean>(false);
+  
+  // Database status state
+  const [dbStatus, setDbStatus] = useState<{
+    status: 'connected' | 'error' | 'fallback';
+    message?: string;
+    host?: string;
+    dbname?: string;
+    user?: string;
+  } | null>(null);
+  
+  // Database settings inputs
+  const [dbHost, setDbHost] = useState<string>('');
+  const [dbName, setDbName] = useState<string>('');
+  const [dbUser, setDbUser] = useState<string>('');
+  const [dbPass, setDbPass] = useState<string>('');
+  const [dbSaveSuccess, setDbSaveSuccess] = useState<string>('');
+  const [dbSaveError, setDbSaveError] = useState<string>('');
+  const [isTestingDb, setIsTestingDb] = useState<boolean>(false);
   
   // Editor state (Modal / Form)
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -58,9 +84,10 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
   const [settingsSuccess, setSettingsSuccess] = useState<string>('');
   const [settingsError, setSettingsError] = useState<string>('');
 
-  // Check login status on load
+  // Check login status and categories on load
   useEffect(() => {
     checkLoginStatus();
+    fetchCategories();
   }, []);
 
   const checkLoginStatus = async () => {
@@ -70,6 +97,12 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
         const data = await response.json();
         if (data.authenticated) {
           setIsLoggedIn(true);
+          if (data.db) {
+            setDbStatus(data.db);
+            setDbHost(data.db.host || '');
+            setDbName(data.db.dbname || '');
+            setDbUser(data.db.user || '');
+          }
           fetchBlogs();
         } else {
           setIsLoggedIn(false);
@@ -87,11 +120,56 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
   const checkLocalSession = () => {
     const isAuth = sessionStorage.getItem('admin_local_auth') === 'true';
     setIsLocalMode(true);
+    // Load local DB connection mock settings
+    const savedHost = localStorage.getItem('admin_local_db_host') || 'localhost';
+    const savedName = localStorage.getItem('admin_local_db_name') || 'quantum_db';
+    const savedUser = localStorage.getItem('admin_local_db_user') || 'root';
+    setDbHost(savedHost);
+    setDbName(savedName);
+    setDbUser(savedUser);
+    setDbStatus({
+      status: 'connected',
+      host: savedHost,
+      dbname: savedName,
+      user: savedUser
+    });
+    
     if (isAuth) {
       setIsLoggedIn(true);
       fetchLocalBlogs();
     } else {
       setIsLoading(false);
+    }
+  };
+
+  // Fetch categories from API
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/categories.php');
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data);
+      } else {
+        fetchLocalCategories();
+      }
+    } catch (e) {
+      fetchLocalCategories();
+    }
+  };
+
+  const fetchLocalCategories = () => {
+    const local = localStorage.getItem('quantum_categories');
+    if (local) {
+      setCategories(JSON.parse(local));
+    } else {
+      const defaultCats = [
+        { id: 'privacy-security', name: 'Privacy & Security' },
+        { id: 'computer-science', name: 'Computer Science' },
+        { id: 'creative-tech', name: 'Creative Tech' },
+        { id: 'general-utilities', name: 'General Utilities' }
+      ];
+      localStorage.setItem('quantum_categories', JSON.stringify(defaultCats));
+      setCategories(defaultCats);
     }
   };
 
@@ -335,13 +413,19 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
     setEditorError('');
     if (post) {
       setEditingPostId(post.id);
+      let contentStr = '';
+      if (Array.isArray(post.content)) {
+        contentStr = post.content.map(para => `<p>${para}</p>`).join('\n');
+      } else {
+        contentStr = post.content || '';
+      }
       setPostForm({
         title: post.title,
         excerpt: post.excerpt,
         author: post.author,
-        category: post.category,
+        category_id: post.category_id || (post.category ? post.category.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/[\s-]+/g, '-') : 'privacy-security'),
         imageGlow: post.imageGlow,
-        content: [...post.content]
+        content: contentStr
       });
       setIsEditing(true);
     } else {
@@ -350,28 +434,12 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
         title: '',
         excerpt: '',
         author: 'Quantum Engineering Team',
-        category: 'Privacy & Security',
+        category_id: categories.length > 0 ? categories[0].id : 'privacy-security',
         imageGlow: 'rgba(0, 242, 254, 0.1)',
-        content: ['']
+        content: ''
       });
       setIsEditing(true);
     }
-  };
-
-  const handleParagraphChange = (index: number, val: string) => {
-    const updated = [...postForm.content];
-    updated[index] = val;
-    setPostForm({ ...postForm, content: updated });
-  };
-
-  const addParagraph = () => {
-    setPostForm({ ...postForm, content: [...postForm.content, ''] });
-  };
-
-  const removeParagraph = (index: number) => {
-    if (postForm.content.length <= 1) return;
-    const updated = postForm.content.filter((_, idx) => idx !== index);
-    setPostForm({ ...postForm, content: updated });
   };
 
   // Submit Blog Post Add/Edit
@@ -384,20 +452,31 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
     if (!postForm.excerpt.trim()) return setEditorError('Excerpt is required.');
     if (!postForm.author.trim()) return setEditorError('Author is required.');
     
-    const filteredContent = postForm.content.map(p => p.trim()).filter(Boolean);
-    if (filteredContent.length === 0) {
-      return setEditorError('Please provide at least one text paragraph.');
+    let finalContent = postForm.content.trim();
+    if (!finalContent) {
+      return setEditorError('Article content is required.');
+    }
+    
+    // Auto wrap plain text in paragraph tags if no HTML tag is present
+    if (!/<[a-z][\s\S]*>/i.test(finalContent)) {
+      finalContent = finalContent
+        .split('\n')
+        .filter(line => line.trim())
+        .map(line => `<p>${line.trim()}</p>`)
+        .join('\n');
     }
 
     setIsSaving(true);
     
     if (isLocalMode) {
       // Local state modification
-      const wordCount = filteredContent.join(' ').split(/\s+/).length;
+      const cleanText = finalContent.replace(/<[^>]*>/g, ' ');
+      const wordCount = cleanText.trim().split(/\s+/).filter(Boolean).length;
       const readTime = Math.ceil(wordCount / 200) + ' min read';
       const cleanSlug = postForm.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/[\s-]+/g, '-').trim();
       
       let updatedPosts = [...posts];
+      const catName = categories.find(c => c.id === postForm.category_id)?.name || 'Privacy & Security';
       
       if (editingPostId) {
         // Edit mode
@@ -408,9 +487,10 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
               title: postForm.title.trim(),
               excerpt: postForm.excerpt.trim(),
               author: postForm.author.trim(),
-              category: postForm.category,
+              category: catName,
+              category_id: postForm.category_id,
               imageGlow: postForm.imageGlow,
-              content: filteredContent,
+              content: finalContent,
               readTime
             };
           }
@@ -430,9 +510,10 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
           title: postForm.title.trim(),
           excerpt: postForm.excerpt.trim(),
           author: postForm.author.trim(),
-          category: postForm.category,
+          category: catName,
+          category_id: postForm.category_id,
           imageGlow: postForm.imageGlow,
-          content: filteredContent,
+          content: finalContent,
           date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
           readTime
         };
@@ -449,8 +530,8 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
         const url = '/api/blogs.php';
         const method = editingPostId ? 'PUT' : 'POST';
         const bodyData = editingPostId 
-          ? { id: editingPostId, ...postForm, content: filteredContent }
-          : { ...postForm, content: filteredContent };
+          ? { id: editingPostId, title: postForm.title.trim(), excerpt: postForm.excerpt.trim(), author: postForm.author.trim(), category_id: postForm.category_id, imageGlow: postForm.imageGlow, content: finalContent }
+          : { title: postForm.title.trim(), excerpt: postForm.excerpt.trim(), author: postForm.author.trim(), category_id: postForm.category_id, imageGlow: postForm.imageGlow, content: finalContent };
           
         const response = await fetch(url, {
           method,
@@ -470,6 +551,144 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
       } finally {
         setIsSaving(false);
       }
+    }
+  };
+
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCategoryError('');
+    setCategorySuccess('');
+    
+    if (!newCategoryName.trim()) {
+      setCategoryError('Category name cannot be empty.');
+      return;
+    }
+    
+    setIsSavingCategory(true);
+    
+    if (isLocalMode) {
+      const id = newCategoryName.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/[\s-]+/g, '-').trim();
+      if (categories.some(c => c.id === id)) {
+        setCategoryError('Category already exists.');
+        setIsSavingCategory(false);
+        return;
+      }
+      const newCat = { id, name: newCategoryName.trim() };
+      const updated = [...categories, newCat];
+      localStorage.setItem('quantum_categories', JSON.stringify(updated));
+      setCategories(updated);
+      setCategorySuccess('Category added successfully locally.');
+      setNewCategoryName('');
+      setIsSavingCategory(false);
+    } else {
+      try {
+        const response = await fetch('/api/categories.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: newCategoryName.trim() })
+        });
+        
+        if (response.ok) {
+          setCategorySuccess('Category added successfully.');
+          setNewCategoryName('');
+          fetchCategories();
+        } else {
+          const data = await response.json();
+          setCategoryError(data.error || 'Failed to add category.');
+        }
+      } catch (err) {
+        setCategoryError('Network error adding category.');
+      } finally {
+        setIsSavingCategory(false);
+      }
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this category? This will delete all blogs in this category.')) return;
+    
+    setCategoryError('');
+    setCategorySuccess('');
+    
+    if (isLocalMode) {
+      const updated = categories.filter(c => c.id !== id);
+      localStorage.setItem('quantum_categories', JSON.stringify(updated));
+      setCategories(updated);
+      
+      // Also delete blogs in this category
+      const localBlogs = localStorage.getItem('quantum_blogs');
+      if (localBlogs) {
+        const parsedBlogs: BlogPost[] = JSON.parse(localBlogs);
+        const updatedBlogs = parsedBlogs.filter(p => p.category_id !== id && p.category?.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/[\s-]+/g, '-') !== id);
+        localStorage.setItem('quantum_blogs', JSON.stringify(updatedBlogs));
+        setPosts(updatedBlogs);
+      }
+      
+      setCategorySuccess('Category and its articles deleted locally.');
+    } else {
+      try {
+        const response = await fetch(`/api/categories.php?id=${encodeURIComponent(id)}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          setCategorySuccess('Category deleted successfully.');
+          fetchCategories();
+          fetchBlogs();
+        } else {
+          const data = await response.json();
+          setCategoryError(data.error || 'Failed to delete category.');
+        }
+      } catch (err) {
+        setCategoryError('Network error deleting category.');
+      }
+    }
+  };
+
+  const handleSaveDbConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setDbSaveSuccess('');
+    setDbSaveError('');
+    
+    if (isLocalMode) {
+      setDbSaveError('Cannot save configuration in local dev simulation mode.');
+      return;
+    }
+    
+    setIsTestingDb(true);
+    try {
+      const response = await fetch('/api/auth.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'save_db_config',
+          db_host: dbHost,
+          db_name: dbName,
+          db_user: dbUser,
+          db_pass: dbPass
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setDbSaveSuccess(data.message || 'Database settings updated successfully.');
+          setDbStatus(data.db);
+          setDbPass('');
+          fetchBlogs();
+          fetchCategories();
+        } else {
+          setDbSaveError(data.error || 'Failed to connect with these database settings.');
+          if (data.db) setDbStatus(data.db);
+        }
+      } else {
+        const data = await response.json();
+        setDbSaveError(data.error || 'Server error saving configuration.');
+      }
+    } catch (err) {
+      setDbSaveError('Network error while saving configuration.');
+    } finally {
+      setIsTestingDb(false);
     }
   };
 
@@ -537,6 +756,15 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
     );
   }
 
+  const getCategoryName = (post: BlogPost) => {
+    if (post.category) return post.category;
+    if (post.category_id) {
+      const found = categories.find(c => c.id === post.category_id);
+      if (found) return found.name;
+    }
+    return 'General';
+  };
+
   // RENDER MAIN DASHBOARD
   return (
     <div style={styles.adminPage}>
@@ -555,16 +783,22 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
         </div>
 
         {/* Tab Selection */}
-        <div style={styles.tabContainer}>
+        <div className="admin-tabs-container">
           <button 
             onClick={() => setActiveTab('posts')}
-            style={{ ...styles.tabItem, ...(activeTab === 'posts' ? styles.activeTab : {}) }}
+            className={`admin-tab-item ${activeTab === 'posts' ? 'active' : ''}`}
           >
             <FileText size={16} /> Manage Blogs
           </button>
           <button 
+            onClick={() => setActiveTab('categories')}
+            className={`admin-tab-item ${activeTab === 'categories' ? 'active' : ''}`}
+          >
+            <Tag size={16} /> Manage Categories
+          </button>
+          <button 
             onClick={() => setActiveTab('settings')}
-            style={{ ...styles.tabItem, ...(activeTab === 'settings' ? styles.activeTab : {}) }}
+            className={`admin-tab-item ${activeTab === 'settings' ? 'active' : ''}`}
           >
             <Settings size={16} /> Admin Settings
           </button>
@@ -594,7 +828,7 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
                       <div key={post.id} className="glass-card" style={styles.postRow}>
                         <div style={styles.postMeta}>
                           <span style={{ ...styles.categoryBadge, color: 'var(--primary)', borderColor: 'rgba(0, 242, 254, 0.15)' }}>
-                            {post.category}
+                            {getCategoryName(post)}
                           </span>
                           <h3 style={styles.postRowTitle}>{post.title}</h3>
                           <p style={styles.postRowExcerpt}>{post.excerpt}</p>
@@ -665,13 +899,12 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
                       <label className="form-label" htmlFor="blog-category">Category</label>
                       <select
                         id="blog-category"
-                        value={postForm.category}
-                        onChange={(e) => setPostForm({ ...postForm, category: e.target.value })}
+                        value={postForm.category_id}
+                        onChange={(e) => setPostForm({ ...postForm, category_id: e.target.value })}
                       >
-                        <option value="Privacy & Security">Privacy & Security</option>
-                        <option value="Computer Science">Computer Science</option>
-                        <option value="Creative Tech">Creative Tech</option>
-                        <option value="General Utilities">General Utilities</option>
+                        {categories.map(cat => (
+                          <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        ))}
                       </select>
                     </div>
 
@@ -714,35 +947,20 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
                     />
                   </div>
 
-                  <div style={styles.paragraphHeaderRow}>
-                    <label className="form-label">Article Text Content (Paragraphs)</label>
-                    <button type="button" style={styles.addParaBtn} onClick={addParagraph}>
-                      <Plus size={13} /> Add Paragraph
-                    </button>
-                  </div>
-
-                  <div style={styles.paragraphsList}>
-                    {postForm.content.map((para, idx) => (
-                      <div key={idx} style={styles.paraWrapper}>
-                        <div style={styles.paraIndex}>P{idx + 1}</div>
-                        <textarea
-                          className="form-textarea"
-                          style={{ flex: 1, minHeight: '80px' }}
-                          placeholder={`Write paragraph ${idx + 1} details here...`}
-                          value={para}
-                          onChange={(e) => handleParagraphChange(idx, e.target.value)}
-                        />
-                        <button
-                          type="button"
-                          style={styles.deleteParaBtn}
-                          disabled={postForm.content.length <= 1}
-                          onClick={() => removeParagraph(idx)}
-                          title="Remove paragraph"
-                        >
-                          <Trash size={14} />
-                        </button>
-                      </div>
-                    ))}
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="blog-content">Article Content (HTML supported)</label>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '8px', lineHeight: '1.4' }}>
+                      Write or paste HTML content. Headings (<code>&lt;h1&gt;</code> to <code>&lt;h4&gt;</code>), paragraphs (<code>&lt;p&gt;</code>), tables, lists (<code>&lt;ul&gt;</code>, <code>&lt;ol&gt;</code>), links (<code>&lt;a&gt;</code>), <code>&lt;b&gt;</code>, and <code>&lt;i&gt;</code> will automatically format. Plain text paragraphs will automatically be wrapped in <code>&lt;p&gt;</code> tags.
+                    </p>
+                    <textarea
+                      id="blog-content"
+                      className="form-textarea"
+                      style={{ minHeight: '280px', fontFamily: 'monospace', fontSize: '0.9rem' }}
+                      placeholder="<p>Write your article content here...</p>"
+                      value={postForm.content}
+                      onChange={(e) => setPostForm({ ...postForm, content: e.target.value })}
+                      required
+                    />
                   </div>
 
                   <div style={styles.editorActions}>
@@ -759,7 +977,6 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
           </div>
         )}
 
-        {/* TAB 2: SETTINGS (PASSCODE CHANGE) */}
         {activeTab === 'settings' && (
           <div style={styles.tabContent}>
             <div className="glass-card" style={styles.settingsCard}>
@@ -828,6 +1045,190 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
                   Update Passcode
                 </button>
               </form>
+            </div>
+
+            <div className="glass-card" style={{ ...styles.settingsCard, marginTop: '24px' }}>
+              <h2 style={styles.settingsTitle}>
+                <Database size={20} style={{ color: 'var(--primary)' }} /> Database Configuration
+              </h2>
+              <p style={styles.settingsDesc}>
+                Configure your Hostinger MySQL connection. If settings are wrong or empty, the app will fall back to JSON file storage.
+              </p>
+              
+              <div style={{ marginBottom: '16px' }}>
+                <span style={{
+                  fontSize: '0.8rem',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  fontWeight: 600,
+                  background: dbStatus?.status === 'connected' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(239, 68, 68, 0.08)',
+                  border: dbStatus?.status === 'connected' ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)',
+                  color: dbStatus?.status === 'connected' ? '#10b981' : '#ef4444'
+                }}>
+                  Status: {dbStatus ? dbStatus.status.toUpperCase() : 'UNKNOWN'}
+                </span>
+                {dbStatus?.message && <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '8px' }}>{dbStatus.message}</p>}
+              </div>
+
+              {dbSaveSuccess && (
+                <div style={styles.successAlert}>
+                  <Check size={16} />
+                  <span>{dbSaveSuccess}</span>
+                </div>
+              )}
+
+              {dbSaveError && (
+                <div style={styles.errorAlert}>
+                  <AlertCircle size={16} />
+                  <span>{dbSaveError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSaveDbConfig} style={styles.settingsForm}>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="db-host-input">Database Host</label>
+                  <input
+                    id="db-host-input"
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. localhost or mysql.hostinger.com"
+                    value={dbHost}
+                    onChange={(e) => setDbHost(e.target.value)}
+                    disabled={isLocalMode}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="db-name-input">Database Name</label>
+                  <input
+                    id="db-name-input"
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. u123456789_quantum"
+                    value={dbName}
+                    onChange={(e) => setDbName(e.target.value)}
+                    disabled={isLocalMode}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="db-user-input">Database Username</label>
+                  <input
+                    id="db-user-input"
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. u123456789_user"
+                    value={dbUser}
+                    onChange={(e) => setDbUser(e.target.value)}
+                    disabled={isLocalMode}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="db-pass-input">Database Password</label>
+                  <input
+                    id="db-pass-input"
+                    type="password"
+                    className="form-input"
+                    placeholder={isLocalMode ? "Disabled in local simulation mode" : "Enter database password"}
+                    value={dbPass}
+                    onChange={(e) => setDbPass(e.target.value)}
+                    disabled={isLocalMode}
+                  />
+                </div>
+
+                <button type="submit" className="btn-primary" style={{ alignSelf: 'flex-start', marginTop: '12px' }} disabled={isTestingDb || isLocalMode}>
+                  {isTestingDb ? 'Testing Connection...' : 'Save Database Settings'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: CATEGORIES */}
+        {activeTab === 'categories' && (
+          <div style={styles.tabContent}>
+            <div className="glass-card" style={styles.settingsCard}>
+              <h2 style={styles.settingsTitle}>
+                <Tag size={20} style={{ color: 'var(--primary)' }} /> Category Management
+              </h2>
+              <p style={styles.settingsDesc}>
+                Manage categories for blog articles. Deleting a category will delete all associated blogs (cascade delete).
+              </p>
+
+              {categorySuccess && (
+                <div style={styles.successAlert}>
+                  <Check size={16} />
+                  <span>{categorySuccess}</span>
+                </div>
+              )}
+
+              {categoryError && (
+                <div style={styles.errorAlert}>
+                  <AlertCircle size={16} />
+                  <span>{categoryError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleAddCategory} style={{ ...styles.settingsForm, marginBottom: '24px' }}>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="new-category-input">New Category Name</label>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <input
+                      id="new-category-input"
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. Artificial Intelligence"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      required
+                    />
+                    <button type="submit" className="btn-primary" disabled={isSavingCategory}>
+                      {isSavingCategory ? 'Adding...' : <><Plus size={16} /> Add</>}
+                    </button>
+                  </div>
+                </div>
+              </form>
+
+              <div style={{ borderTop: '1px solid var(--border-glass)', paddingTop: '20px' }}>
+                <h3 style={{ ...styles.sectionHeader, marginBottom: '14px', fontSize: '1.1rem' }}>Existing Categories</h3>
+                {categories.length === 0 ? (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No categories found.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {categories.map((cat) => (
+                      <div key={cat.id} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        border: '1px solid var(--border-glass)',
+                        borderRadius: '8px',
+                        padding: '10px 16px',
+                        fontSize: '0.95rem'
+                      }}>
+                        <span>{cat.name} <code style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '8px' }}>({cat.id})</code></span>
+                        <button
+                          type="button"
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: '#ef4444',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            padding: '4px'
+                          }}
+                          onClick={() => handleDeleteCategory(cat.id)}
+                          title="Delete Category"
+                        >
+                          <Trash size={15} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -974,31 +1375,6 @@ const styles = {
     fontWeight: 600,
     cursor: 'pointer',
     transition: 'var(--transition-fast)',
-  },
-  tabContainer: {
-    display: 'flex',
-    borderBottom: '1px solid var(--border-glass)',
-    marginBottom: '32px',
-    gap: '8px',
-  },
-  tabItem: {
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--text-secondary)',
-    fontFamily: 'var(--font-heading)',
-    fontSize: '1rem',
-    fontWeight: 600,
-    padding: '12px 20px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    borderBottom: '2px solid transparent',
-    transition: 'var(--transition-fast)',
-  },
-  activeTab: {
-    color: 'var(--primary)',
-    borderBottomColor: 'var(--primary)',
   },
   tabContent: {
     display: 'flex',

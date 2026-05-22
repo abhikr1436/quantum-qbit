@@ -864,48 +864,33 @@ export const MathCalculators: React.FC = () => {
   return (
     <div className="container" style={styles.container}>
       {/* Tab Switcher */}
-      <div style={styles.tabs}>
+      <div className="math-tabs-container">
         <button
-          style={{
-            ...styles.tabBtn,
-            ...(activeTab === 'scientific' ? styles.activeTabBtn : {})
-          }}
+          className={`math-tab-btn ${activeTab === 'scientific' ? 'active' : ''}`}
           onClick={() => setActiveTab('scientific')}
         >
           <Calculator size={16} /> Scientific Calculator
         </button>
         <button
-          style={{
-            ...styles.tabBtn,
-            ...(activeTab === 'base' ? styles.activeTabBtn : {})
-          }}
+          className={`math-tab-btn ${activeTab === 'base' ? 'active' : ''}`}
           onClick={() => setActiveTab('base')}
         >
           <Binary size={16} /> Base Converter
         </button>
         <button
-          style={{
-            ...styles.tabBtn,
-            ...(activeTab === 'unit' ? styles.activeTabBtn : {})
-          }}
+          className={`math-tab-btn ${activeTab === 'unit' ? 'active' : ''}`}
           onClick={() => setActiveTab('unit')}
         >
           <RefreshCw size={16} /> Unit Converter
         </button>
         <button
-          style={{
-            ...styles.tabBtn,
-            ...(activeTab === 'solver' ? styles.activeTabBtn : {})
-          }}
+          className={`math-tab-btn ${activeTab === 'solver' ? 'active' : ''}`}
           onClick={() => setActiveTab('solver')}
         >
           <Equal size={16} /> Equation Solver
         </button>
         <button
-          style={{
-            ...styles.tabBtn,
-            ...(activeTab === 'plotter' ? styles.activeTabBtn : {})
-          }}
+          className={`math-tab-btn ${activeTab === 'plotter' ? 'active' : ''}`}
           onClick={() => setActiveTab('plotter')}
         >
           <LineChart size={16} /> Graph Plotter
@@ -1089,7 +1074,7 @@ export const MathCalculators: React.FC = () => {
             </div>
 
             {/* Input grid */}
-            <div style={styles.converterGrid}>
+            <div className="math-converter-grid" style={styles.converterGrid}>
               {/* Input Value */}
               <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '8px' }}>
                 <span style={styles.inputLabel}>Value to Convert</span>
@@ -1468,7 +1453,7 @@ export const MathCalculators: React.FC = () => {
               ))}
             </div>
 
-            <div style={styles.plotterWorkspace}>
+            <div className="math-plotter-workspace" style={styles.plotterWorkspace}>
               {/* Controls Column */}
               <div style={styles.plotterControls}>
                 {plotterMode === 'equation' ? (
@@ -1621,34 +1606,6 @@ const styles = {
   container: {
     maxWidth: '850px',
     margin: '0 auto',
-  },
-  tabs: {
-    display: 'flex',
-    gap: '6px',
-    borderBottom: '1px solid var(--border-glass)',
-    marginBottom: '24px',
-    paddingBottom: '4px',
-    justifyContent: 'center',
-    flexWrap: 'wrap' as const,
-  },
-  tabBtn: {
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--text-secondary)',
-    fontFamily: 'var(--font-heading)',
-    fontSize: '0.95rem',
-    fontWeight: 600,
-    padding: '10px 16px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    borderRadius: '6px',
-    transition: 'var(--transition-fast)',
-  },
-  activeTabBtn: {
-    color: 'var(--primary)',
-    background: 'rgba(0, 242, 254, 0.05)',
   },
   panelContent: {
     marginTop: '10px',
@@ -1833,10 +1790,6 @@ const styles = {
     background: 'rgba(157, 78, 221, 0.08)',
   },
   converterGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1.2fr 1fr 1fr',
-    gap: '16px',
-    marginBottom: '24px',
   },
   inputLabel: {
     fontSize: '0.8rem',
@@ -2098,10 +2051,6 @@ const styles = {
     background: 'rgba(157, 78, 221, 0.08)',
   },
   plotterWorkspace: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1.25fr',
-    gap: '24px',
-    alignItems: 'start',
   },
   plotterControls: {
     display: 'flex',

@@ -66,7 +66,7 @@ export const ContactUs: React.FC = () => {
           </p>
         </div>
 
-        <div style={styles.grid}>
+        <div className="contact-grid" style={styles.grid}>
           {/* Contact Details Card */}
           <div className="glass-card" style={styles.detailsCard}>
             <div style={styles.iconWrapper}>
@@ -223,12 +223,6 @@ const styles = {
     lineHeight: 1.5,
   },
   grid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1.4fr',
-    gap: '30px',
-    alignItems: 'start',
-    maxWidth: '1000px',
-    margin: '0 auto',
   },
   detailsCard: {
     padding: '40px 30px',

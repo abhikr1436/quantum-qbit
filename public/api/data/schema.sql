@@ -1,0 +1,17 @@
+CREATE TABLE IF NOT EXISTS categories (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS blogs (
+    id VARCHAR(100) PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    excerpt TEXT NOT NULL,
+    content LONGTEXT NOT NULL,
+    author VARCHAR(100) NOT NULL,
+    date VARCHAR(50) NOT NULL,
+    read_time VARCHAR(30) NOT NULL,
+    category_id VARCHAR(50) NOT NULL,
+    image_glow VARCHAR(100) NOT NULL,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+);

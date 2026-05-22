@@ -29,17 +29,21 @@ function getConfig($configFile) {
         mkdir(dirname($configFile), 0755, true);
     }
     
-    if (!file_exists($configFile)) {
-        // Initial setup: Default passcode is "quantumqbit2026"
-        $defaultPasscode = 'quantumqbit2026';
-        $hashed = password_hash($defaultPasscode, PASSWORD_DEFAULT);
-        $config = ['passcode_hash' => $hashed];
-        file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT));
-        return $config;
+    $config = [];
+    if (file_exists($configFile)) {
+        $config = json_decode(file_get_contents($configFile), true);
+        if (!is_array($config)) {
+            $config = [];
+        }
     }
     
-    $data = file_get_contents($configFile);
-    return json_decode($data, true);
+    if (!isset($config['passcode_hash'])) {
+        $defaultPasscode = 'quantumqbit2026';
+        $config['passcode_hash'] = password_hash($defaultPasscode, PASSWORD_DEFAULT);
+        file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT));
+    }
+    
+    return $config;
 }
 
 $config = getConfig($configFile);
@@ -56,7 +60,22 @@ if (isset($_GET['action'])) {
 switch ($action) {
     case 'status':
         $authenticated = isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
-        echo json_encode(['authenticated' => $authenticated]);
+        $dbRes = [];
+        if ($authenticated) {
+            require_once __DIR__ . '/db_config.php';
+            $dbInfo = getDBStatus();
+            $dbRes = [
+                'status' => $dbInfo['status'],
+                'message' => isset($dbInfo['message']) ? $dbInfo['message'] : '',
+                'host' => isset($dbInfo['host']) ? $dbInfo['host'] : '',
+                'dbname' => isset($dbInfo['dbname']) ? $dbInfo['dbname'] : '',
+                'user' => isset($dbInfo['user']) ? $dbInfo['user'] : '',
+            ];
+        }
+        echo json_encode([
+            'authenticated' => $authenticated,
+            'db' => $dbRes
+        ]);
         break;
         
     case 'login':
@@ -114,6 +133,59 @@ switch ($action) {
         } else {
             http_response_code(500);
             echo json_encode(['success' => false, 'error' => 'Failed to save configuration']);
+        }
+        break;
+
+    case 'save_db_config':
+        if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'error' => 'Unauthorized']);
+            break;
+        }
+        
+        $dbHost = isset($input['db_host']) ? trim($input['db_host']) : '';
+        $dbName = isset($input['db_name']) ? trim($input['db_name']) : '';
+        $dbUser = isset($input['db_user']) ? trim($input['db_user']) : '';
+        $dbPass = isset($input['db_pass']) ? $input['db_pass'] : '';
+        
+        $config['db_host'] = $dbHost;
+        $config['db_name'] = $dbName;
+        $config['db_user'] = $dbUser;
+        $config['db_pass'] = $dbPass;
+        
+        if (!file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT))) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Failed to save configuration']);
+            break;
+        }
+        
+        // Test the connection immediately
+        require_once __DIR__ . '/db_config.php';
+        $dbInfo = getDBStatus();
+        
+        if ($dbInfo['status'] === 'connected') {
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Database configuration saved and connected successfully!',
+                'db' => [
+                    'status' => 'connected',
+                    'host' => $dbHost,
+                    'dbname' => $dbName,
+                    'user' => $dbUser
+                ]
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'error' => 'Saved, but connection failed: ' . $dbInfo['message'],
+                'db' => [
+                    'status' => 'error',
+                    'message' => $dbInfo['message'],
+                    'host' => $dbHost,
+                    'dbname' => $dbName,
+                    'user' => $dbUser
+                ]
+            ]);
         }
         break;
         

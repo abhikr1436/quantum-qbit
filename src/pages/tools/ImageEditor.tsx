@@ -1390,8 +1390,7 @@ export const ImageEditor: React.FC = () => {
         /* Upload Area */
         <div 
           onClick={triggerUpload} 
-          style={styles.uploadArea}
-          className="glass-card"
+          className="glass-card image-upload-area"
         >
           <div style={styles.uploadGlow}></div>
           <div style={styles.uploadBox}>
@@ -1410,9 +1409,9 @@ export const ImageEditor: React.FC = () => {
         </div>
       ) : (
         /* Active Workspace */
-        <div style={styles.workspaceGrid}>
+        <div className="image-editor-workspace" style={styles.workspaceGrid}>
           {/* Preview Panel */}
-          <div className="glass-card" style={styles.previewPanel}>
+          <div className="glass-card image-preview-panel" style={styles.previewPanel}>
             <div style={styles.previewHeader}>
               <span style={styles.fileTitle}>
                 <ImageIcon size={16} style={{ color: 'var(--primary)' }} /> 
@@ -1482,40 +1481,40 @@ export const ImageEditor: React.FC = () => {
           {/* Adjustments Sidebar */}
           <div className="glass-card" style={styles.sidebar}>
             {/* Categories tab container */}
-            <div style={styles.tabContainer}>
+            <div className="editor-tabs-container">
               <button 
                 onClick={() => { setActiveTab('adjust'); setEyeDropperActive(false); }} 
-                style={{...styles.sidebarTab, ...(activeTab === 'adjust' ? styles.sidebarTabActive : {})}}
+                className={`editor-tab-btn ${activeTab === 'adjust' ? 'active' : ''}`}
               >
                 Filters
               </button>
               <button 
                 onClick={() => { setActiveTab('crop'); setEyeDropperActive(false); }} 
-                style={{...styles.sidebarTab, ...(activeTab === 'crop' ? styles.sidebarTabActive : {})}}
+                className={`editor-tab-btn ${activeTab === 'crop' ? 'active' : ''}`}
               >
                 Crop
               </button>
               <button 
                 onClick={() => { setActiveTab('resize'); setEyeDropperActive(false); }} 
-                style={{...styles.sidebarTab, ...(activeTab === 'resize' ? styles.sidebarTabActive : {})}}
+                className={`editor-tab-btn ${activeTab === 'resize' ? 'active' : ''}`}
               >
                 Resize
               </button>
               <button 
                 onClick={() => { setActiveTab('dpi'); setEyeDropperActive(false); }} 
-                style={{...styles.sidebarTab, ...(activeTab === 'dpi' ? styles.sidebarTabActive : {})}}
+                className={`editor-tab-btn ${activeTab === 'dpi' ? 'active' : ''}`}
               >
                 DPI
               </button>
               <button 
                 onClick={() => { setActiveTab('compress'); setEyeDropperActive(false); }} 
-                style={{...styles.sidebarTab, ...(activeTab === 'compress' ? styles.sidebarTabActive : {})}}
+                className={`editor-tab-btn ${activeTab === 'compress' ? 'active' : ''}`}
               >
                 Compress
               </button>
               <button 
                 onClick={() => { setActiveTab('bg-remove'); }} 
-                style={{...styles.sidebarTab, ...(activeTab === 'bg-remove' ? styles.sidebarTabActive : {})}}
+                className={`editor-tab-btn ${activeTab === 'bg-remove' ? 'active' : ''}`}
               >
                 Remove BG
               </button>
@@ -2092,7 +2091,7 @@ export const ImageEditor: React.FC = () => {
               </button>
             </div>
             
-            <div style={styles.modalBody} className="modal-body">
+            <div className="image-editor-modal-body" style={styles.modalBody}>
               {/* Left Panel: Processed Preview */}
               <div style={styles.modalLeftPanel}>
                 <span style={styles.inputHelp}>Rendered Output Snapshot</span>
@@ -2108,7 +2107,7 @@ export const ImageEditor: React.FC = () => {
               {/* Right Panel: Metadata & Active Changes */}
               <div style={styles.modalRightPanel}>
                 <h4 style={styles.modalSubheading}>Metadata Comparison</h4>
-                <div style={styles.tableWrapper}>
+                <div className="responsive-table-wrapper" style={styles.tableWrapper}>
                   <table style={styles.comparisonTable}>
                     <thead>
                       <tr>
@@ -2242,18 +2241,6 @@ const styles = {
     maxWidth: '1200px',
     margin: '0 auto',
   },
-  uploadArea: {
-    minHeight: '450px',
-    border: '1.5px dashed var(--border-glass-active)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    textAlign: 'center' as const,
-    cursor: 'pointer',
-    position: 'relative' as const,
-    overflow: 'hidden',
-    padding: '40px 24px',
-  },
   uploadGlow: {
     position: 'absolute' as const,
     top: '50%',
@@ -2294,17 +2281,12 @@ const styles = {
     fontSize: '0.92rem',
   },
   workspaceGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 350px',
-    gap: '24px',
-    alignItems: 'start',
   },
   previewPanel: {
     padding: '24px',
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '20px',
-    height: '630px',
   },
   previewHeader: {
     display: 'flex',
@@ -2386,31 +2368,6 @@ const styles = {
     gap: '20px',
     minHeight: '630px',
     background: 'rgba(255, 255, 255, 0.01)',
-  },
-  tabContainer: {
-    display: 'flex',
-    gap: '2px',
-    borderBottom: '1px solid var(--border-glass)',
-    paddingBottom: '8px',
-    overflowX: 'auto' as const,
-  },
-  sidebarTab: {
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--text-secondary)',
-    fontFamily: 'var(--font-heading)',
-    fontSize: '0.8rem',
-    fontWeight: 500,
-    padding: '6px 8px',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    whiteSpace: 'nowrap' as const,
-    transition: 'var(--transition-fast)',
-  },
-  sidebarTabActive: {
-    color: 'var(--primary)',
-    background: 'rgba(0, 242, 254, 0.06)',
-    fontWeight: 600,
   },
   tabContent: {
     display: 'flex',
@@ -2692,12 +2649,6 @@ const styles = {
     transition: 'var(--transition-fast)',
   },
   modalBody: {
-    display: 'grid',
-    gridTemplateColumns: '1.2fr 1fr',
-    gap: '24px',
-    padding: '24px',
-    overflowY: 'auto' as const,
-    maxHeight: '70vh',
   },
   modalLeftPanel: {
     display: 'flex',

@@ -6,13 +6,15 @@ interface NavbarProps {
   setCurrentPage: (page: string) => void;
   theme: 'dark' | 'light';
   toggleTheme: () => void;
+  setSidebarOpen: (open: boolean) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
   currentPage, 
   setCurrentPage, 
   theme, 
-  toggleTheme 
+  toggleTheme,
+  setSidebarOpen
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -33,8 +35,21 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <nav style={styles.nav}>
       <div style={styles.container}>
-        <div style={styles.logoContainer} onClick={() => handleNavClick('landing')}>
-          <img src="/logo.png" alt="Quantum Qbit Logo" className="logo-img" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {currentPage !== 'admin' && (
+            <button
+              onClick={() => setSidebarOpen(true)}
+              style={styles.sidebarToggleBtn}
+              title="Open Navigation Menu"
+              aria-label="Open Navigation Menu"
+              className="theme-toggle-btn"
+            >
+              <Menu size={20} />
+            </button>
+          )}
+          <div style={styles.logoContainer} onClick={() => handleNavClick('landing')}>
+            <img src="/logo.png" alt="Quantum Qbit Logo" className="logo-img" />
+          </div>
         </div>
 
         {/* Right Area (Desktop navigation, Theme Toggle, Mobile Hamburger) */}
@@ -180,6 +195,19 @@ const styles = {
     boxShadow: 'inset 0 0 0 1px rgba(0, 242, 254, 0.15)',
   },
   themeToggleBtn: {
+    background: 'rgba(255, 255, 255, 0.02)',
+    border: '1px solid var(--border-glass)',
+    color: 'var(--text-primary)',
+    borderRadius: '8px',
+    width: '38px',
+    height: '38px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    transition: 'var(--transition-smooth)',
+  },
+  sidebarToggleBtn: {
     background: 'rgba(255, 255, 255, 0.02)',
     border: '1px solid var(--border-glass)',
     color: 'var(--text-primary)',

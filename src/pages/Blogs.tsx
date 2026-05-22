@@ -1,25 +1,72 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, User, Clock, ArrowLeft, BookOpenText } from 'lucide-react';
+import DOMPurify from 'dompurify';
+import AdSlot from '../components/AdSlot';
 
 interface BlogPost {
   id: string;
   title: string;
   excerpt: string;
-  content: string[];
+  content: string | string[];
   author: string;
   date: string;
   readTime: string;
   category: string;
+  category_id?: string;
   imageGlow: string;
 }
 
-export const Blogs: React.FC = () => {
+interface Category {
+  id: string;
+  name: string;
+}
+
+interface BlogsProps {
+  selectedCategory?: string;
+  setSelectedCategory?: (cat: string) => void;
+}
+
+export const Blogs: React.FC<BlogsProps> = ({
+  selectedCategory = 'all',
+  setSelectedCategory
+}) => {
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories.php');
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data);
+        } else {
+          loadFallbackCategories();
+        }
+      } catch (err) {
+        loadFallbackCategories();
+      }
+    };
+
+    const loadFallbackCategories = () => {
+      const local = localStorage.getItem('quantum_categories');
+      if (local) {
+        setCategories(JSON.parse(local));
+      } else {
+        const defaultCategories: Category[] = [
+          { id: 'privacy-security', name: 'Privacy & Security' },
+          { id: 'computer-science', name: 'Computer Science' },
+          { id: 'creative-tech', name: 'Creative Tech' },
+          { id: 'general-utilities', name: 'General Utilities' }
+        ];
+        localStorage.setItem('quantum_categories', JSON.stringify(defaultCategories));
+        setCategories(defaultCategories);
+      }
+    };
+
     const fetchBlogs = async () => {
       try {
         const response = await fetch('/api/blogs.php');
@@ -96,54 +143,96 @@ export const Blogs: React.FC = () => {
       }
     };
 
+    fetchCategories();
     fetchBlogs();
   }, []);
 
   const selectedPost = posts.find(p => p.id === selectedPostId);
 
+  const getCategoryName = (post: BlogPost) => {
+    if (post.category_id) {
+      const cat = categories.find(c => c.id === post.category_id);
+      if (cat) return cat.name;
+    }
+    if (post.category) return post.category;
+    if (post.category_id) {
+      return post.category_id
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+    return 'General';
+  };
+
   // Render Single Blog Post Reader View
   if (selectedPost) {
     return (
-      <div className="container" style={styles.readerContainer}>
-        <button style={styles.backBtn} onClick={() => setSelectedPostId(null)}>
-          <ArrowLeft size={16} /> Back to Blog List
-        </button>
+      <div className="container" style={styles.readerFlexWrapper}>
+        <div style={styles.articleCol}>
+          <button style={styles.backBtn} onClick={() => setSelectedPostId(null)}>
+            <ArrowLeft size={16} /> Back to Blog List
+          </button>
 
-        <article style={styles.article}>
-          <div style={{ ...styles.articleGlow, background: `radial-gradient(circle, ${selectedPost.imageGlow} 0%, transparent 70%)` }}></div>
-          <span style={styles.articleTag}>{selectedPost.category}</span>
-          <h1 style={styles.articleTitle}>{selectedPost.title}</h1>
+          <article style={styles.article}>
+            <div style={{ ...styles.articleGlow, background: `radial-gradient(circle, ${selectedPost.imageGlow} 0%, transparent 70%)` }}></div>
+            <span style={styles.articleTag}>{getCategoryName(selectedPost)}</span>
+            <h1 style={styles.articleTitle}>{selectedPost.title}</h1>
 
-          {/* Author/Date Header */}
-          <div style={styles.articleMeta}>
-            <div style={styles.metaItem}>
-              <User size={14} />
-              <span>{selectedPost.author}</span>
+            {/* Author/Date Header */}
+            <div style={styles.articleMeta}>
+              <div style={styles.metaItem}>
+                <User size={14} />
+                <span>{selectedPost.author}</span>
+              </div>
+              <div style={styles.metaItem}>
+                <Calendar size={14} />
+                <span>{selectedPost.date}</span>
+              </div>
+              <div style={styles.metaItem}>
+                <Clock size={14} />
+                <span>{selectedPost.readTime}</span>
+              </div>
             </div>
-            <div style={styles.metaItem}>
-              <Calendar size={14} />
-              <span>{selectedPost.date}</span>
+
+            <div style={styles.articleDivider}></div>
+
+            {/* Article Text Content */}
+            <div style={styles.articleBody}>
+              {Array.isArray(selectedPost.content) ? (
+                selectedPost.content.map((paragraph, index) => (
+                  <p key={index} style={styles.paragraph}>
+                    {paragraph}
+                  </p>
+                ))
+              ) : (
+                <div 
+                  className="rich-html-blog"
+                  dangerouslySetInnerHTML={{ 
+                    __html: DOMPurify.sanitize(selectedPost.content) 
+                  }} 
+                />
+              )}
             </div>
-            <div style={styles.metaItem}>
-              <Clock size={14} />
-              <span>{selectedPost.readTime}</span>
-            </div>
+          </article>
+        </div>
+
+        {/* Sidebar Column with AdSlot */}
+        <aside className="ad-sidebar-col" style={styles.sidebarCol}>
+          <AdSlot id="blog-reader-sidebar-ad" type="sidebar" />
+          <div style={sidebarStickyCardStyle} className="glass-card">
+            <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '10px', fontFamily: 'var(--font-heading)' }}>Quantum Utilities</h4>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.45, margin: 0 }}>
+              Try our offline-first local image studio and PDF compressor apps directly in your browser.
+            </p>
           </div>
-
-          <div style={styles.articleDivider}></div>
-
-          {/* Article Text Content */}
-          <div style={styles.articleBody}>
-            {selectedPost.content.map((paragraph, index) => (
-              <p key={index} style={styles.paragraph}>
-                {paragraph}
-              </p>
-            ))}
-          </div>
-        </article>
+        </aside>
       </div>
     );
   }
+
+  const filteredPosts = selectedCategory !== 'all'
+    ? posts.filter(post => post.category_id === selectedCategory || post.category === selectedCategory)
+    : posts;
 
   return (
     <div style={styles.blogFeed}>
@@ -156,18 +245,38 @@ export const Blogs: React.FC = () => {
           </p>
         </div>
 
+        {/* Category filter banner */}
+        {selectedCategory !== 'all' && (
+          <div className="blog-filter-banner">
+            <div className="blog-filter-text">
+              Showing articles in <strong>{
+                categories.find(c => c.id === selectedCategory)?.name || 
+                selectedCategory.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+              }</strong>
+            </div>
+            {setSelectedCategory && (
+              <button 
+                className="clear-filter-btn"
+                onClick={() => setSelectedCategory('all')}
+              >
+                Clear Filter
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Blog Post List */}
         {isLoading ? (
           <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-secondary)' }}>
             Loading publications database...
           </div>
-        ) : posts.length === 0 ? (
+        ) : filteredPosts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-secondary)' }}>
-            No publication articles found.
+            No publication articles found in this category.
           </div>
         ) : (
           <div style={styles.postsGrid}>
-            {posts.map((post) => (
+            {filteredPosts.map((post) => (
               <div key={post.id} className="glass-card" style={styles.postCard}>
                 {/* Dynamic glowing ambient backing */}
                 <div style={{
@@ -176,7 +285,7 @@ export const Blogs: React.FC = () => {
                 }}></div>
                 
                 <div style={styles.cardInfo}>
-                  <span style={styles.postCategory}>{post.category}</span>
+                  <span style={styles.postCategory}>{getCategoryName(post)}</span>
                   <h2 style={styles.postTitle} onClick={() => setSelectedPostId(post.id)}>
                     {post.title}
                   </h2>
@@ -204,6 +313,15 @@ export const Blogs: React.FC = () => {
   );
 };
 
+const sidebarStickyCardStyle = {
+  padding: '24px 20px',
+  border: '1px solid var(--border-glass)',
+  borderRadius: 'var(--radius-lg)',
+  position: 'sticky' as const,
+  top: '100px',
+  background: 'var(--bg-card)',
+};
+
 const styles = {
   blogFeed: {
     padding: '60px 0 100px 0',
@@ -213,6 +331,26 @@ const styles = {
     maxWidth: '800px',
     margin: '0 auto',
     position: 'relative' as const,
+  },
+  readerFlexWrapper: {
+    padding: '40px 24px 100px 24px',
+    maxWidth: '1140px',
+    margin: '0 auto',
+    display: 'flex',
+    gap: '40px',
+    position: 'relative' as const,
+  },
+  articleCol: {
+    flex: 1,
+    minWidth: 0,
+  },
+  sidebarCol: {
+    width: '300px',
+    flexShrink: 0,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '24px',
+    paddingTop: '64px',
   },
   backBtn: {
     display: 'inline-flex',

@@ -648,27 +648,27 @@ export const PdfEditor: React.FC = () => {
   return (
     <div className="container" style={styles.workshop}>
       {/* Tab Switcher */}
-      <div style={styles.tabsContainer}>
+      <div className="pdf-tabs-container">
         <button
-          style={{ ...styles.tabLink, ...(activeTab === 'imgToPdf' ? styles.activeTabLink : {}) }}
+          className={`pdf-tab-link ${activeTab === 'imgToPdf' ? 'active' : ''}`}
           onClick={() => setActiveTab('imgToPdf')}
         >
           <ImageIcon size={16} /> Images to PDF
         </button>
         <button
-          style={{ ...styles.tabLink, ...(activeTab === 'compress' ? styles.activeTabLink : {}) }}
+          className={`pdf-tab-link ${activeTab === 'compress' ? 'active' : ''}`}
           onClick={() => setActiveTab('compress')}
         >
           <Settings size={16} /> PDF Compressor
         </button>
         <button
-          style={{ ...styles.tabLink, ...(activeTab === 'officeToPdf' ? styles.activeTabLink : {}) }}
+          className={`pdf-tab-link ${activeTab === 'officeToPdf' ? 'active' : ''}`}
           onClick={() => setActiveTab('officeToPdf')}
         >
           <FileText size={16} /> Convert to PDF
         </button>
         <button
-          style={{ ...styles.tabLink, ...(activeTab === 'pdfToWord' ? styles.activeTabLink : {}) }}
+          className={`pdf-tab-link ${activeTab === 'pdfToWord' ? 'active' : ''}`}
           onClick={() => setActiveTab('pdfToWord')}
         >
           <FileCode size={16} /> PDF to Word (OCR)
@@ -679,7 +679,7 @@ export const PdfEditor: React.FC = () => {
       {activeTab === 'imgToPdf' && (
         <div style={styles.tabContent}>
           {images.length === 0 ? (
-            <div onClick={() => imgInputRef.current?.click()} style={styles.dropzone} className="glass-card">
+            <div onClick={() => imgInputRef.current?.click()} className="glass-card pdf-dropzone">
               <div style={styles.uploadIconCircle}>
                 <Upload size={28} style={{ color: 'var(--secondary)' }} />
               </div>
@@ -700,7 +700,7 @@ export const PdfEditor: React.FC = () => {
               />
             </div>
           ) : (
-            <div style={styles.editorWorkspace}>
+            <div className="pdf-editor-workspace" style={styles.editorWorkspace}>
               <div className="glass-card" style={styles.pdfSettings}>
                 <h3 style={styles.settingsHeader}>Document Settings</h3>
                 <div className="form-group">
@@ -789,7 +789,7 @@ export const PdfEditor: React.FC = () => {
       {activeTab === 'compress' && (
         <div style={styles.tabContent}>
           {!compressFile ? (
-            <div onClick={() => compressInputRef.current?.click()} style={styles.dropzone} className="glass-card">
+            <div onClick={() => compressInputRef.current?.click()} className="glass-card pdf-dropzone">
               <div style={styles.uploadIconCircle}>
                 <Settings size={28} style={{ color: 'var(--primary)' }} />
               </div>
@@ -807,13 +807,13 @@ export const PdfEditor: React.FC = () => {
               />
             </div>
           ) : (
-            <div style={styles.editorWorkspace}>
+            <div className="pdf-editor-workspace" style={styles.editorWorkspace}>
               <div className="glass-card" style={styles.pdfSettings}>
                 <h3 style={styles.settingsHeader}>Compression Configuration</h3>
                 
                 <div style={styles.selectWrapper}>
                   <label className="form-label">Compression Mode</label>
-                  <div style={styles.modeToggleGroup}>
+                  <div className="mode-toggle-group" style={styles.modeToggleGroup}>
                     <button
                       onClick={() => { setCompressionType('preset'); setCompressedBlob(null); }}
                       style={{ ...styles.toggleBtn, ...(compressionType === 'preset' ? styles.toggleBtnActive : {}) }}
@@ -904,7 +904,7 @@ export const PdfEditor: React.FC = () => {
 
                 {compressedBlob && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <div style={styles.tableWrapper}>
+                    <div className="responsive-table-wrapper" style={styles.tableWrapper}>
                       <table style={styles.comparisonTable}>
                         <thead>
                           <tr>
@@ -955,7 +955,7 @@ export const PdfEditor: React.FC = () => {
       {activeTab === 'officeToPdf' && (
         <div style={styles.tabContent}>
           {!officeFile ? (
-            <div onClick={() => officeInputRef.current?.click()} style={styles.dropzone} className="glass-card">
+            <div onClick={() => officeInputRef.current?.click()} className="glass-card pdf-dropzone">
               <div style={styles.uploadIconCircle}>
                 <FileText size={28} style={{ color: 'var(--secondary)' }} />
               </div>
@@ -973,7 +973,7 @@ export const PdfEditor: React.FC = () => {
               />
             </div>
           ) : (
-            <div style={styles.editorWorkspace}>
+            <div className="pdf-editor-workspace" style={styles.editorWorkspace}>
               <div className="glass-card" style={styles.pdfSettings}>
                 <h3 style={styles.settingsHeader}>Convert Controls</h3>
                 
@@ -1101,7 +1101,7 @@ export const PdfEditor: React.FC = () => {
       {activeTab === 'pdfToWord' && (
         <div style={styles.tabContent}>
           {!ocrFile ? (
-            <div onClick={() => ocrInputRef.current?.click()} style={styles.dropzone} className="glass-card">
+            <div onClick={() => ocrInputRef.current?.click()} className="glass-card pdf-dropzone">
               <div style={styles.uploadIconCircle}>
                 <FileCode size={28} style={{ color: 'var(--primary)' }} />
               </div>
@@ -1119,7 +1119,7 @@ export const PdfEditor: React.FC = () => {
               />
             </div>
           ) : (
-            <div style={styles.editorWorkspace}>
+            <div className="pdf-editor-workspace" style={styles.editorWorkspace}>
               <div className="glass-card" style={styles.pdfSettings}>
                 <h3 style={styles.settingsHeader}>OCR Scan Panel</h3>
                 
@@ -1216,50 +1216,8 @@ const styles = {
     maxWidth: '1200px',
     margin: '0 auto',
   },
-  tabsContainer: {
-    display: 'flex',
-    gap: '8px',
-    borderBottom: '1px solid var(--border-glass)',
-    marginBottom: '30px',
-    paddingBottom: '4px',
-    overflowX: 'auto' as const,
-  },
-  tabLink: {
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--text-secondary)',
-    fontFamily: 'var(--font-heading)',
-    fontSize: '0.98rem',
-    fontWeight: 600,
-    padding: '12px 20px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    borderRadius: '8px 8px 0 0',
-    transition: 'var(--transition-fast)',
-    borderBottom: '2px solid transparent',
-    whiteSpace: 'nowrap' as const,
-  },
-  activeTabLink: {
-    color: 'var(--primary)',
-    borderBottomColor: 'var(--primary)',
-    background: 'rgba(255,255,255,0.01)',
-  },
   tabContent: {
     marginTop: '10px',
-  },
-  dropzone: {
-    minHeight: '380px',
-    border: '1.5px dashed var(--border-glass-active)',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    justifyContent: 'center',
-    textAlign: 'center' as const,
-    cursor: 'pointer',
-    padding: '40px 24px',
-    transition: 'var(--transition-smooth)',
   },
   uploadIconCircle: {
     width: '60px',
@@ -1286,10 +1244,6 @@ const styles = {
     marginBottom: '20px',
   },
   editorWorkspace: {
-    display: 'grid',
-    gridTemplateColumns: '320px 1fr',
-    gap: '24px',
-    alignItems: 'start',
   },
   pdfSettings: {
     padding: '24px',
@@ -1437,13 +1391,6 @@ const styles = {
     transition: 'var(--transition-fast)',
   },
   modeToggleGroup: {
-    display: 'flex',
-    gap: '4px',
-    background: 'rgba(0, 0, 0, 0.2)',
-    padding: '4px',
-    borderRadius: '8px',
-    border: '1px solid var(--border-glass)',
-    marginTop: '4px',
   },
   toggleBtn: {
     flex: 1,
