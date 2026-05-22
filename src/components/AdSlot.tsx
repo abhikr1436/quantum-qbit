@@ -10,7 +10,7 @@ interface AdSlotProps {
   style?: React.CSSProperties;
 }
 
-const SHOW_ADS = false; // Set to true when ready to show ads
+const SHOW_ADS = true; // Set to true when ready to show ads
 
 export const AdSlot: React.FC<AdSlotProps> = ({
   id,
