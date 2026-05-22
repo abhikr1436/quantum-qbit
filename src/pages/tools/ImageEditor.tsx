@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import SquareAd from '../../components/Ads';
 import { Sliders, RotateCw, RefreshCw, Download, Upload, Image as ImageIcon, Sparkles, Activity } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { jsPDF } from 'jspdf';

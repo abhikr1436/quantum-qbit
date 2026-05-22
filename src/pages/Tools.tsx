@@ -3,7 +3,6 @@ import { Search, Image, FileText, Calculator, ArrowLeft, Sliders, Hash, Percent 
 import { ImageEditor } from './tools/ImageEditor';
 import { PdfEditor } from './tools/PdfEditor';
 import { MathCalculators } from './tools/MathCalculators';
-import SquareAd from '../components/Ads';
 
 interface ToolsProps {
   selectedTool: string;
@@ -174,11 +173,6 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, def
             <p>No tools matched your search query. Try typing something else!</p>
           </div>
         )}
-
-        {/* Sponsor Ad Section */}
-        <div style={{ marginTop: '40px' }}>
-          <SquareAd id="tools-directory-square-ad" />
-        </div>
       </div>
     </div>
   );

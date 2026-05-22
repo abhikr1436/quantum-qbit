@@ -9,7 +9,6 @@ import ContactUs from './pages/ContactUs';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
 import Admin from './pages/Admin';
-import { BannerAd } from './components/Ads';
 import Sidebar from './components/Sidebar';
 import { usePath, navigate } from './utils/router';
 import { updateSEO } from './utils/seo';
@@ -84,6 +83,15 @@ function App() {
   } else if (path === '/admin') {
     page = 'admin';
   }
+
+  // Toggle body class for admin page to hide the traditional sticky bottom ad
+  useEffect(() => {
+    if (page === 'admin') {
+      document.body.classList.add('page-admin');
+    } else {
+      document.body.classList.remove('page-admin');
+    }
+  }, [page]);
 
   // Dynamic SEO Updates for main pages (Tools and Blogs update their own metadata)
   useEffect(() => {
@@ -219,10 +227,6 @@ function App() {
 
       <Footer setCurrentPage={handleSetCurrentPage} />
 
-      {/* Dynamic Ad Slots (excluding Admin workspace for a clean portal experience) */}
-      {page !== 'admin' && (
-        <BannerAd id="bottom-sticky-banner-ad" />
-      )}
     </div>
   );
 }
