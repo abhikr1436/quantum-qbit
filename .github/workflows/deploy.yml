@@ -47,3 +47,8 @@ jobs:
           local-dir: ./dist/
           server-dir: /public_html/
           dangerous-clean-slate: true
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            .ftp-deploy-sync-state.json
