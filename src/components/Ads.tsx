@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 
 const SHOW_SQUARE_AD = false; // Toggle to enable Square Ads
 const SHOW_BANNER_AD = true; // Toggle to enable Banner Ads
-const SHOW_SIDEBAR_AD = false; // Toggle to enable Sidebar Ads
+const SHOW_SIDEBAR_AD = true; // Toggle to enable Sidebar Ads
 const SHOW_POPUP_AD = false; // Toggle to enable Popup Ads
 
 // ==========================================
@@ -101,7 +101,19 @@ export const BannerAd: React.FC<BannerAdProps> = ({ id, className = '', style })
 
   const containerStyle: React.CSSProperties = hasContent
     ? { ...bannerAdStyle, ...style }
-    : { position: 'fixed', left: '-9999px', bottom: '-9999px', opacity: 0, pointerEvents: 'none', width: '100%', maxWidth: '900px' };
+    : {
+        position: 'fixed',
+        left: '50%',
+        bottom: '20px',
+        transform: 'translateX(-50%)',
+        opacity: 0.001,
+        pointerEvents: 'none',
+        width: '100%',
+        maxWidth: '900px',
+        height: '60px',
+        overflow: 'hidden',
+        zIndex: 1000
+      };
 
   return (
     <div 
@@ -110,7 +122,7 @@ export const BannerAd: React.FC<BannerAdProps> = ({ id, className = '', style })
       style={containerStyle}
     >
       <div style={hasContent ? bannerGlowStyle : { display: 'none' }}></div>
-      <div style={hasContent ? bannerFlexStyle : { display: 'none' }}>
+      <div style={bannerFlexStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexGrow: 1, justifyContent: 'center' }}>
           <span style={hasContent ? bannerBadgeStyle : { display: 'none' }}>SPONSOR AD</span>
           
@@ -120,7 +132,7 @@ export const BannerAd: React.FC<BannerAdProps> = ({ id, className = '', style })
           <div 
             ref={bannerRef} 
             style={{ 
-              display: hasContent ? 'flex' : 'none', 
+              display: 'flex', 
               justifyContent: 'center', 
               alignItems: 'center', 
               minHeight: '60px', 
