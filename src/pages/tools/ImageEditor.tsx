@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Sliders, RotateCw, RefreshCw, Download, Upload, Image as ImageIcon, Sparkles, Activity } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { jsPDF } from 'jspdf';
 
 // -------------------------------------------------------------
 // DPI Metadata Extraction & Injection Utilities (Client-Side)
@@ -181,7 +182,63 @@ const injectJpegDpi = (blob: Blob, dpi: number): Promise<Blob> => {
   });
 };
 
-const formatBytes = (bytes: number, decimals = 2) => {
+export const canvasToBmpBlob = (canvas: HTMLCanvasElement): Blob => {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Could not get canvas context');
+  const width = canvas.width;
+  const height = canvas.height;
+  const imgData = ctx.getImageData(0, 0, width, height);
+  const data = imgData.data;
+
+  const rowSize = Math.floor((24 * width + 31) / 32) * 4;
+  const pixelArraySize = rowSize * height;
+  const fileSize = 54 + pixelArraySize;
+
+  const buffer = new ArrayBuffer(fileSize);
+  const view = new DataView(buffer);
+  const u8 = new Uint8Array(buffer);
+
+  // File Header
+  u8[0] = 0x42; // 'B'
+  u8[1] = 0x4D; // 'M'
+  view.setUint32(2, fileSize, true);
+  view.setUint16(6, 0, true);
+  view.setUint16(8, 0, true);
+  view.setUint32(10, 54, true);
+
+  // DIB Header
+  view.setUint32(14, 40, true);
+  view.setInt32(18, width, true);
+  view.setInt32(22, height, true);
+  view.setUint16(26, 1, true);
+  view.setUint16(28, 24, true); // 24-bit RGB
+  view.setUint32(30, 0, true); // BI_RGB (uncompressed)
+  view.setUint32(34, pixelArraySize, true);
+  view.setInt32(38, 2835, true); // 72 DPI
+  view.setInt32(42, 2835, true);
+  view.setUint32(46, 0, true);
+  view.setUint32(50, 0, true);
+
+  // Pixel data (BGR bottom-up)
+  let offset = 54;
+  for (let y = height - 1; y >= 0; y--) {
+    const rowOffset = y * width * 4;
+    for (let x = 0; x < width; x++) {
+      const px = rowOffset + x * 4;
+      u8[offset++] = data[px + 2]; // B
+      u8[offset++] = data[px + 1]; // G
+      u8[offset++] = data[px];     // R
+    }
+    // padding
+    for (let p = 0; p < rowSize - width * 3; p++) {
+      u8[offset++] = 0;
+    }
+  }
+
+  return new Blob([buffer], { type: 'image/bmp' });
+};
+
+export const formatBytes = (bytes: number, decimals = 2) => {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
@@ -213,7 +270,14 @@ const hexToRgb = (hex: string) => {
 
 export const ImageEditor: React.FC = () => {
   // Navigation tabs in sidebar
-  const [activeTab, setActiveTab] = useState<'adjust' | 'crop' | 'resize' | 'dpi' | 'compress' | 'bg-remove'>('adjust');
+  const [activeTab, setActiveTab] = useState<'adjust' | 'crop' | 'resize' | 'dpi' | 'compress' | 'bg-remove' | 'convert'>('adjust');
+
+  // Format Conversion states
+  const [convertFormat, setConvertFormat] = useState<'png' | 'jpeg' | 'webp' | 'bmp' | 'pdf'>('png');
+  const [convertQuality, setConvertQuality] = useState<number>(90);
+  const [convertedBlob, setConvertedBlob] = useState<Blob | null>(null);
+  const [convertedSizeStr, setConvertedSizeStr] = useState<string>('');
+  const [converting, setConverting] = useState<boolean>(false);
 
   // File metadata states
   const [image, setImage] = useState<string | null>(null);
@@ -1139,6 +1203,74 @@ export const ImageEditor: React.FC = () => {
     setCompressing(false);
   };
 
+  const handleConvertFormat = async () => {
+    if (!image || !previewCanvasRef.current) return;
+    setConverting(true);
+    setConvertedBlob(null);
+    setConvertedSizeStr('');
+
+    // Force clean draw without crop guides
+    drawPreview(true);
+
+    const canvas = previewCanvasRef.current;
+    let blob: Blob | null = null;
+
+    if (convertFormat === 'bmp') {
+      try {
+        blob = canvasToBmpBlob(canvas);
+      } catch (err) {
+        console.error('BMP Conversion failed:', err);
+      }
+    } else if (convertFormat === 'pdf') {
+      try {
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        const pdf = new jsPDF({
+          orientation: canvas.width > canvas.height ? 'l' : 'p',
+          unit: 'px',
+          format: [canvas.width, canvas.height]
+        });
+        pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+        blob = pdf.output('blob');
+      } catch (err) {
+        console.error('PDF Conversion failed:', err);
+      }
+    } else {
+      const mime = `image/${convertFormat}`;
+      const quality = convertQuality / 100;
+      blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, mime, quality));
+    }
+
+    if (blob) {
+      let finalBlob = blob;
+      if (blob.type === 'image/png') {
+        finalBlob = await injectPngDpi(blob, dpi);
+      } else if (blob.type === 'image/jpeg') {
+        finalBlob = await injectJpegDpi(blob, dpi);
+      }
+      setConvertedBlob(finalBlob);
+      setConvertedSizeStr(formatBytes(finalBlob.size));
+    }
+
+    drawPreview();
+    setConverting(false);
+  };
+
+  const downloadConvertedFile = () => {
+    if (!convertedBlob) return;
+    const link = document.createElement('a');
+    const ext: string = convertFormat === 'jpeg' ? 'jpg' : convertFormat;
+    link.download = `${filename}_converted.${ext}`;
+    link.href = URL.createObjectURL(convertedBlob);
+    link.click();
+
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.8 },
+      colors: ['#00f2fe', '#9d4edd', '#ffffff']
+    });
+  };
+
   // -------------------------------------------------------------
   // Download file (incorporating filters, bg removal, and DPI metadata)
   // -------------------------------------------------------------
@@ -1517,6 +1649,12 @@ export const ImageEditor: React.FC = () => {
                 className={`editor-tab-btn ${activeTab === 'bg-remove' ? 'active' : ''}`}
               >
                 Remove BG
+              </button>
+              <button 
+                onClick={() => { setActiveTab('convert'); setEyeDropperActive(false); }} 
+                className={`editor-tab-btn ${activeTab === 'convert' ? 'active' : ''}`}
+              >
+                Convert
               </button>
             </div>
 
@@ -2057,6 +2195,91 @@ export const ImageEditor: React.FC = () => {
               </div>
             )}
 
+            {/* TAB CONTENT: CONVERT FORMAT */}
+            {activeTab === 'convert' && (
+              <div style={styles.tabContent}>
+                <h3 style={styles.sectionHeader}>
+                  <RefreshCw size={15} style={{ color: 'var(--primary)' }} />
+                  <span>Convert Format</span>
+                </h3>
+                <p style={styles.tabText}>
+                  Convert this image to other formats client-side without uploading to any server.
+                </p>
+
+                <div style={styles.controlGroup}>
+                  <span style={styles.inputHelp}>Target Format</span>
+                  <select
+                    value={convertFormat}
+                    onChange={(e) => {
+                      setConvertFormat(e.target.value as any);
+                      setConvertedBlob(null);
+                      setConvertedSizeStr('');
+                    }}
+                    style={styles.selectInput}
+                  >
+                    <option value="png">PNG (.png)</option>
+                    <option value="jpeg">JPEG (.jpg)</option>
+                    <option value="webp">WEBP (.webp)</option>
+                    <option value="bmp">BMP (.bmp)</option>
+                    <option value="pdf">PDF (.pdf)</option>
+                  </select>
+
+                  {(convertFormat === 'jpeg' || convertFormat === 'webp') && (
+                    <div style={{ marginBottom: '16px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <span style={styles.inputHelp}>Quality Factor</span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>{convertQuality}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="10"
+                        max="100"
+                        value={convertQuality}
+                        onChange={(e) => {
+                          setConvertQuality(Number(e.target.value));
+                          setConvertedBlob(null);
+                          setConvertedSizeStr('');
+                        }}
+                        style={styles.rangeInput}
+                      />
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                    <button 
+                      className="btn-primary" 
+                      onClick={handleConvertFormat}
+                      disabled={converting}
+                      style={{ padding: '8px 16px', fontSize: '0.8rem', whiteSpace: 'nowrap', width: '100%' }}
+                    >
+                      {converting ? 'Converting...' : 'Convert Image'}
+                    </button>
+                  </div>
+
+                  {convertedSizeStr ? (
+                    <div style={{ marginTop: '12px' }}>
+                      <div style={styles.successBox}>
+                        <strong>Result:</strong> Ready as {convertFormat.toUpperCase()} ({convertedSizeStr})
+                      </div>
+                      <button
+                        className="btn-primary"
+                        onClick={downloadConvertedFile}
+                        style={{ marginTop: '10px', padding: '10px 16px', width: '100%', backgroundColor: '#10b981', borderColor: '#10b981' }}
+                      >
+                        <Download size={14} style={{ marginRight: '6px' }} /> Download Converted File
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={styles.infoCard}>
+                      <span style={{ fontSize: '0.8rem' }}>
+                        Click <strong>Convert Image</strong> to build the target format before download.
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Sidebar Section: Upload Another */}
             <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
               <button 
@@ -2478,6 +2701,18 @@ const styles = {
     fontSize: '0.85rem',
     outline: 'none',
     transition: 'var(--transition-smooth)',
+  },
+  selectInput: {
+    width: '100%',
+    background: 'rgba(0, 0, 0, 0.15)',
+    border: '1px solid var(--border-glass)',
+    borderRadius: '6px',
+    padding: '8px 10px',
+    color: 'var(--text-primary)',
+    fontSize: '0.85rem',
+    fontFamily: 'var(--font-heading)',
+    outline: 'none',
+    cursor: 'pointer',
   },
   checkboxLabel: {
     display: 'flex',
