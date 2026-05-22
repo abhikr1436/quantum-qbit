@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { X, ExternalLink, ShieldAlert, Cpu } from 'lucide-react';
+import { X } from 'lucide-react';
 
 const SHOW_ADS = true; // Set to false to disable ads globally
 
@@ -15,44 +15,21 @@ interface SquareAdProps {
 export const SquareAd: React.FC<SquareAdProps> = ({ id, className = '', style }) => {
   if (!SHOW_ADS) return null;
 
-  const [adBlocked, setAdBlocked] = useState(false);
-
   useEffect(() => {
     try {
       // @ts-ignore
       (window.adsbygoogle = window.adsbygoogle || []).push({});
     } catch (err) {
-      console.warn('AdSense initialization failed, loading fallback sponsor card:', err);
-      setAdBlocked(true);
+      console.warn('AdSense push error (non-critical):', err);
     }
   }, []);
-
-  if (adBlocked) {
-    return (
-      <div id={id} className={`glass-card ${className}`} style={{ ...squareFallbackStyle, ...style }}>
-        <span style={sponsorTextStyle}>SPONSOR CORNER</span>
-        <div style={squareGlowBgStyle}></div>
-        <div style={squareContentContainerStyle}>
-          <Cpu size={32} style={{ color: 'var(--primary)', marginBottom: '10px' }} />
-          <h4 style={squareTitleStyle}>SECURE LOCAL COMPILING</h4>
-          <p style={squareDescStyle}>
-            Want zero server vulnerabilities? All PDF, image, and calculation tasks process locally in-browser.
-          </p>
-          <a href="#/tools" style={squareBtnStyle}>
-            Try Tool Suite <ExternalLink size={10} />
-          </a>
-        </div>
-        <div style={taglineStyle}>SECURED // LOCAL_ONLY</div>
-      </div>
-    );
-  }
 
   return (
     <div id={id} className={`${className}`} style={{ ...squareAdContainerStyle, ...style }}>
       <span style={sponsorTextStyle}>SPONSOR AD</span>
       <ins
         className="adsbygoogle"
-        style={{ display: 'block', textDecoration: 'none' }}
+        style={{ display: 'block', width: '100%', minHeight: '250px' }}
         data-ad-client="ca-pub-6096598752695949"
         data-ad-slot="9567651830"
         data-ad-format="auto"
@@ -131,44 +108,21 @@ interface SidebarAdProps {
 export const SidebarAd: React.FC<SidebarAdProps> = ({ id, className = '', style }) => {
   if (!SHOW_ADS) return null;
 
-  const [adBlocked, setAdBlocked] = useState(false);
-
   useEffect(() => {
     try {
       // @ts-ignore
       (window.adsbygoogle = window.adsbygoogle || []).push({});
     } catch (err) {
-      console.warn('AdSense sidebar failed to load:', err);
-      setAdBlocked(true);
+      console.warn('AdSense sidebar push error (non-critical):', err);
     }
   }, []);
-
-  if (adBlocked) {
-    return (
-      <div id={id} className={`glass-card ${className}`} style={{ ...sidebarFallbackStyle, ...style }}>
-        <span style={sponsorTextStyle}>PROMOTED CONTENT</span>
-        <div style={sidebarGlowBgStyle}></div>
-        <div style={sidebarContentContainerStyle}>
-          <ShieldAlert size={36} style={{ color: 'var(--primary)', marginBottom: '10px' }} />
-          <h4 style={sidebarTitleStyle}>QUANTUM SHIELD</h4>
-          <p style={sidebarDescStyle}>
-            Encrypt, split, and backup files locally with zero-server vulnerability. 100% offline-first.
-          </p>
-          <a href="#/tools" style={sidebarBtnStyle}>
-            Try Tool <ExternalLink size={12} />
-          </a>
-        </div>
-        <div style={taglineStyle}>SECURED // LOCAL_ONLY</div>
-      </div>
-    );
-  }
 
   return (
     <div id={id} className={`${className}`} style={{ ...sidebarAdContainerStyle, ...style }}>
       <span style={sponsorTextStyle}>SPONSOR AD</span>
       <ins
         className="adsbygoogle"
-        style={{ display: 'block', textDecoration: 'none' }}
+        style={{ display: 'block', width: '100%', minHeight: '300px' }}
         data-ad-client="ca-pub-6096598752695949"
         data-ad-slot="1928374650"
         data-ad-format="vertical"

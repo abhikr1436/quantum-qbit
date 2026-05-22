@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, User, Clock, ArrowLeft, BookOpenText } from 'lucide-react';
 import DOMPurify from 'dompurify';
-import AdSlot from '../components/AdSlot';
+import { SidebarAd } from '../components/Ads';
 import { updateSEO } from '../utils/seo';
 
 interface BlogPost {
@@ -250,7 +250,7 @@ export const Blogs: React.FC<BlogsProps> = ({
 
         {/* Sidebar Column with AdSlot */}
         <aside className="ad-sidebar-col" style={styles.sidebarCol}>
-          <AdSlot id="blog-reader-sidebar-ad" type="sidebar" />
+          <SidebarAd id="blog-reader-sidebar-ad" />
           <div style={sidebarStickyCardStyle} className="glass-card">
             <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '10px', fontFamily: 'var(--font-heading)' }}>Quantum Utilities</h4>
             <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.45, margin: 0 }}>

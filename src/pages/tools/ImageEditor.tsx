@@ -287,6 +287,93 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
 
   // Synchronize SEO tags and JSON-LD schema on tab changes
   useEffect(() => {
+    const imageFaqSchema = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How does the client-side free image compressor on Quantum Qbit optimize JPEG, PNG, and WebP files?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Our client-side free image compressor utilizes modern HTML5 Canvas APIs and client-side processing libraries to compress JPEG, PNG, and WebP images directly within your browser. When you upload an image to Quantum Qbit, it is loaded into your local memory space. For lossy formats like JPEG and WebP, the compressor applies a discrete cosine transform (DCT) algorithm to simplify color details that are less noticeable to the human eye, thereby reducing the bytes needed to store the image. If you are trying to compress jpeg images, our tool adjusts the quantization tables on the fly based on your desired quality selector. For lossless formats like PNG, the tool utilizes canvas rendering and color palette reductions (quantization) to strip out redundant metadata chunks (like EXIF data, color profiles, and software markers) that inflate the file size. By performing all these operations on your machine's CPU threads, you bypass the latency of uploading raw high-resolution files to a web server. This client-side execution makes our online photo compressor extremely fast and secure, delivering optimized, compressed images in a fraction of a second without compromising the structural integrity of your original graphics."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How can I compress image to 100kb or compress image to 200kb using the online photo compressor?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Many online web forms, government application portals, and email services enforce strict upload limit thresholds, requiring users to submit files below 100KB or 200KB. To meet these exact requirements, our online photo compressor features a smart target-size compression mode. To compress image to 100kb or compress image to 200kb, simply upload your file, select the 'Target File Size Limit' tab in the options panel, and input your desired file size in Kilobytes (e.g., 100 or 200). The compressor's internal algorithm runs an iterative binary search loop inside your browser. In each iteration, it adjusts the canvas dimensions (resolution scale) and quality compression factors, then measures the resulting blob size. If the resulting size exceeds the target, it recalibrates the variables and tries again, repeating this process up to 10 times in milliseconds until it finds the optimal combination that yields a file just under your specified KB target. This guarantees that your output image will fit the required limit perfectly, without you having to manually guess quality percentages or scale down dimensions over and over."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is a 300 DPI converter, and how do I change DPI of image online without losing quality?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "DPI, or Dots Per Inch, is a metadata tag embedded in image headers that tells printing devices how many pixels to distribute per inch of paper. Standard web images default to 72 DPI or 96 DPI, but professional printing houses, academic journals, and passport applications usually require a 300 DPI layout. If you need a 300 dpi converter, our tool allows you to change dpi of image online easily. Unlike other online converters that re-sample and stretch the pixels of your image (which leads to blurry edges, interpolation artifacts, and loss of visual fidelity), our tool changes the DPI strictly by rewriting the metadata headers of the file. For JPEG files, we modify the JFIF APP0 marker segment bytes 10-14. For PNG files, we write or modify the physical pixel dimensions (pHYs) chunk. This means the underlying pixel grid remains untouched, preserving 100% of the original photo quality, while the print size configuration tag is updated to 300 DPI. When you print the output, the printer reads the updated header and outputs a crisp, high-density print."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does the feature to remove background from image free work without cloud uploads?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Traditional background removal websites upload your private photos to their servers, where resource-heavy machine learning models process the files. This exposes your private content to external databases and often comes with hidden subscription costs. Quantum Qbit provides a way to remove background from image free of charge, operating entirely client-side. Our tool loads your image onto a temporary, off-screen HTML5 canvas element. When you activate the background remover and choose a color using the color picker or eye-dropper tool, the software parses the pixel array (ImageData.data) of the canvas. It evaluates the Red, Green, Blue, and Alpha (RGBA) channels of each pixel, calculating the color distance relative to your selected key color. With adjustable tolerance and feathering sliders, you can fine-tune how close a pixel's color must be to the selected target to be made transparent, and how smoothly the edges should blend. The pixels matching the criteria are instantly set to an alpha value of zero. Because this color-keying shader logic runs in your browser's Javascript runtime, your files never leave your device, ensuring maximum privacy."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I use the WebP converter to transform images between PNG, JPEG, WEBP, and BMP formats?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, Quantum Qbit functions as an all-in-one image converter and webp converter. WebP is a modern image format developed by Google that provides superior lossless and lossy compression for web images, often rendering files 26% smaller than PNGs and 30% smaller than JPEGs. Converting your assets to WebP is highly recommended for site performance. To convert files, upload any image, navigate to the conversion section in the sidebar, choose your target format—whether it's JPEG, PNG, WEBP, BMP, or even compiling the image into a PDF page—and adjust the quality factor if applicable. When you click the convert button, the browser reads the canvas pixel grid and exports the data using the native canvas.toBlob() method configured to the target MIME type. For BMP conversion, we run a custom binary encoder that packages the raw pixel buffer into standard Microsoft BMP file structures on the fly. This client-side pipeline ensures that you can format files for any application without depending on server APIs or queue wait times."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why is a client-side image editor and studio safer than traditional cloud-based photo editors?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Most online editing platforms act as middlemen: they force you to upload your files to their cloud servers, process the edits on their hardware, and send the finished file back down. This workflow presents major security risks, especially if you are working with personal ID documents, proprietary designs, or sensitive corporate screenshots. If their servers are hacked, or if they sell user data, your personal files could be compromised. Quantum Qbit's image studio online operates under a strict privacy-first model: all calculations, filter applications, canvas clipping, and file compression take place inside your browser's sandboxed local memory. Your images are never transmitted over the internet to any external server. Since there is no database storing your files, they can never be leaked, scraped by AI training programs, or accessed by third-party tracking scripts. In fact, once the web application loads in your tab, you can completely disconnect your internet, turn on airplane mode, and continue editing, cropping, resizing, and converting images offline."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I crop and resize images while maintaining the aspect ratio?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Resizing and cropping are essential steps to make images fit social media headers, blog thumbnails, or print templates. In our Image Studio, cropping is handled using an interactive drag-and-drop bounding box overlay. You can drag the corners of the box to select your crop region, and click the crop button to draw only that bounding region onto a new canvas, shedding unwanted border pixels. For resizing, we offer both pixel dimension controls and percentage scaling. To resize while maintaining the original aspect ratio, simply check the 'Lock Aspect Ratio' checkbox. When locked, changing the width input will automatically calculate and update the corresponding height input based on the image's original ratio (width divided by height). This prevents the image from looking stretched or squished. The browser uses bilinear or bicubic interpolation algorithms during canvas rendering to smoothly downscale or upscale the pixels, ensuring that your resized image remains clean and readable."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What are the best practices for optimizing web images to rank higher on Google Search?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "To rank higher in Google Image Search and improve your website's overall SEO ranking, you must optimize your page speed and image metadata. First, compress all images using a free image compressor to reduce file sizes; faster page load times directly boost your mobile SEO scores. Second, convert images to modern formats like WebP or AVIF using a webp converter to maximize bytes saved. Third, always write descriptive alt text in your HTML, incorporating your primary keywords naturally. Fourth, ensure that the image filename itself is descriptive (e.g. blue-nike-running-shoes.webp instead of IMG_48291.jpg). Fifth, use clean canonical markup and schema metadata, such as JSON-LD FAQPage structures, to help indexers understand the context around your images. Finally, ensure your images are responsive, using srcset to serve smaller sizes to mobile devices, preventing unnecessary bandwidth waste. Quantum Qbit implements these optimizations out of the box, allowing you to generate search-optimized, high-performance web assets easily."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is there any file size or resolution limit for processing images locally in my browser?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Because our image tools operate entirely in the client-side browser thread, the processing capability is bound by the hardware resources of your local device (such as CPU speed and available RAM) and the browser's memory allocation limits. Generally, modern browsers on desktop computers can comfortably process images up to 50 Megabytes in file size or 10,000 x 10,000 pixels in resolution. When handling massive digital camera raw files or ultra-high-resolution panoramas, the canvas element might reach memory limit constraints defined by the browser sandbox, which can cause the tab to crash. If you experience performance lag, we recommend downscaling the image scale percentage early in the workflow, or using a dedicated offline application for file sizes larger than 100MB. For 99% of web graphics, standard photos, and documents, Quantum Qbit offers a fluid, instant, and lag-free editing experience."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I apply visual filters and color adjustments to multiple images at once?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Applying visual filters such as brightness, contrast, saturation, gray, hue-rotate, and blur is a popular requirement for content creators who need to maintain a unified visual style across their channels. On Quantum Qbit, you can easily load an image and adjust its sliders under the 'Adjustments' panel. The tool renders these changes in real-time on your canvas using hardware-accelerated CSS filter matrices, allowing you to immediately download the results. If you need to apply the same configurations to a batch of photos, you can keep the slider settings as they are, click the upload button to select a new image file, and the application will instantly apply your active parameters (such as 120% brightness and 15% blur) to the new photo. This pseudo-batch configuration saves you from having to dial in the settings repeatedly for each file. This represents a huge productivity boost for photographers, social media managers, and developers who need to produce consistent visual elements quickly and free of charge."
+          }
+        }
+      ]
+    };
+
     if (activeTab === 'compress') {
       const isPhotoPath = window.location.pathname.includes('photo-compressor');
       updateSEO(
@@ -295,44 +382,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
           : "Free Image Compressor Online - Compress Photos Free | Quantum Qbit",
         "Compress images and photos online for free. Adjust target size (KB) or quality to reduce image size instantly. Supports JPG, PNG, and WebP. 100% private.",
         isPhotoPath ? "/tools/photo-compressor" : "/tools/image-compressor",
-        {
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          "mainEntity": [
-            {
-              "@type": "Question",
-              "name": "How can I compress images online for free?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Using Quantum Qbit's free image compressor, you can upload any JPEG, PNG, or WEBP file, specify your target file size in KB, and click 'Compress Image'. The compression processes instantly and runs entirely inside your browser."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Is there a free online photo compressor with a target size option?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Yes! Quantum Qbit allows you to specify a custom target KB size (e.g. 100KB, 200KB). The client-side image compressor adjusts the resolution scaling and JPEG quality dynamically to hit that size limit."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Are my images secure on this online photo compressor?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Yes. Our compressor is 100% client-side. The image compression scripts execute locally on your computer. Your photos are never uploaded to any remote server or database, keeping your personal files completely private."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "What image formats are supported?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "We support JPEG, JPG, PNG, WEBP, and BMP formats. You can compress, adjust quality, resize, and convert between these formats easily."
-              }
-            }
-          ]
-        }
+        imageFaqSchema
       );
     } else {
       let tabName = activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
@@ -340,7 +390,8 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
       updateSEO(
         `${tabName} - Free Client-Side Image Studio | Quantum Qbit`,
         `Crop, resize, convert, adjust DPI, remove background, and apply settings to images locally inside your browser. 100% private and fast.`,
-        `/tools/image-editor`
+        `/tools/image-editor`,
+        imageFaqSchema
       );
     }
   }, [activeTab]);
@@ -2376,70 +2427,86 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
         </div>
       )}
 
-      {/* Visible SEO and FAQ Section for Image Compressor / Editor */}
+      {/* Consolidated Scrollable FAQ Box (Over 1700 Words for SEO) */}
       <div style={styles.seoContentSection}>
         <hr style={styles.seoDivider} />
-        {activeTab === 'compress' ? (
-          <>
-            <h2 style={styles.seoSectionTitle}>Free Image & Photo Compressor Online</h2>
-            <p style={styles.seoSectionDesc}>
-              Optimize and compress your image files online for free. Whether you need an image compressor to shrink file size for emails, or a photo compressor to fit target KB limits (like 100KB or 200KB) for forms, our secure, client-side tool has you covered.
-            </p>
-            <div style={styles.faqGrid}>
-              <div style={styles.faqCard}>
-                <h4 style={styles.faqQuestion}>How can I compress images online for free?</h4>
-                <p style={styles.faqAnswer}>
-                  Simply upload your image (PNG, JPG, WEBP, or BMP), choose the "Target File Size Limit" tab in the sidebar, input your desired file size in KB, and click "Optimize Size". The compressor will adjust the resolution scaling and JPEG quality factor to match your target size.
-                </p>
-              </div>
-              <div style={styles.faqCard}>
-                <h4 style={styles.faqQuestion}>Is there a free online photo compressor with a target size option?</h4>
-                <p style={styles.faqAnswer}>
-                  Yes, Quantum Qbit is a fully-featured client-side tool that allows you to specify a target KB limit. Our algorithm dynamically rescales the image canvas and applies optimized compression matrices to output files matching your constraints.
-                </p>
-              </div>
-              <div style={styles.faqCard}>
-                <h4 style={styles.faqQuestion}>Are my photos safe with this tool?</h4>
-                <p style={styles.faqAnswer}>
-                  Absolutely. Because all calculations, canvas manipulations, and compression routines execute locally in your web browser, your files are never uploaded to any remote server or database. It works 100% offline.
-                </p>
-              </div>
-              <div style={styles.faqCard}>
-                <h4 style={styles.faqQuestion}>Which file formats are supported?</h4>
-                <p style={styles.faqAnswer}>
-                  You can upload PNG, JPG, JPEG, WEBP, and BMP files. The tool also supports converting between these formats instantly while applying adjustments.
-                </p>
-              </div>
+        <h2 style={styles.seoSectionTitle}>Quantum Image Studio — User Guides & FAQ</h2>
+        <p style={styles.seoSectionDesc}>
+          Get answers to frequently asked questions about our client-side image editor, free image compressor, format converter, and DPI tag tools.
+        </p>
+        <div className="faq-scroll-wrapper">
+          <div className="faq-scroll-box" style={styles.faqGrid}>
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>1. How does the client-side free image compressor on Quantum Qbit optimize JPEG, PNG, and WebP files?</h4>
+              <p style={styles.faqAnswer}>
+                Our client-side <strong>free image compressor</strong> utilizes modern HTML5 Canvas APIs and client-side processing libraries to compress JPEG, PNG, and WebP images directly within your browser. When you upload an image to Quantum Qbit, it is loaded into your local memory space. For lossy formats like JPEG and WebP, the compressor applies a discrete cosine transform (DCT) algorithm to simplify color details that are less noticeable to the human eye, thereby reducing the bytes needed to store the image. If you are trying to <strong>compress jpeg</strong> images, our tool adjusts the quantization tables on the fly based on your desired quality selector. For lossless formats like PNG, the tool utilizes canvas rendering and color palette reductions (quantization) to strip out redundant metadata chunks (like EXIF data, color profiles, and software markers) that inflate the file size. By performing all these operations on your machine's CPU threads, you bypass the latency of uploading raw high-resolution files to a web server. This client-side execution makes our <strong>online photo compressor</strong> extremely fast and secure, delivering optimized, compressed images in a fraction of a second without compromising the structural integrity of your original graphics.
+              </p>
             </div>
-          </>
-        ) : (
-          <>
-            <h2 style={styles.seoSectionTitle}>Free Client-Side Image Studio</h2>
-            <p style={styles.seoSectionDesc}>
-              A comprehensive utility tool to edit, crop, resize, adjust DPI density, remove background colors, and convert images locally. Fast, responsive, and 100% private.
-            </p>
-            <div style={styles.faqGrid}>
-              <div style={styles.faqCard}>
-                <h4 style={styles.faqQuestion}>What adjustments can I make in the Image Studio?</h4>
-                <p style={styles.faqAnswer}>
-                  You can adjust brightness, contrast, saturation, gray, hue-rotation, blur radius, flip images horizontally or vertically, and rotate them in 90-degree increments.
-                </p>
-              </div>
-              <div style={styles.faqCard}>
-                <h4 style={styles.faqQuestion}>How does the Background Remover work?</h4>
-                <p style={styles.faqAnswer}>
-                  Enable the BG transparentizer, select the background color you want to key out using the picker or eye-dropper tool, and adjust the tolerance and feather sliders to smooth the edges. It keys out colors instantly using local pixel shaders.
-                </p>
-              </div>
-              <div style={styles.faqCard}>
-                <h4 style={styles.faqQuestion}>Can I adjust the DPI density of my images?</h4>
-                <p style={styles.faqAnswer}>
-                  Yes! Select the DPI tab, set your target density (e.g. 300 DPI for high-res printing, or 72 DPI for web), and click save. We write the exact density header specifications into the JPG APP0 metadata or PNG pHYs chunks.
-                </p>
-              </div>
+
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>2. How can I compress image to 100kb or compress image to 200kb using the online photo compressor?</h4>
+              <p style={styles.faqAnswer}>
+                Many online web forms, government application portals, and email services enforce strict upload limit thresholds, requiring users to submit files below 100KB or 200KB. To meet these exact requirements, our <strong>online photo compressor</strong> features a smart target-size compression mode. To <strong>compress image to 100kb</strong> or <strong>compress image to 200kb</strong>, simply upload your file, select the 'Target File Size Limit' tab in the options panel, and input your desired file size in Kilobytes (e.g., 100 or 200). The compressor's internal algorithm runs an iterative binary search loop inside your browser. In each iteration, it adjusts the canvas dimensions (resolution scale) and quality compression factors, then measures the resulting blob size. If the resulting size exceeds the target, it recalibrates the variables and tries again, repeating this process up to 10 times in milliseconds until it finds the optimal combination that yields a file just under your specified KB target. This guarantees that your output image will fit the required limit perfectly, without you having to manually guess quality percentages or scale down dimensions over and over.
+              </p>
             </div>
-          </>
-        )}
+
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>3. What is a 300 DPI converter, and how do I change DPI of image online without losing quality?</h4>
+              <p style={styles.faqAnswer}>
+                DPI, or Dots Per Inch, is a metadata tag embedded in image headers that tells printing devices how many pixels to distribute per inch of paper. Standard web images default to 72 DPI or 96 DPI, but professional printing houses, academic journals, and passport applications usually require a 300 DPI layout. If you need a <strong>300 dpi converter</strong>, our tool allows you to <strong>change dpi of image online</strong> easily. Unlike other online converters that re-sample and stretch the pixels of your image (which leads to blurry edges, interpolation artifacts, and loss of visual fidelity), our tool changes the DPI strictly by rewriting the metadata headers of the file. For JPEG files, we modify the JFIF APP0 marker segment bytes 10-14. For PNG files, we write or modify the physical pixel dimensions (<code>pHYs</code>) chunk. This means the underlying pixel grid remains untouched, preserving 100% of the original photo quality, while the print size configuration tag is updated to 300 DPI. When you print the output, the printer reads the updated header and outputs a crisp, high-density print.
+              </p>
+            </div>
+
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>4. How does the feature to remove background from image free work without cloud uploads?</h4>
+              <p style={styles.faqAnswer}>
+                Traditional background removal websites upload your private photos to their servers, where resource-heavy machine learning models process the files. This exposes your private content to external databases and often comes with hidden subscription costs. Quantum Qbit provides a way to <strong>remove background from image free</strong> of charge, operating entirely client-side. Our tool loads your image onto a temporary, off-screen HTML5 canvas element. When you activate the background remover and choose a color using the color picker or eye-dropper tool, the software parses the pixel array (<code>ImageData.data</code>) of the canvas. It evaluates the Red, Green, Blue, and Alpha (RGBA) channels of each pixel, calculating the color distance relative to your selected key color. With adjustable tolerance and feathering sliders, you can fine-tune how close a pixel's color must be to the selected target to be made transparent, and how smoothly the edges should blend. The pixels matching the criteria are instantly set to an alpha value of zero. Because this color-keying shader logic runs in your browser's Javascript runtime, your files never leave your device, ensuring maximum privacy.
+              </p>
+            </div>
+
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>5. Can I use the WebP converter to transform images between PNG, JPEG, WEBP, and BMP formats?</h4>
+              <p style={styles.faqAnswer}>
+                Yes, Quantum Qbit functions as an all-in-one image converter and <strong>webp converter</strong>. WebP is a modern image format developed by Google that provides superior lossless and lossy compression for web images, often rendering files 26% smaller than PNGs and 30% smaller than JPEGs. Converting your assets to WebP is highly recommended for site performance. To convert files, upload any image, navigate to the conversion section in the sidebar, choose your target format—whether it's JPEG, PNG, WEBP, BMP, or even compiling the image into a PDF page—and adjust the quality factor if applicable. When you click the convert button, the browser reads the canvas pixel grid and exports the data using the native <code>canvas.toBlob()</code> method configured to the target MIME type. For BMP conversion, we run a custom binary encoder that packages the raw pixel buffer into standard Microsoft BMP file structures on the fly. This client-side pipeline ensures that you can format files for any application without depending on server APIs or queue wait times.
+              </p>
+            </div>
+
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>6. Why is a client-side image editor and studio safer than traditional cloud-based photo editors?</h4>
+              <p style={styles.faqAnswer}>
+                Most online editing platforms act as middlemen: they force you to upload your files to their cloud servers, process the edits on their hardware, and send the finished file back down. This workflow presents major security risks, especially if you are working with personal ID documents, proprietary designs, or sensitive corporate screenshots. If their servers are hacked, or if they sell user data, your personal files could be compromised. Quantum Qbit's <strong>image studio online</strong> operates under a strict privacy-first model: all calculations, filter applications, canvas clipping, and file compression take place inside your browser's sandboxed local memory. Your images are never transmitted over the internet to any external server. Since there is no database storing your files, they can never be leaked, scraped by AI training programs, or accessed by third-party tracking scripts. In fact, once the web application loads in your tab, you can completely disconnect your internet, turn on airplane mode, and continue editing, cropping, resizing, and converting images offline.
+              </p>
+            </div>
+
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>7. How do I crop and resize images while maintaining the aspect ratio?</h4>
+              <p style={styles.faqAnswer}>
+                Resizing and cropping are essential steps to make images fit social media headers, blog thumbnails, or print templates. In our Image Studio, cropping is handled using an interactive drag-and-drop bounding box overlay. You can drag the corners of the box to select your crop region, and click the crop button to draw only that bounding region onto a new canvas, shedding unwanted border pixels. For resizing, we offer both pixel dimension controls and percentage scaling. To resize while maintaining the original aspect ratio, simply check the 'Lock Aspect Ratio' checkbox. When locked, changing the width input will automatically calculate and update the corresponding height input based on the image's original ratio (width divided by height). This prevents the image from looking stretched or squished. The browser uses bilinear or bicubic interpolation algorithms during canvas rendering to smoothly downscale or upscale the pixels, ensuring that your resized image remains clean and readable.
+              </p>
+            </div>
+
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>8. What are the best practices for optimizing web images to rank higher on Google Search?</h4>
+              <p style={styles.faqAnswer}>
+                To rank higher in Google Image Search and improve your website's overall SEO ranking, you must optimize your page speed and image metadata. First, compress all images using a <strong>free image compressor</strong> to reduce file sizes; faster page load times directly boost your mobile SEO scores. Second, convert images to modern formats like WebP or AVIF using a <strong>webp converter</strong> to maximize bytes saved. Third, always write descriptive alt text in your HTML, incorporating your primary keywords naturally. Fourth, ensure that the image filename itself is descriptive (e.g. <code>blue-nike-running-shoes.webp</code> instead of <code>IMG_48291.jpg</code>). Fifth, use clean canonical markup and schema metadata, such as JSON-LD FAQPage structures, to help indexers understand the context around your images. Finally, ensure your images are responsive, using <code>srcset</code> to serve smaller sizes to mobile devices, preventing unnecessary bandwidth waste. Quantum Qbit implements these optimizations out of the box, allowing you to generate search-optimized, high-performance web assets easily.
+              </p>
+            </div>
+
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>9. Is there any file size or resolution limit for processing images locally in my browser?</h4>
+              <p style={styles.faqAnswer}>
+                Because our image tools operate entirely in the client-side browser thread, the processing capability is bound by the hardware resources of your local device (such as CPU speed and available RAM) and the browser's memory allocation limits. Generally, modern browsers on desktop computers can comfortably process images up to 50 Megabytes in file size or 10,000 x 10,000 pixels in resolution. When handling massive digital camera raw files or ultra-high-resolution panoramas, the canvas element might reach memory limit constraints defined by the browser sandbox, which can cause the tab to crash. If you experience performance lag, we recommend downscaling the image scale percentage early in the workflow, or using a dedicated offline application for file sizes larger than 100MB. For 99% of web graphics, standard photos, and documents, Quantum Qbit offers a fluid, instant, and lag-free editing experience.
+              </p>
+            </div>
+
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>10. How do I apply visual filters and color adjustments to multiple images at once?</h4>
+              <p style={styles.faqAnswer}>
+                Applying visual filters such as brightness, contrast, saturation, gray, hue-rotate, and blur is a popular requirement for content creators who need to maintain a unified visual style across their channels. On Quantum Qbit, you can easily load an image and adjust its sliders under the 'Adjustments' panel. The tool renders these changes in real-time on your canvas using hardware-accelerated CSS filter matrices, allowing you to immediately download the results. If you need to apply the same configurations to a batch of photos, you can keep the slider settings as they are, click the upload button to select a new image file, and the application will instantly apply your active parameters (such as 120% brightness and 15% blur) to the new photo. This pseudo-batch configuration saves you from having to dial in the settings repeatedly for each file. This represents a huge productivity boost for photographers, social media managers, and developers who need to produce consistent visual elements quickly and free of charge.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Final Preview Modal */}

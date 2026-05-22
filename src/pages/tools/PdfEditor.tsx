@@ -32,6 +32,69 @@ interface PdfEditorProps {
 }
 
 export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
+  // Dynamic FAQ JSON-LD Schema for SEO Structured Data
+  useEffect(() => {
+    const faqSchema = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How do I compress PDF to 100KB, 200KB, or 300KB using this free PDF compressor online?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Compressing PDF documents down to exact limits like 100KB, 200KB, or 300KB is simplified using our browser-based PDF compressor online. Traditional cloud compressor servers blindly scale down all quality matrices uniformly, which often results in blurry text and low resolution content. In contrast, our client-side utility uses a binary search quality optimization algorithm that allows you to specify a custom target KB size directly. The compiler then runs repeated local trials, adjusting compression ratios for embedded JPEG, PNG, or WEBP photos while keeping text vector structures perfectly untouched. Because text elements inside a PDF are stored as vector instructions rather than flat bitmaps, the compressor keeps fonts and vectors 100% sharp. This ensures that even if you shrink a document heavily to fit online government applications or email size restrictions, your headers and sentences remain crisp and readable. You can easily reduce PDF size free of cost without worrying about artifacts. Simply choose the 'Target KB Size' option in our PDF compressor online dashboard, input the desired target file size limit (e.g. 150), and click the optimize button to trigger the instant client-side calculation."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What are the security and privacy benefits of utilizing a client-side offline-first PDF merger and compiler?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "When you use a normal free PDF merger or compiler, you upload sensitive files to a remote cloud server. This exposes your financial records, ID scans, and legal papers to potential data leaks, server hacks, or third-party tracking. Our offline-first web utility solves this by processing all files entirely in your browser's local memory. The merging, compiling, and layout adjustments are executed locally using Javascript libraries like pdf-lib and jsPDF. Your files never touch a remote server, ensuring absolute privacy. Since we don't upload anything, you don't even need an active internet connection to run the tools once the page has loaded. The files are merged on your CPU threads, preventing data interception. This client-side PDF editor and merger is ideal for compliance-heavy sectors like legal offices, student desks, and enterprise projects where uploading proprietary information is strictly prohibited."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does browser-based OCR technology extract text from scanned PDFs to editable Word format?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Scanned PDFs are essentially image files wrapped inside a PDF container. To make them editable, you need OCR (Optical Character Recognition). Our PDF to Word OCR tool uses Tesseract.js, a neural network-based text recognition engine. When you upload a scanned document, the engine loads training data from your browser cache, initializes a worker thread, and starts reading the character outlines directly from the canvas pixels. It groups recognized glyphs into words, sentences, and paragraphs, and writes the output into a downloadable Microsoft Word (.docx) file. Since this text parser works inside your browser sandbox, your documents remain private. This is the ultimate tool to extract text from PDF files for free without risking information leaks or paying expensive subscription fees."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is it possible to convert Word (.docx) and PowerPoint (.pptx) documents to PDF offline?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! Our tool allows you to convert Word documents (.docx), presentations (.pptx), text (.txt), and HTML files into standard vector PDF files completely offline. The tool parses the file's XML elements, extracts fonts, headers, paragraphs, and list items, and builds a clean layout on a canvas. You can edit PPTX slide headers and bullet points directly in the workspace before converting. Once you are satisfied with the preview, click 'Compile to PDF' to generate the document locally. Because it doesn't use external conversion APIs, it is fast, free, and secure."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How can I convert images (PNG/JPG/WEBP) into a single PDF document without cloud uploads?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Our Images to PDF converter allows you to combine multiple images into a single PDF document locally. Simply upload your files, adjust page margins (None, Small, or Standard), choose A4 portrait or landscape orientation, and compile. The compiler scales the images to fit the margins and renders them onto separate pages. You can reorder pages or clear individual images before building. It is perfect for converting documents, photos, or portfolios into a unified PDF file instantly."
+          }
+        }
+      ]
+    };
+
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.id = 'faq-jsonld-pdf';
+    script.innerHTML = JSON.stringify(faqSchema);
+    document.head.appendChild(script);
+
+    return () => {
+      const existing = document.getElementById('faq-jsonld-pdf');
+      if (existing) {
+        document.head.removeChild(existing);
+      }
+    };
+  }, []);
+
   const [activeTab, setActiveTab] = useState<'imgToPdf' | 'compress' | 'officeToPdf' | 'pdfToWord'>(defaultTab || 'imgToPdf');
 
   // Sync state if defaultTab changes (e.g. via deep link navigation)
@@ -1074,41 +1137,6 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
               </div>
             </div>
           )}
-
-          {/* Visible SEO and FAQ Section for PDF Compressor */}
-          <div style={styles.seoContentSection}>
-            <hr style={styles.seoDivider} />
-            <h2 style={styles.seoSectionTitle}>Free PDF Compressor Online - Reduce PDF File Size</h2>
-            <p style={styles.seoSectionDesc}>
-              Optimize and compress your PDF files online for free. Whether you need a PDF compressor online to shrink document size for emails, or a PDF compressor free of charge with custom target size features, our client-side tool provides fast vector resizing with complete privacy.
-            </p>
-            <div style={styles.faqGrid}>
-              <div style={styles.faqCard}>
-                <h4 style={styles.faqQuestion}>How can I compress a PDF online for free?</h4>
-                <p style={styles.faqAnswer}>
-                  Upload your PDF file using the file selector, choose a compression preset (Low, Medium, or High) or specify a specific Target KB Size, and click "Optimize Size". The compressor will shrink your file and offer an instant download.
-                </p>
-              </div>
-              <div style={styles.faqCard}>
-                <h4 style={styles.faqQuestion}>Is my data safe when using this free online PDF compressor?</h4>
-                <p style={styles.faqAnswer}>
-                  Absolutely. Unlike standard cloud-based converters, Quantum Qbit is a 100% client-side web application. Your PDF documents are compiled and rescaled directly on your device, meaning your files are never uploaded to a server or exposed to third parties.
-                </p>
-              </div>
-              <div style={styles.faqCard}>
-                <h4 style={styles.faqQuestion}>Can I compress a PDF to a specific size like 100KB, 200KB, or 300KB?</h4>
-                <p style={styles.faqAnswer}>
-                  Yes! Choose the "Target KB Size" mode, enter your desired target file size limit (e.g., 200), and click "Optimize Size". The tool will dynamically recalculate the image quality and dimensions to hit your target size as closely as possible.
-                </p>
-              </div>
-              <div style={styles.faqCard}>
-                <h4 style={styles.faqQuestion}>Will compressing a PDF degrade its layout or quality?</h4>
-                <p style={styles.faqAnswer}>
-                  Text and vector lines remain perfectly sharp and vector-aligned. The compressor primarily optimizes embedded images by resizing their dimensions and compressing their JPEG/PNG quality. Choose "Low Compression" if you need high print quality.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
@@ -1255,35 +1283,6 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
               </div>
             </div>
           )}
-
-          {/* Visible SEO and FAQ Section for Office to PDF */}
-          <div style={styles.seoContentSection}>
-            <hr style={styles.seoDivider} />
-            <h2 style={styles.seoSectionTitle}>Word & PowerPoint to PDF Converter Online</h2>
-            <p style={styles.seoSectionDesc}>
-              Convert Word (.docx), PowerPoint (.pptx), text (.txt), and HTML documents into vector PDF files locally. Instantly prepare documents for distribution with high styling preservation.
-            </p>
-            <div style={styles.faqGrid}>
-              <div style={styles.faqCard}>
-                <h4 style={styles.faqQuestion}>How do I convert DOCX or PPTX files to PDF?</h4>
-                <p style={styles.faqAnswer}>
-                  Select your document, edit any slides or review the document formatting in the live layout preview panel on the right, and click "Compile to PDF". Your new PDF will compile instantly for saving.
-                </p>
-              </div>
-              <div style={styles.faqCard}>
-                <h4 style={styles.faqQuestion}>Can I edit my PowerPoint slides before compiling?</h4>
-                <p style={styles.faqAnswer}>
-                  Yes! When you upload a .pptx file, we extract all slide text layers into editable input cards. You can modify slide headers and bullet points directly in the workspace before converting to PDF.
-                </p>
-              </div>
-              <div style={styles.faqCard}>
-                <h4 style={styles.faqQuestion}>Is my document layout preserved during conversion?</h4>
-                <p style={styles.faqAnswer}>
-                  We extract textual structures and CSS layout specifications. You can review the exact rendering output in the interactive preview container to verify formatting details before compiling.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
@@ -1395,37 +1394,109 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
               </div>
             </div>
           )}
+        </div>
+      )}
+      {/* Consolidated Scrollable FAQ Box (Over 1700 Words for SEO) */}
+      <div style={styles.seoContentSection}>
+        <hr style={styles.seoDivider} />
+        <h2 style={styles.seoSectionTitle}>Quantum PDF Workshop — User Guides & FAQ</h2>
+        <p style={styles.seoSectionDesc}>
+          Get absolute clarity on how our browser-based utility lets you compress, merge, edit, and convert documents securely without server-side vulnerabilities.
+        </p>
+        <div className="faq-scroll-wrapper">
+          <div className="faq-scroll-box" style={styles.faqGrid}>
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>1. How do I compress PDF to 100KB, 200KB, or 300KB using this free PDF compressor online?</h4>
+              <p style={styles.faqAnswer}>
+                Compressing PDF documents down to exact limits like 100KB, 200KB, or 300KB is simplified using our browser-based PDF compressor online. Traditional cloud compressor servers blindly scale down all quality matrices uniformly, which often results in blurry text and low resolution content. In contrast, our client-side utility uses a binary search quality optimization algorithm that allows you to specify a custom target KB size directly. The compiler then runs repeated local trials, adjusting compression ratios for embedded JPEG, PNG, or WEBP photos while keeping text vector structures perfectly untouched. Because text elements inside a PDF are stored as vector instructions rather than flat bitmaps, the compressor keeps fonts and vectors 100% sharp. This ensures that even if you shrink a document heavily to fit online government applications or email size restrictions, your headers and sentences remain crisp and readable. You can easily reduce PDF size free of cost without worrying about artifacts. Simply choose the 'Target KB Size' option in our PDF compressor online dashboard, input the desired target file size limit (e.g. 150), and click the optimize button to trigger the instant client-side calculation.
+              </p>
+              <p style={{ ...styles.faqAnswer, marginTop: '8px' }}>
+                To achieve the best balance of visual clarity and file footprint, we recommend trying the preset modes first. 'Low Compression' maintains maximum image resolution (ideal for PDF files containing high-resolution engineering prints or detailed diagrams), whereas 'High Compression' targets aggressive size reductions down to 100KB. By executing all iterations in your browser thread, you bypass upload wait times entirely, generating optimized outputs in milliseconds.
+              </p>
+            </div>
 
-          {/* Visible SEO and FAQ Section for PDF to Word OCR */}
-          <div style={styles.seoContentSection}>
-            <hr style={styles.seoDivider} />
-            <h2 style={styles.seoSectionTitle}>Free PDF to Word OCR Converter - Extract Text</h2>
-            <p style={styles.seoSectionDesc}>
-              Convert scanned PDF files, drafts, and image text into editable Microsoft Word (.docx) files using advanced browser-based OCR technology. No server queues, 100% private text extraction.
-            </p>
-            <div style={styles.faqGrid}>
-              <div style={styles.faqCard}>
-                <h4 style={styles.faqQuestion}>How does the PDF to Word OCR extractor work?</h4>
-                <p style={styles.faqAnswer}>
-                  Our tool loads a neural-network-based OCR engine (Tesseract.js) directly inside your web worker. It reads characters from the images or scanned layers of your PDF, parses the sentences, and writes them into a downloadable Word file.
-                </p>
-              </div>
-              <div style={styles.faqCard}>
-                <h4 style={styles.faqQuestion}>Do I need an internet connection to run the OCR scanner?</h4>
-                <p style={styles.faqAnswer}>
-                  The OCR language training files are cached in your browser. Once loaded, the text recognition runs entirely offline in your browser, keeping your documents secure and processing them at local hardware speeds.
-                </p>
-              </div>
-              <div style={styles.faqCard}>
-                <h4 style={styles.faqQuestion}>How do I download the final editable document?</h4>
-                <p style={styles.faqAnswer}>
-                  Click "Scan & Extract to Word" to start the extraction process. Once the progress bar reaches 100%, click "Save Word (.docx) Document" to download the fully editable file containing the parsed text.
-                </p>
-              </div>
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>2. What are the security and privacy benefits of utilizing a client-side offline-first PDF merger and compiler?</h4>
+              <p style={styles.faqAnswer}>
+                When you use a normal free PDF merger or compiler, you upload sensitive files to a remote cloud server. This exposes your financial records, ID scans, and legal papers to potential data leaks, server hacks, or third-party tracking. Our offline-first web utility solves this by processing all files entirely in your browser's local memory. The merging, compiling, and layout adjustments are executed locally using Javascript libraries like pdf-lib and jsPDF. Your files never touch a remote server, ensuring absolute privacy. Since we don't upload anything, you don't even need an active internet connection to run the tools once the page has loaded. The files are merged on your CPU threads, preventing data interception.
+              </p>
+              <p style={{ ...styles.faqAnswer, marginTop: '8px' }}>
+                This client-side PDF editor and merger is ideal for compliance-heavy sectors like legal offices, student desks, and enterprise projects where uploading proprietary information is strictly prohibited. You retain complete custody of your private data, eliminating worries about security compliance, corporate espionage, or unauthorized scraping of confidential business documents.
+              </p>
+            </div>
+
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>3. How does browser-based OCR technology extract text from scanned PDFs to editable Word format?</h4>
+              <p style={styles.faqAnswer}>
+                Scanned PDFs are essentially image files wrapped inside a PDF container. To make them editable, you need OCR (Optical Character Recognition). Our PDF to Word OCR tool uses Tesseract.js, a neural network-based text recognition engine. When you upload a scanned document, the engine loads training data from your browser cache, initializes a worker thread, and starts reading the character outlines directly from the canvas pixels. It groups recognized glyphs into words, sentences, and paragraphs, and writes the output into a downloadable Microsoft Word (.docx) file. Since this text parser works inside your browser sandbox, your documents remain private. This is the ultimate tool to extract text from PDF files for free without risking information leaks or paying expensive subscription fees.
+              </p>
+              <p style={{ ...styles.faqAnswer, marginTop: '8px' }}>
+                The accuracy of text recognition is heavily dependent on the scan DPI and contrast of the input PDF. For optimal results, ensure the input pages are clean, well-lit, and aligned. The engine runs locally using your computer's CPU power, so processing time will scale with the number of pages in the PDF document.
+              </p>
+            </div>
+
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>4. Is it possible to convert Word (.docx) and PowerPoint (.pptx) documents to PDF offline?</h4>
+              <p style={styles.faqAnswer}>
+                Yes! Our tool allows you to convert Word documents (.docx), presentations (.pptx), text (.txt), and HTML files into standard vector PDF files completely offline. The tool parses the file's XML elements, extracts fonts, headers, paragraphs, and list items, and builds a clean layout on a canvas. You can edit PPTX slide headers and bullet points directly in the workspace before converting. Once you are satisfied with the preview, click 'Compile to PDF' to generate the document locally. Because it doesn't use external conversion APIs, it is fast, free, and secure.
+              </p>
+              <p style={{ ...styles.faqAnswer, marginTop: '8px' }}>
+                This is a game-changer for developer documentation and presentation prep. You no longer need to upload slide decks containing sensitive business statistics or university course outlines to random online conversion forms. Our offline converter supports style overrides, rendering typography and vector elements smoothly.
+              </p>
+            </div>
+
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>5. How can I convert images (PNG/JPG/WEBP) into a single PDF document without cloud uploads?</h4>
+              <p style={styles.faqAnswer}>
+                Our Images to PDF converter allows you to combine multiple images into a single PDF document locally. Simply upload your files, adjust page margins (None, Small, or Standard), choose A4 portrait or landscape orientation, and compile. The compiler scales the images to fit the margins and renders them onto separate pages. You can reorder pages or clear individual images before building. It is perfect for converting documents, photos, or portfolios into a unified PDF file instantly.
+              </p>
+              <p style={{ ...styles.faqAnswer, marginTop: '8px' }}>
+                We support dragging-and-dropping to reorder slides, rotating mismatched images before compilation, and compressing sizes individually. This keeps the final compiled PDF optimized and formatted precisely as required.
+              </p>
+            </div>
+
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>6. How does the PDF Compressor optimize file size without losing text legibility?</h4>
+              <p style={styles.faqAnswer}>
+                The PDF compressor targets embedded bitmap images (like screenshots or photographs) which represent 90% of a document's file size. It reduces their resolution and applies quality compression matrices (JPEG/WEBP) to shrink their footprint. In contrast, text blocks, fonts, and drawings are stored as math vectors, which consume almost zero space and are left untouched. This ensures that even high-ratio compression preserves the readability of text while reducing the file size.
+              </p>
+              <p style={{ ...styles.faqAnswer, marginTop: '8px' }}>
+                For files that contain thousands of vector drawing components (such as architectural CAD blueprints or dense mathematical schemas), the tool automatically handles clean compression of color maps and font tables to squeeze out unnecessary metadata, resulting in highly accessible, fast-rendering documents.
+              </p>
+            </div>
+
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>7. What is the difference between client-side OCR and server-side PDF conversion tools?</h4>
+              <p style={styles.faqAnswer}>
+                Server-side tools require uploading your file to a cloud infrastructure, placing you in a processing queue, and downloading the result. If the server is busy or your internet is slow, this takes time. Client-side tools load the conversion logic directly into your browser. The execution speed depends entirely on your device's CPU. This eliminates upload/download times, allows offline usage, and guarantees data security since your files remain on your device.
+              </p>
+              <p style={{ ...styles.faqAnswer, marginTop: '8px' }}>
+                Moreover, server-side tools often hide batch processing, high resolution exports, or scanned OCR limits behind expensive paywalls. Quantum Qbit provides unrestricted usage, meaning you can run OCR scans on multi-page files without payment demands.
+              </p>
+            </div>
+
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>8. How do I optimize PDF document layouts for Google Search SEO and Web Accessibility?</h4>
+              <p style={styles.faqAnswer}>
+                To make your PDFs rank higher on search engines and remain accessible to screen readers, ensure they contain text layers rather than flat images. If your document is scanned, run our OCR tool to extract the text and compile it. Add metadata like title, description, and keywords to the document properties, use headers hierarchically, and compress large decorative images to ensure fast loading times.
+              </p>
+              <p style={{ ...styles.faqAnswer, marginTop: '8px' }}>
+                Google's crawler reads vector text inside PDF documents just like standard HTML pages. By providing clean, structured text tables and reducing image size, search indexers can crawl the content easily, improving your keyword ranks.
+              </p>
+            </div>
+
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>9. Are there any limits on file size when processing documents locally in the browser?</h4>
+              <p style={styles.faqAnswer}>
+                The file size limit is dictated by your browser's available memory sandbox (usually between 512MB and 2GB depending on the browser and device). For standard documents (under 50MB), client-side processing is fast and efficient. For extremely large files (e.g. 500MB scan decks), the browser tab might crash due to out-of-memory errors. In such cases, split the file into smaller sections before processing.
+              </p>
+              <p style={{ ...styles.faqAnswer, marginTop: '8px' }}>
+                This constraint exists to protect system resources from memory leaks. Our code uses streams and canvas chunking to process images dynamically, which reduces memory pressure. This keeps the browser tab stable even when compressing multi-page documents containing rich high-definition visuals.
+              </p>
             </div>
           </div>
         </div>
-      )}
+      </div>
       <div style={{ marginTop: '40px', width: '100%' }}>
         <SquareAd id="pdf-editor-square-ad" />
       </div>

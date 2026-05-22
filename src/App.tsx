@@ -9,7 +9,7 @@ import ContactUs from './pages/ContactUs';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
 import Admin from './pages/Admin';
-import { SidebarAd, BannerAd, PopupAd } from './components/Ads';
+import { BannerAd } from './components/Ads';
 import Sidebar from './components/Sidebar';
 import { usePath, navigate } from './utils/router';
 import { updateSEO } from './utils/seo';
@@ -215,22 +215,13 @@ function App() {
         <main style={styles.mainContent} className="main-content-area">
           {renderPage()}
         </main>
-        
-        {page !== 'admin' && page !== 'landing' && (
-          <aside className="right-ad-sidebar" style={styles.adSidebarWrapper}>
-            <SidebarAd id="sidebar-vertical-ad" />
-          </aside>
-        )}
       </div>
 
       <Footer setCurrentPage={handleSetCurrentPage} />
 
       {/* Dynamic Ad Slots (excluding Admin workspace for a clean portal experience) */}
       {page !== 'admin' && (
-        <>
-          <BannerAd id="bottom-sticky-banner-ad" />
-          <PopupAd id="interstitial-popup-ad" />
-        </>
+        <BannerAd id="bottom-sticky-banner-ad" />
       )}
     </div>
   );
@@ -248,14 +239,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column' as const,
   },
-  adSidebarWrapper: {
-    paddingTop: '100px',
-    paddingRight: '24px',
-    height: 'fit-content',
-    position: 'sticky' as const,
-    top: '0px',
-    zIndex: 5,
-  },
+
 };
 
 export default App;
