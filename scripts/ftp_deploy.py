@@ -124,8 +124,8 @@ def deploy_sftp(host, user, password, dist_path):
         
         # Check possible document root directories
         possible_paths = [
-            'domains/quantumqbit.in/public_html',
             'public_html',
+            'domains/quantumqbit.in/public_html',
             '.'
         ]
         
