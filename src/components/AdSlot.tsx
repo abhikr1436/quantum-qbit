@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { X, ExternalLink, ShieldAlert } from 'lucide-react';
 
 interface AdSlotProps {
@@ -25,6 +25,7 @@ export const AdSlot: React.FC<AdSlotProps> = ({
   const [isVisible, setIsVisible] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
   const [countdown, setCountdown] = useState(3);
+  const bannerRef = useRef<HTMLDivElement>(null);
 
   // For popup delay and session check
   useEffect(() => {
@@ -64,6 +65,23 @@ export const AdSlot: React.FC<AdSlotProps> = ({
       }
     }
   }, [adClient, adSlotId, isVisible, showPopup, type]);
+
+  // PrizeFamily Dynamic Banner Ad Loader
+  useEffect(() => {
+    if (type !== 'banner' || !isVisible || !bannerRef.current) return;
+    
+    const container = bannerRef.current;
+    container.innerHTML = '';
+    
+    const script = document.createElement('script');
+    script.src = "//prizefamily.com/b/X.V-sOdXG/l/0/YeWece/jeEmo9/uuZ/UwlskfPYTkcIw/NDj/gJ0IO-DAEDtGNczzAE2/OTDUQp4/NBQS";
+    script.async = true;
+    script.referrerPolicy = 'no-referrer-when-downgrade';
+    // @ts-ignore
+    script.settings = {};
+    
+    container.appendChild(script);
+  }, [type, isVisible]);
 
   const handleClose = () => {
     setIsVisible(false);
@@ -116,17 +134,13 @@ export const AdSlot: React.FC<AdSlotProps> = ({
           <div style={bannerFallbackStyle} className="glass-card">
             <div style={bannerGlowStyle}></div>
             <div style={bannerFlexStyle}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={bannerBadgeStyle}>SPONSOR</span>
-                <div>
-                  <h4 style={bannerTitleStyle}>QUANTUM CONVERTER PRO</h4>
-                  <p style={bannerDescStyle}>Optimize JPG, PNG, WebP & PDFs locally inside your browser cache.</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexGrow: 1, justifyContent: 'center' }}>
+                <span style={bannerBadgeStyle}>SPONSOR AD</span>
+                <div ref={bannerRef} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60px', width: '100%', maxWidth: '728px' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Loading ad placement...</span>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <a href="#/tools" style={bannerBtnStyle}>
-                  Launch App
-                </a>
                 <button onClick={handleClose} style={closeBtnStyle} title="Dismiss Ad">
                   <X size={16} />
                 </button>
