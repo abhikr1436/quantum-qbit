@@ -34,6 +34,7 @@ jobs:
           # Strip protocol prefix (e.g. ftp://) and trailing port if they exist
           HOST=$(echo "${{ secrets.SFTP_SERVER }}" | sed -e 's|^[^/]*//||' -e 's|:[0-9]*$||')
           echo "CLEAN_HOST=$HOST" >> $GITHUB_ENV
+          echo "Resolved FTP host: $HOST"
 
       - name: Upload files via FTP to Hostinger
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -41,8 +42,8 @@ jobs:
           server: ${{ env.CLEAN_HOST }}
           username: ${{ secrets.SFTP_USERNAME }}
           password: ${{ secrets.SFTP_PASSWORD }}
-          port: ${{ secrets.SFTP_PORT || 21 }}
+          port: 21
           protocol: ftp
           local-dir: ./dist/
-          server-dir: public_html/
-          dangerous-clean-slate: false
+          server-dir: /public_html/
+          dangerous-clean-slate: true
