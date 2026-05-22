@@ -124,8 +124,8 @@ def deploy_sftp(host, user, password, dist_path):
         
         # Check possible document root directories
         possible_paths = [
-            'public_html',
             'domains/quantumqbit.in/public_html',
+            'public_html',
             '.'
         ]
         
@@ -190,13 +190,18 @@ def deploy_ftp(host, user, password, dist_path):
         print("\n=== FTP ROOT ===")
         ftp.retrlines('LIST')
 
-        # Navigate to public_html
-        print("\nNavigating to public_html...")
-        try:
-            ftp.cwd('public_html')
-            print(f"Now in: {ftp.pwd()}")
-        except ftplib.error_perm as e:
-            print(f"Could not change directory to public_html: {e}")
+        # Navigate to document root
+        print("\nNavigating to document root...")
+        navigated = False
+        for p in ['domains/quantumqbit.in/public_html', 'public_html']:
+            try:
+                ftp.cwd(p)
+                print(f"Successfully changed FTP directory to: {ftp.pwd()}")
+                navigated = True
+                break
+            except ftplib.error_perm:
+                continue
+        if not navigated:
             print("Deploying to the current root directory.")
 
         print("\n=== FTP CURRENT FILES ===")
