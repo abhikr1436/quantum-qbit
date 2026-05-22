@@ -15,21 +15,25 @@ interface SquareAdProps {
 export const SquareAd: React.FC<SquareAdProps> = ({ id, className = '', style }) => {
   if (!SHOW_ADS) return null;
 
+  const adRef = useRef<HTMLModElement>(null);
+
   useEffect(() => {
     try {
-      // @ts-ignore
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      if (adRef.current && !adRef.current.hasAttribute('data-adsbygoogle-status')) {
+        // @ts-ignore
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      }
     } catch (err) {
       console.warn('AdSense push error (non-critical):', err);
     }
   }, []);
 
   return (
-    <div id={id} className={`${className}`} style={{ ...squareAdContainerStyle, ...style }}>
-      <span style={sponsorTextStyle}>SPONSOR AD</span>
+    <div id={id} className={className} style={{ width: '100%', margin: '20px auto', display: 'flex', justifyContent: 'center', ...style }}>
       <ins
+        ref={adRef}
         className="adsbygoogle"
-        style={{ display: 'block', width: '100%', minHeight: '250px' }}
+        style={{ display: 'block', width: '100%', maxWidth: '336px' }}
         data-ad-client="ca-pub-6096598752695949"
         data-ad-slot="9567651830"
         data-ad-format="auto"
@@ -52,6 +56,7 @@ export const BannerAd: React.FC<BannerAdProps> = ({ id, className = '', style })
   if (!SHOW_ADS) return null;
 
   const [isVisible, setIsVisible] = useState(true);
+  const [hasContent, setHasContent] = useState(false);
   const bannerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -59,6 +64,17 @@ export const BannerAd: React.FC<BannerAdProps> = ({ id, className = '', style })
     
     const container = bannerRef.current;
     container.innerHTML = '';
+    
+    // Set up MutationObserver to detect when actual ad content is injected
+    const observer = new MutationObserver(() => {
+      const children = Array.from(container.childNodes);
+      const hasAdElements = children.some(node => node.nodeName !== 'SCRIPT');
+      if (hasAdElements) {
+        setHasContent(true);
+      }
+    });
+
+    observer.observe(container, { childList: true, subtree: true });
     
     const script = document.createElement('script');
     script.src = "//prizefamily.com/b/X.V-sOdXG/l/0/YeWece/jeEmo9/uuZ/UwlskfPYTkcIw/NDj/gJ0IO-DAEDtGNczzAE2/OTDUQp4/NBQS";
@@ -68,6 +84,10 @@ export const BannerAd: React.FC<BannerAdProps> = ({ id, className = '', style })
     script.settings = {};
     
     container.appendChild(script);
+
+    return () => {
+      observer.disconnect();
+    };
   }, [isVisible]);
 
   const handleClose = () => {
@@ -76,17 +96,25 @@ export const BannerAd: React.FC<BannerAdProps> = ({ id, className = '', style })
 
   if (!isVisible) return null;
 
+  const containerStyle: React.CSSProperties = hasContent
+    ? { ...bannerAdStyle, ...style }
+    : { position: 'fixed', left: '-9999px', bottom: '-9999px', opacity: 0, pointerEvents: 'none', width: '100%', maxWidth: '900px' };
+
   return (
-    <div id={id} className={`glass-card ${className}`} style={{ ...bannerAdStyle, ...style }}>
-      <div style={bannerGlowStyle}></div>
-      <div style={bannerFlexStyle}>
+    <div 
+      id={id} 
+      className={hasContent ? `glass-card ${className}` : className} 
+      style={containerStyle}
+    >
+      <div style={hasContent ? bannerGlowStyle : { display: 'none' }}></div>
+      <div style={hasContent ? bannerFlexStyle : { display: 'none' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexGrow: 1, justifyContent: 'center' }}>
-          <span style={bannerBadgeStyle}>SPONSOR AD</span>
+          <span style={hasContent ? bannerBadgeStyle : { display: 'none' }}>SPONSOR AD</span>
           <div ref={bannerRef} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60px', width: '100%', maxWidth: '728px' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Loading ad placement...</span>
+            {!hasContent && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Loading ad...</span>}
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+        <div style={hasContent ? { display: 'flex', alignItems: 'center', gap: '15px' } : { display: 'none' }}>
           <button onClick={handleClose} style={closeBtnStyle} title="Dismiss Ad">
             <X size={16} />
           </button>
@@ -108,21 +136,25 @@ interface SidebarAdProps {
 export const SidebarAd: React.FC<SidebarAdProps> = ({ id, className = '', style }) => {
   if (!SHOW_ADS) return null;
 
+  const adRef = useRef<HTMLModElement>(null);
+
   useEffect(() => {
     try {
-      // @ts-ignore
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      if (adRef.current && !adRef.current.hasAttribute('data-adsbygoogle-status')) {
+        // @ts-ignore
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      }
     } catch (err) {
       console.warn('AdSense sidebar push error (non-critical):', err);
     }
   }, []);
 
   return (
-    <div id={id} className={`${className}`} style={{ ...sidebarAdContainerStyle, ...style }}>
-      <span style={sponsorTextStyle}>SPONSOR AD</span>
+    <div id={id} className={className} style={{ width: '100%', margin: '20px auto', display: 'flex', justifyContent: 'center', ...style }}>
       <ins
+        ref={adRef}
         className="adsbygoogle"
-        style={{ display: 'block', width: '100%', minHeight: '300px' }}
+        style={{ display: 'block', width: '100%', maxWidth: '300px' }}
         data-ad-client="ca-pub-6096598752695949"
         data-ad-slot="1928374650"
         data-ad-format="vertical"
