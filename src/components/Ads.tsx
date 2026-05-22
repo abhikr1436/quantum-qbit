@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { X } from 'lucide-react';
 
 const SHOW_SQUARE_AD = false; // Toggle to enable Square Ads
-const SHOW_BANNER_AD = false; // Toggle to enable Banner Ads
+const SHOW_BANNER_AD = true; // Toggle to enable Banner Ads
 const SHOW_SIDEBAR_AD = false; // Toggle to enable Sidebar Ads
 const SHOW_POPUP_AD = false; // Toggle to enable Popup Ads
 
