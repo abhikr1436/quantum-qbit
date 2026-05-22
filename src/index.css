@@ -756,7 +756,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 .pdf-tabs-container,
 .math-tabs-container,
-.editor-tabs-container,
 .admin-tabs-container {
   display: flex;
   gap: 8px;
@@ -767,9 +766,17 @@ input[type="range"]::-webkit-slider-thumb:hover {
   scrollbar-width: none; /* Hide scrollbar for Clean view */
 }
 
+.editor-tabs-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding-bottom: 4px;
+  overflow-x: visible;
+}
+
 .pdf-tabs-container::-webkit-scrollbar,
 .math-tabs-container::-webkit-scrollbar,
-.editor-tabs-container::-webkit-scrollbar,
 .admin-tabs-container::-webkit-scrollbar {
   display: none;
 }
