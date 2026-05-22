@@ -136,13 +136,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Scrollable Navigation Items */}
         <div style={styles.scrollArea}>
           {/* Home option */}
-          <button 
+          <a 
+            href="/"
             className={`sidebar-nav-item ${currentPage === 'landing' ? 'active' : ''}`}
-            onClick={() => handleNav('landing')}
+            onClick={(e) => { e.preventDefault(); handleNav('landing'); }}
+            style={{ textDecoration: 'none' }}
           >
             <Home size={18} />
             <span>Home</span>
-          </button>
+          </a>
 
           {/* Tools options with suboptions */}
           <div style={styles.groupContainer}>
@@ -157,27 +159,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
             
             {toolsExpanded && (
               <div style={styles.subItemsContainer}>
-                <button 
+                <a 
+                  href="/tools/image-editor"
                   className={`sidebar-sub-item ${currentPage === 'tools' && selectedTool === 'image-editor' ? 'active' : ''}`}
-                  onClick={() => handleToolNav('image-editor')}
+                  onClick={(e) => { e.preventDefault(); handleToolNav('image-editor'); }}
+                  style={{ textDecoration: 'none' }}
                 >
                   <Image size={15} />
                   <span>Image Studio</span>
-                </button>
-                <button 
+                </a>
+                <a 
+                  href="/tools/pdf-editor"
                   className={`sidebar-sub-item ${currentPage === 'tools' && selectedTool === 'pdf-editor' ? 'active' : ''}`}
-                  onClick={() => handleToolNav('pdf-editor')}
+                  onClick={(e) => { e.preventDefault(); handleToolNav('pdf-editor'); }}
+                  style={{ textDecoration: 'none' }}
                 >
                   <FileText size={15} />
                   <span>PDF Workshop</span>
-                </button>
-                <button 
+                </a>
+                <a 
+                  href="/tools/math-calculators"
                   className={`sidebar-sub-item ${currentPage === 'tools' && selectedTool === 'math-calculators' ? 'active' : ''}`}
-                  onClick={() => handleToolNav('math-calculators')}
+                  onClick={(e) => { e.preventDefault(); handleToolNav('math-calculators'); }}
+                  style={{ textDecoration: 'none' }}
                 >
                   <Calculator size={15} />
                   <span>Math Workbench</span>
-                </button>
+                </a>
               </div>
             )}
           </div>
@@ -195,45 +203,53 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             {blogsExpanded && (
               <div style={styles.subItemsContainer}>
-                <button 
+                <a 
+                  href="/blogs"
                   className={`sidebar-sub-item ${currentPage === 'blogs' && selectedCategory === 'all' ? 'active' : ''}`}
-                  onClick={() => handleCategoryNav('all')}
+                  onClick={(e) => { e.preventDefault(); handleCategoryNav('all'); }}
+                  style={{ textDecoration: 'none' }}
                 >
                   <Compass size={15} />
                   <span>All Articles</span>
-                </button>
+                </a>
                 
                 {categories.map((cat) => (
-                  <button 
+                  <a 
                     key={cat.id}
+                    href="/blogs"
                     className={`sidebar-sub-item ${currentPage === 'blogs' && selectedCategory === cat.id ? 'active' : ''}`}
-                    onClick={() => handleCategoryNav(cat.id)}
+                    onClick={(e) => { e.preventDefault(); handleCategoryNav(cat.id); }}
+                    style={{ textDecoration: 'none' }}
                   >
                     <BookOpen size={15} style={{ opacity: 0.6 }} />
                     <span style={styles.subItemText}>{cat.name}</span>
-                  </button>
+                  </a>
                 ))}
               </div>
             )}
           </div>
 
           {/* About option */}
-          <button 
+          <a 
+            href="/about"
             className={`sidebar-nav-item ${currentPage === 'about' ? 'active' : ''}`}
-            onClick={() => handleNav('about')}
+            onClick={(e) => { e.preventDefault(); handleNav('about'); }}
+            style={{ textDecoration: 'none' }}
           >
             <Info size={18} />
             <span>About Us</span>
-          </button>
+          </a>
 
           {/* Contact option */}
-          <button 
+          <a 
+            href="/contact"
             className={`sidebar-nav-item ${currentPage === 'contact' ? 'active' : ''}`}
-            onClick={() => handleNav('contact')}
+            onClick={(e) => { e.preventDefault(); handleNav('contact'); }}
+            style={{ textDecoration: 'none' }}
           >
             <Phone size={18} />
             <span>Contact Us</span>
-          </button>
+          </a>
         </div>
 
         {/* Sidebar Footer info */}

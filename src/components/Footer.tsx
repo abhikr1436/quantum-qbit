@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Cpu, Mail, Send } from 'lucide-react';
+import { navigate } from '../utils/router';
 
 interface FooterProps {
   setCurrentPage: (page: string) => void;
@@ -20,7 +21,11 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
 
   const handleNavClick = (pageId: string) => {
     setCurrentPage(pageId);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDirectNavigate = (e: React.MouseEvent, path: string) => {
+    e.preventDefault();
+    navigate(path);
   };
 
   return (
@@ -29,9 +34,11 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
         <div style={styles.grid}>
           {/* Brand Info */}
           <div style={styles.brandCol}>
-            <div style={styles.logo} onClick={() => handleNavClick('landing')}>
-              <img src="/logo.png" alt="Quantum Qbit Logo" className="logo-img" />
-            </div>
+            <a href="/" onClick={(e) => handleDirectNavigate(e, '/')} style={{ textDecoration: 'none' }}>
+              <div style={styles.logo}>
+                <img src="/logo.png" alt="Quantum Qbit Logo" className="logo-img" />
+              </div>
+            </a>
             <p style={styles.description}>
               Empowering developers, designers, and students with high-performance,
               client-side web tools. No server uploads, total privacy, instant results.
@@ -53,11 +60,11 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
           <div style={styles.linksCol}>
             <h4 style={styles.colTitle}>Navigation</h4>
             <ul style={styles.linksList}>
-              <li><button onClick={() => handleNavClick('landing')} style={styles.footerBtn}>Home</button></li>
-              <li><button onClick={() => handleNavClick('tools')} style={styles.footerBtn}>Web Tools</button></li>
-              <li><button onClick={() => handleNavClick('blogs')} style={styles.footerBtn}>Blog Articles</button></li>
-              <li><button onClick={() => handleNavClick('about')} style={styles.footerBtn}>About Our Mission</button></li>
-              <li><button onClick={() => handleNavClick('contact')} style={styles.footerBtn}>Get in Touch</button></li>
+              <li><a href="/" onClick={(e) => handleDirectNavigate(e, '/')} style={{...styles.footerBtn, textDecoration: 'none'}}>Home</a></li>
+              <li><a href="/tools" onClick={(e) => handleDirectNavigate(e, '/tools')} style={{...styles.footerBtn, textDecoration: 'none'}}>Web Tools</a></li>
+              <li><a href="/blogs" onClick={(e) => handleDirectNavigate(e, '/blogs')} style={{...styles.footerBtn, textDecoration: 'none'}}>Blog Articles</a></li>
+              <li><a href="/about" onClick={(e) => handleDirectNavigate(e, '/about')} style={{...styles.footerBtn, textDecoration: 'none'}}>About Our Mission</a></li>
+              <li><a href="/contact" onClick={(e) => handleDirectNavigate(e, '/contact')} style={{...styles.footerBtn, textDecoration: 'none'}}>Get in Touch</a></li>
             </ul>
           </div>
 
@@ -65,11 +72,11 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
           <div style={styles.linksCol}>
             <h4 style={styles.colTitle}>Popular Tools</h4>
             <ul style={styles.linksList}>
-              <li><button onClick={() => handleNavClick('tools')} style={styles.footerBtn}>Image Editor</button></li>
-              <li><button onClick={() => handleNavClick('tools')} style={styles.footerBtn}>PDF Converter</button></li>
-              <li><button onClick={() => handleNavClick('tools')} style={styles.footerBtn}>Scientific Calculator</button></li>
-              <li><button onClick={() => handleNavClick('tools')} style={styles.footerBtn}>Base Number Converter</button></li>
-              <li><button onClick={() => handleNavClick('tools')} style={styles.footerBtn}>Unit Calculator</button></li>
+              <li><a href="/tools/pdf-compressor" onClick={(e) => handleDirectNavigate(e, '/tools/pdf-compressor')} style={{...styles.footerBtn, textDecoration: 'none'}}>PDF Compressor Online</a></li>
+              <li><a href="/tools/image-compressor" onClick={(e) => handleDirectNavigate(e, '/tools/image-compressor')} style={{...styles.footerBtn, textDecoration: 'none'}}>Image Compressor Free</a></li>
+              <li><a href="/tools/image-editor" onClick={(e) => handleDirectNavigate(e, '/tools/image-editor')} style={{...styles.footerBtn, textDecoration: 'none'}}>Image Studio (Editor)</a></li>
+              <li><a href="/tools/pdf-editor" onClick={(e) => handleDirectNavigate(e, '/tools/pdf-editor')} style={{...styles.footerBtn, textDecoration: 'none'}}>PDF Workshop (Convert)</a></li>
+              <li><a href="/tools/math-calculators" onClick={(e) => handleDirectNavigate(e, '/tools/math-calculators')} style={{...styles.footerBtn, textDecoration: 'none'}}>Math Workbench</a></li>
             </ul>
           </div>
 
@@ -111,9 +118,9 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
             © {new Date().getFullYear()} Quantum Qbit. Built with privacy and speed in mind.
           </p>
           <div style={styles.bottomLinks}>
-            <button onClick={() => handleNavClick('privacy')} style={styles.bottomLinkBtn}>Privacy Policy</button>
-            <button onClick={() => handleNavClick('terms')} style={styles.bottomLinkBtn}>Terms & Conditions</button>
-            <button onClick={() => handleNavClick('admin')} style={styles.bottomLinkBtn}>Admin Portal</button>
+            <a href="/privacy" onClick={(e) => handleDirectNavigate(e, '/privacy')} style={{...styles.bottomLinkBtn, textDecoration: 'none'}}>Privacy Policy</a>
+            <a href="/terms" onClick={(e) => handleDirectNavigate(e, '/terms')} style={{...styles.bottomLinkBtn, textDecoration: 'none'}}>Terms & Conditions</a>
+            <a href="/admin" onClick={(e) => handleDirectNavigate(e, '/admin')} style={{...styles.bottomLinkBtn, textDecoration: 'none'}}>Admin Portal</a>
           </div>
         </div>
       </div>

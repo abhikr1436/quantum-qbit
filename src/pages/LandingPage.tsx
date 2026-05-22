@@ -1,12 +1,8 @@
 import React from 'react';
 import { Cpu, Image, FileText, Calculator, ShieldCheck, Zap, Lock, ArrowRight, BookOpen } from 'lucide-react';
+import { navigate } from '../utils/router';
 
-interface LandingPageProps {
-  setCurrentPage: (page: string) => void;
-  setSelectedTool?: (toolId: string) => void;
-}
-
-export const LandingPage: React.FC<LandingPageProps> = ({ setCurrentPage, setSelectedTool }) => {
+export const LandingPage: React.FC = () => {
   const features = [
     {
       icon: <Lock size={20} style={{ color: 'var(--primary)' }} />,
@@ -50,11 +46,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setCurrentPage, setSel
   ];
 
   const handleToolClick = (toolId: string) => {
-    if (setSelectedTool) {
-      setSelectedTool(toolId);
-    }
-    setCurrentPage('tools');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigate(`/tools/${toolId}`);
   };
 
   return (
@@ -76,10 +68,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setCurrentPage, setSel
             A curated suite of minimal, high-performance web applications designed with absolute privacy. No uploads, no registrations, completely client-side.
           </p>
           <div style={styles.ctaGroup}>
-            <button className="btn-primary" onClick={() => setCurrentPage('tools')}>
+            <button className="btn-primary" onClick={() => navigate('/tools')}>
               Explore Tools <ArrowRight size={16} />
             </button>
-            <button className="btn-secondary" onClick={() => setCurrentPage('about')}>
+            <button className="btn-secondary" onClick={() => navigate('/about')}>
               Learn Our Mission
             </button>
           </div>
@@ -149,10 +141,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setCurrentPage, setSel
             All tools are free to use. Learn how we respect your data or browse articles on how to maximize your workflow on our blog.
           </p>
           <div style={styles.ctaButtons}>
-            <button className="btn-primary" onClick={() => setCurrentPage('tools')}>
+            <button className="btn-primary" onClick={() => navigate('/tools')}>
               Start Using Tools
             </button>
-            <button className="btn-secondary" onClick={() => setCurrentPage('blogs')}>
+            <button className="btn-secondary" onClick={() => navigate('/blogs')}>
               <BookOpen size={16} /> Read the Blog
             </button>
           </div>

@@ -7,9 +7,10 @@ import { MathCalculators } from './tools/MathCalculators';
 interface ToolsProps {
   selectedTool: string;
   setSelectedTool: (toolId: string) => void;
+  defaultTab?: string;
 }
 
-export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool }) => {
+export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, defaultTab }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
 
@@ -61,11 +62,13 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool }) =
     return (
       <div style={styles.toolContainer}>
         <div style={styles.backBar}>
-          <button style={styles.backBtn} onClick={() => setSelectedTool('none')}>
-            <ArrowLeft size={16} /> Back to Tools Directory
-          </button>
+          <a href="/tools" onClick={(e) => { e.preventDefault(); setSelectedTool('none'); }} style={{ textDecoration: 'none' }}>
+            <span style={styles.backBtn}>
+              <ArrowLeft size={16} /> Back to Tools Directory
+            </span>
+          </a>
         </div>
-        <ImageEditor />
+        <ImageEditor defaultTab={defaultTab as any} />
       </div>
     );
   }
@@ -74,11 +77,13 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool }) =
     return (
       <div style={styles.toolContainer}>
         <div style={styles.backBar}>
-          <button style={styles.backBtn} onClick={() => setSelectedTool('none')}>
-            <ArrowLeft size={16} /> Back to Tools Directory
-          </button>
+          <a href="/tools" onClick={(e) => { e.preventDefault(); setSelectedTool('none'); }} style={{ textDecoration: 'none' }}>
+            <span style={styles.backBtn}>
+              <ArrowLeft size={16} /> Back to Tools Directory
+            </span>
+          </a>
         </div>
-        <PdfEditor />
+        <PdfEditor defaultTab={defaultTab as any} />
       </div>
     );
   }
@@ -87,9 +92,11 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool }) =
     return (
       <div style={styles.toolContainer}>
         <div style={styles.backBar}>
-          <button style={styles.backBtn} onClick={() => setSelectedTool('none')}>
-            <ArrowLeft size={16} /> Back to Tools Directory
-          </button>
+          <a href="/tools" onClick={(e) => { e.preventDefault(); setSelectedTool('none'); }} style={{ textDecoration: 'none' }}>
+            <span style={styles.backBtn}>
+              <ArrowLeft size={16} /> Back to Tools Directory
+            </span>
+          </a>
         </div>
         <MathCalculators />
       </div>
@@ -147,13 +154,17 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool }) =
                 </div>
                 <h3 style={styles.cardTitle}>{tool.title}</h3>
                 <p style={styles.cardDesc}>{tool.description}</p>
-                <button
+                <a
+                  href={`/tools/${tool.id}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setSelectedTool(tool.id);
+                  }}
                   className="btn-primary"
-                  style={styles.openBtn}
-                  onClick={() => setSelectedTool(tool.id)}
+                  style={{ ...styles.openBtn, textDecoration: 'none', display: 'flex' }}
                 >
                   Open Tool
-                </button>
+                </a>
               </div>
             ))}
           </div>

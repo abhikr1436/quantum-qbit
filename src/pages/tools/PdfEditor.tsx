@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FileText, Image as ImageIcon, Upload, Trash, ArrowUp, ArrowDown, Download, Check, Copy, Settings, RefreshCw, FileCode } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import confetti from 'canvas-confetti';
@@ -7,6 +7,8 @@ import { createWorker } from 'tesseract.js';
 import { Document, Packer, Paragraph, TextRun } from 'docx';
 import mammoth from 'mammoth';
 import JSZip from 'jszip';
+import { navigate } from '../../utils/router';
+import { updateSEO } from '../../utils/seo';
 
 // Configure worker for pdfjs-dist
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
@@ -24,8 +26,86 @@ interface SlideData {
   bullets: string[];
 }
 
-export const PdfEditor: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'imgToPdf' | 'compress' | 'officeToPdf' | 'pdfToWord'>('imgToPdf');
+interface PdfEditorProps {
+  defaultTab?: 'imgToPdf' | 'compress' | 'officeToPdf' | 'pdfToWord';
+}
+
+export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
+  const [activeTab, setActiveTab] = useState<'imgToPdf' | 'compress' | 'officeToPdf' | 'pdfToWord'>(defaultTab || 'imgToPdf');
+
+  // Sync state if defaultTab changes (e.g. via deep link navigation)
+  useEffect(() => {
+    if (defaultTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab]);
+
+  // Synchronize SEO tags and JSON-LD schema on tab changes
+  useEffect(() => {
+    if (activeTab === 'imgToPdf') {
+      updateSEO(
+        "Convert Images to PDF Online - Free Image to PDF Converter | Quantum Qbit",
+        "Free, secure online tool to convert PNG, JPG, and WEBP images to PDF documents. 100% client-side compilation - your images are never sent to a server.",
+        "/tools/images-to-pdf"
+      );
+    } else if (activeTab === 'compress') {
+      updateSEO(
+        "Free PDF Compressor Online - Reduce PDF File Size | Quantum Qbit",
+        "Compress PDF files online for free. Choose custom compression ratios or preset quality to reduce PDF file size. Vector preservation. 100% private.",
+        "/tools/pdf-compressor",
+        {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "How can I compress a PDF online for free?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "You can use Quantum Qbit's PDF Compressor. Simply upload your PDF file, choose your compression level or specify a target file size, and download the compressed PDF instantly. It works 100% locally in your browser."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is my data safe when using this free online PDF compressor?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, absolutely! Unlike other online tools, Quantum Qbit processes your files entirely on your local machine using client-side JavaScript. Your PDF files never leave your device and are never uploaded to any server."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can I compress a PDF to a specific size like 100KB or 200KB?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, Quantum Qbit offers a 'Target KB Size' option, allowing you to specify exactly what size you want the compressed PDF to be. The compressor will adjust the scaling and quality to match that target size as closely as possible."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Will compressing a PDF degrade its quality?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Compressing a PDF resizes large images and adjusts rendering parameters. While text vectors remain sharp and clean, images may experience slight quality reductions depending on the level of compression chosen (Low, Medium, or High)."
+              }
+            }
+          ]
+        }
+      );
+    } else if (activeTab === 'officeToPdf') {
+      updateSEO(
+        "Convert Word & PowerPoint to PDF Online Free | Quantum Qbit",
+        "Easily convert DOCX, PPTX, TXT, and HTML files into standard vector PDF documents in your browser. Fast, 100% secure, offline conversion tool.",
+        "/tools/convert-to-pdf"
+      );
+    } else if (activeTab === 'pdfToWord') {
+      updateSEO(
+        "Free PDF to Word OCR Converter - Extract Text Online | Quantum Qbit",
+        "Convert scanned PDF files to editable Word documents using advanced client-side OCR technology. Extract high-accuracy text from images and PDF drafts.",
+        "/tools/pdf-to-word"
+      );
+    }
+  }, [activeTab]);
 
   // Shared Helper: Format bytes
   const formatBytes = (bytes: number): string => {
@@ -649,30 +729,46 @@ export const PdfEditor: React.FC = () => {
     <div className="container" style={styles.workshop}>
       {/* Tab Switcher */}
       <div className="pdf-tabs-container">
-        <button
+        <a
+          href="/tools/images-to-pdf"
           className={`pdf-tab-link ${activeTab === 'imgToPdf' ? 'active' : ''}`}
-          onClick={() => setActiveTab('imgToPdf')}
+          onClick={(e) => {
+            e.preventDefault();
+            navigate('/tools/images-to-pdf');
+          }}
         >
           <ImageIcon size={16} /> Images to PDF
-        </button>
-        <button
+        </a>
+        <a
+          href="/tools/pdf-compressor"
           className={`pdf-tab-link ${activeTab === 'compress' ? 'active' : ''}`}
-          onClick={() => setActiveTab('compress')}
+          onClick={(e) => {
+            e.preventDefault();
+            navigate('/tools/pdf-compressor');
+          }}
         >
           <Settings size={16} /> PDF Compressor
-        </button>
-        <button
+        </a>
+        <a
+          href="/tools/convert-to-pdf"
           className={`pdf-tab-link ${activeTab === 'officeToPdf' ? 'active' : ''}`}
-          onClick={() => setActiveTab('officeToPdf')}
+          onClick={(e) => {
+            e.preventDefault();
+            navigate('/tools/convert-to-pdf');
+          }}
         >
           <FileText size={16} /> Convert to PDF
-        </button>
-        <button
+        </a>
+        <a
+          href="/tools/pdf-to-word"
           className={`pdf-tab-link ${activeTab === 'pdfToWord' ? 'active' : ''}`}
-          onClick={() => setActiveTab('pdfToWord')}
+          onClick={(e) => {
+            e.preventDefault();
+            navigate('/tools/pdf-to-word');
+          }}
         >
           <FileCode size={16} /> PDF to Word (OCR)
-        </button>
+        </a>
       </div>
 
       {/* ----------------- TAB: IMAGE TO PDF ----------------- */}
@@ -782,6 +878,35 @@ export const PdfEditor: React.FC = () => {
               </div>
             </div>
           )}
+
+          {/* Visible SEO and FAQ Section for Images to PDF */}
+          <div style={styles.seoContentSection}>
+            <hr style={styles.seoDivider} />
+            <h2 style={styles.seoSectionTitle}>Free Online Image to PDF Converter</h2>
+            <p style={styles.seoSectionDesc}>
+              Convert your JPG, PNG, or WEBP images into high-quality PDF documents quickly and securely. All processing happens 100% locally in your browser – your files are never uploaded to any server.
+            </p>
+            <div style={styles.faqGrid}>
+              <div style={styles.faqCard}>
+                <h4 style={styles.faqQuestion}>How do I convert images to PDF on Quantum Qbit?</h4>
+                <p style={styles.faqAnswer}>
+                  Simply click the upload area to select your images (PNG, JPG, or WEBP). You can arrange them using the up/down controls to specify page order, adjust margins and orientation, and click "Compile & Save PDF" to download the document.
+                </p>
+              </div>
+              <div style={styles.faqCard}>
+                <h4 style={styles.faqQuestion}>Is there a limit on the number of images I can compile?</h4>
+                <p style={styles.faqAnswer}>
+                  No! Because the conversion is executed entirely on your client-side browser, there is no file size limit or page number restriction. You can combine as many images as your computer's memory can handle.
+                </p>
+              </div>
+              <div style={styles.faqCard}>
+                <h4 style={styles.faqQuestion}>Are my private photos safe with this tool?</h4>
+                <p style={styles.faqAnswer}>
+                  Yes, 100%. All processing is executed locally via JavaScript. Your images never leave your computer and are never uploaded to any remote storage or database.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -948,6 +1073,41 @@ export const PdfEditor: React.FC = () => {
               </div>
             </div>
           )}
+
+          {/* Visible SEO and FAQ Section for PDF Compressor */}
+          <div style={styles.seoContentSection}>
+            <hr style={styles.seoDivider} />
+            <h2 style={styles.seoSectionTitle}>Free PDF Compressor Online - Reduce PDF File Size</h2>
+            <p style={styles.seoSectionDesc}>
+              Optimize and compress your PDF files online for free. Whether you need a PDF compressor online to shrink document size for emails, or a PDF compressor free of charge with custom target size features, our client-side tool provides fast vector resizing with complete privacy.
+            </p>
+            <div style={styles.faqGrid}>
+              <div style={styles.faqCard}>
+                <h4 style={styles.faqQuestion}>How can I compress a PDF online for free?</h4>
+                <p style={styles.faqAnswer}>
+                  Upload your PDF file using the file selector, choose a compression preset (Low, Medium, or High) or specify a specific Target KB Size, and click "Optimize Size". The compressor will shrink your file and offer an instant download.
+                </p>
+              </div>
+              <div style={styles.faqCard}>
+                <h4 style={styles.faqQuestion}>Is my data safe when using this free online PDF compressor?</h4>
+                <p style={styles.faqAnswer}>
+                  Absolutely. Unlike standard cloud-based converters, Quantum Qbit is a 100% client-side web application. Your PDF documents are compiled and rescaled directly on your device, meaning your files are never uploaded to a server or exposed to third parties.
+                </p>
+              </div>
+              <div style={styles.faqCard}>
+                <h4 style={styles.faqQuestion}>Can I compress a PDF to a specific size like 100KB, 200KB, or 300KB?</h4>
+                <p style={styles.faqAnswer}>
+                  Yes! Choose the "Target KB Size" mode, enter your desired target file size limit (e.g., 200), and click "Optimize Size". The tool will dynamically recalculate the image quality and dimensions to hit your target size as closely as possible.
+                </p>
+              </div>
+              <div style={styles.faqCard}>
+                <h4 style={styles.faqQuestion}>Will compressing a PDF degrade its layout or quality?</h4>
+                <p style={styles.faqAnswer}>
+                  Text and vector lines remain perfectly sharp and vector-aligned. The compressor primarily optimizes embedded images by resizing their dimensions and compressing their JPEG/PNG quality. Choose "Low Compression" if you need high print quality.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1094,6 +1254,35 @@ export const PdfEditor: React.FC = () => {
               </div>
             </div>
           )}
+
+          {/* Visible SEO and FAQ Section for Office to PDF */}
+          <div style={styles.seoContentSection}>
+            <hr style={styles.seoDivider} />
+            <h2 style={styles.seoSectionTitle}>Word & PowerPoint to PDF Converter Online</h2>
+            <p style={styles.seoSectionDesc}>
+              Convert Word (.docx), PowerPoint (.pptx), text (.txt), and HTML documents into vector PDF files locally. Instantly prepare documents for distribution with high styling preservation.
+            </p>
+            <div style={styles.faqGrid}>
+              <div style={styles.faqCard}>
+                <h4 style={styles.faqQuestion}>How do I convert DOCX or PPTX files to PDF?</h4>
+                <p style={styles.faqAnswer}>
+                  Select your document, edit any slides or review the document formatting in the live layout preview panel on the right, and click "Compile to PDF". Your new PDF will compile instantly for saving.
+                </p>
+              </div>
+              <div style={styles.faqCard}>
+                <h4 style={styles.faqQuestion}>Can I edit my PowerPoint slides before compiling?</h4>
+                <p style={styles.faqAnswer}>
+                  Yes! When you upload a .pptx file, we extract all slide text layers into editable input cards. You can modify slide headers and bullet points directly in the workspace before converting to PDF.
+                </p>
+              </div>
+              <div style={styles.faqCard}>
+                <h4 style={styles.faqQuestion}>Is my document layout preserved during conversion?</h4>
+                <p style={styles.faqAnswer}>
+                  We extract textual structures and CSS layout specifications. You can review the exact rendering output in the interactive preview container to verify formatting details before compiling.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1205,6 +1394,35 @@ export const PdfEditor: React.FC = () => {
               </div>
             </div>
           )}
+
+          {/* Visible SEO and FAQ Section for PDF to Word OCR */}
+          <div style={styles.seoContentSection}>
+            <hr style={styles.seoDivider} />
+            <h2 style={styles.seoSectionTitle}>Free PDF to Word OCR Converter - Extract Text</h2>
+            <p style={styles.seoSectionDesc}>
+              Convert scanned PDF files, drafts, and image text into editable Microsoft Word (.docx) files using advanced browser-based OCR technology. No server queues, 100% private text extraction.
+            </p>
+            <div style={styles.faqGrid}>
+              <div style={styles.faqCard}>
+                <h4 style={styles.faqQuestion}>How does the PDF to Word OCR extractor work?</h4>
+                <p style={styles.faqAnswer}>
+                  Our tool loads a neural-network-based OCR engine (Tesseract.js) directly inside your web worker. It reads characters from the images or scanned layers of your PDF, parses the sentences, and writes them into a downloadable Word file.
+                </p>
+              </div>
+              <div style={styles.faqCard}>
+                <h4 style={styles.faqQuestion}>Do I need an internet connection to run the OCR scanner?</h4>
+                <p style={styles.faqAnswer}>
+                  The OCR language training files are cached in your browser. Once loaded, the text recognition runs entirely offline in your browser, keeping your documents secure and processing them at local hardware speeds.
+                </p>
+              </div>
+              <div style={styles.faqCard}>
+                <h4 style={styles.faqQuestion}>How do I download the final editable document?</h4>
+                <p style={styles.faqAnswer}>
+                  Click "Scan & Extract to Word" to start the extraction process. Once the progress bar reaches 100%, click "Save Word (.docx) Document" to download the fully editable file containing the parsed text.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -1540,6 +1758,65 @@ const styles = {
     lineHeight: '1.6',
     resize: 'none' as const,
     outline: 'none',
+  },
+  seoContentSection: {
+    marginTop: '60px',
+    padding: '40px 24px',
+    background: 'rgba(255, 255, 255, 0.01)',
+    border: '1px solid var(--border-glass)',
+    borderRadius: '16px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '24px',
+  },
+  seoDivider: {
+    border: '0',
+    height: '1px',
+    background: 'linear-gradient(to right, transparent, var(--border-glass-active), transparent)',
+    margin: '10px 0 20px 0',
+  },
+  seoSectionTitle: {
+    fontSize: '1.75rem',
+    fontWeight: 700,
+    color: 'var(--primary)',
+    textAlign: 'center' as const,
+    textShadow: '0 0 10px var(--primary-glow)',
+  },
+  seoSectionDesc: {
+    fontSize: '1.05rem',
+    lineHeight: 1.6,
+    color: 'var(--text-secondary)',
+    textAlign: 'center' as const,
+    maxWidth: '800px',
+    margin: '0 auto',
+  },
+  faqGrid: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '16px',
+    marginTop: '16px',
+    maxWidth: '800px',
+    width: '100%',
+    margin: '0 auto',
+  },
+  faqCard: {
+    background: 'rgba(255, 255, 255, 0.01)',
+    border: '1px solid var(--border-glass)',
+    borderRadius: '10px',
+    padding: '16px 20px',
+    transition: 'var(--transition-smooth)',
+  },
+  faqQuestion: {
+    fontSize: '1.05rem',
+    fontWeight: 600,
+    color: 'var(--text-primary)',
+    marginBottom: '8px',
+    fontFamily: 'var(--font-heading)',
+  },
+  faqAnswer: {
+    fontSize: '0.95rem',
+    lineHeight: 1.5,
+    color: 'var(--text-secondary)',
   },
 };
 

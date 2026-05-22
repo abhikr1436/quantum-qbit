@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Sliders, RotateCw, RefreshCw, Download, Upload, Image as ImageIcon, Sparkles, Activity } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { jsPDF } from 'jspdf';
+import { navigate } from '../../utils/router';
+import { updateSEO } from '../../utils/seo';
 
 // -------------------------------------------------------------
 // DPI Metadata Extraction & Injection Utilities (Client-Side)
@@ -268,9 +270,79 @@ const hexToRgb = (hex: string) => {
 // Component
 // -------------------------------------------------------------
 
-export const ImageEditor: React.FC = () => {
+interface ImageEditorProps {
+  defaultTab?: 'adjust' | 'crop' | 'resize' | 'dpi' | 'compress' | 'bg-remove' | 'convert';
+}
+
+export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
   // Navigation tabs in sidebar
-  const [activeTab, setActiveTab] = useState<'adjust' | 'crop' | 'resize' | 'dpi' | 'compress' | 'bg-remove' | 'convert'>('adjust');
+  const [activeTab, setActiveTab] = useState<'adjust' | 'crop' | 'resize' | 'dpi' | 'compress' | 'bg-remove' | 'convert'>(defaultTab || 'adjust');
+
+  useEffect(() => {
+    if (defaultTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab]);
+
+  // Synchronize SEO tags and JSON-LD schema on tab changes
+  useEffect(() => {
+    if (activeTab === 'compress') {
+      const isPhotoPath = window.location.pathname.includes('photo-compressor');
+      updateSEO(
+        isPhotoPath
+          ? "Free Photo Compressor Online - Reduce Photo File Size | Quantum Qbit"
+          : "Free Image Compressor Online - Compress Photos Free | Quantum Qbit",
+        "Compress images and photos online for free. Adjust target size (KB) or quality to reduce image size instantly. Supports JPG, PNG, and WebP. 100% private.",
+        isPhotoPath ? "/tools/photo-compressor" : "/tools/image-compressor",
+        {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "How can I compress images online for free?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Using Quantum Qbit's free image compressor, you can upload any JPEG, PNG, or WEBP file, specify your target file size in KB, and click 'Compress Image'. The compression processes instantly and runs entirely inside your browser."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is there a free online photo compressor with a target size option?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes! Quantum Qbit allows you to specify a custom target KB size (e.g. 100KB, 200KB). The client-side image compressor adjusts the resolution scaling and JPEG quality dynamically to hit that size limit."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Are my images secure on this online photo compressor?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. Our compressor is 100% client-side. The image compression scripts execute locally on your computer. Your photos are never uploaded to any remote server or database, keeping your personal files completely private."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What image formats are supported?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "We support JPEG, JPG, PNG, WEBP, and BMP formats. You can compress, adjust quality, resize, and convert between these formats easily."
+              }
+            }
+          ]
+        }
+      );
+    } else {
+      let tabName = activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
+      if (activeTab === 'bg-remove') tabName = 'Background Remover';
+      updateSEO(
+        `${tabName} - Free Client-Side Image Studio | Quantum Qbit`,
+        `Crop, resize, convert, adjust DPI, remove background, and apply settings to images locally inside your browser. 100% private and fast.`,
+        `/tools/image-editor`
+      );
+    }
+  }, [activeTab]);
 
   // Format Conversion states
   const [convertFormat, setConvertFormat] = useState<'png' | 'jpeg' | 'webp' | 'bmp' | 'pdf'>('png');
@@ -1614,48 +1686,55 @@ export const ImageEditor: React.FC = () => {
           <div className="glass-card" style={styles.sidebar}>
             {/* Categories tab container */}
             <div className="editor-tabs-container">
-              <button 
-                onClick={() => { setActiveTab('adjust'); setEyeDropperActive(false); }} 
+              <a 
+                href="/tools/image-editor"
+                onClick={(e) => { e.preventDefault(); navigate('/tools/image-editor'); setActiveTab('adjust'); setEyeDropperActive(false); }} 
                 className={`editor-tab-btn ${activeTab === 'adjust' ? 'active' : ''}`}
               >
                 Filters
-              </button>
-              <button 
-                onClick={() => { setActiveTab('crop'); setEyeDropperActive(false); }} 
+              </a>
+              <a 
+                href="/tools/image-editor"
+                onClick={(e) => { e.preventDefault(); navigate('/tools/image-editor'); setActiveTab('crop'); setEyeDropperActive(false); }} 
                 className={`editor-tab-btn ${activeTab === 'crop' ? 'active' : ''}`}
               >
                 Crop
-              </button>
-              <button 
-                onClick={() => { setActiveTab('resize'); setEyeDropperActive(false); }} 
+              </a>
+              <a 
+                href="/tools/image-editor"
+                onClick={(e) => { e.preventDefault(); navigate('/tools/image-editor'); setActiveTab('resize'); setEyeDropperActive(false); }} 
                 className={`editor-tab-btn ${activeTab === 'resize' ? 'active' : ''}`}
               >
                 Resize
-              </button>
-              <button 
-                onClick={() => { setActiveTab('dpi'); setEyeDropperActive(false); }} 
+              </a>
+              <a 
+                href="/tools/image-editor"
+                onClick={(e) => { e.preventDefault(); navigate('/tools/image-editor'); setActiveTab('dpi'); setEyeDropperActive(false); }} 
                 className={`editor-tab-btn ${activeTab === 'dpi' ? 'active' : ''}`}
               >
                 DPI
-              </button>
-              <button 
-                onClick={() => { setActiveTab('compress'); setEyeDropperActive(false); }} 
+              </a>
+              <a 
+                href="/tools/image-compressor"
+                onClick={(e) => { e.preventDefault(); navigate('/tools/image-compressor'); setEyeDropperActive(false); }} 
                 className={`editor-tab-btn ${activeTab === 'compress' ? 'active' : ''}`}
               >
                 Compress
-              </button>
-              <button 
-                onClick={() => { setActiveTab('bg-remove'); }} 
+              </a>
+              <a 
+                href="/tools/image-editor"
+                onClick={(e) => { e.preventDefault(); navigate('/tools/image-editor'); setActiveTab('bg-remove'); }} 
                 className={`editor-tab-btn ${activeTab === 'bg-remove' ? 'active' : ''}`}
               >
                 Remove BG
-              </button>
-              <button 
-                onClick={() => { setActiveTab('convert'); setEyeDropperActive(false); }} 
+              </a>
+              <a 
+                href="/tools/image-editor"
+                onClick={(e) => { e.preventDefault(); navigate('/tools/image-editor'); setActiveTab('convert'); setEyeDropperActive(false); }} 
                 className={`editor-tab-btn ${activeTab === 'convert' ? 'active' : ''}`}
               >
                 Convert
-              </button>
+              </a>
             </div>
 
             {/* TAB CONTENT: FILTERS */}
@@ -2295,6 +2374,72 @@ export const ImageEditor: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Visible SEO and FAQ Section for Image Compressor / Editor */}
+      <div style={styles.seoContentSection}>
+        <hr style={styles.seoDivider} />
+        {activeTab === 'compress' ? (
+          <>
+            <h2 style={styles.seoSectionTitle}>Free Image & Photo Compressor Online</h2>
+            <p style={styles.seoSectionDesc}>
+              Optimize and compress your image files online for free. Whether you need an image compressor to shrink file size for emails, or a photo compressor to fit target KB limits (like 100KB or 200KB) for forms, our secure, client-side tool has you covered.
+            </p>
+            <div style={styles.faqGrid}>
+              <div style={styles.faqCard}>
+                <h4 style={styles.faqQuestion}>How can I compress images online for free?</h4>
+                <p style={styles.faqAnswer}>
+                  Simply upload your image (PNG, JPG, WEBP, or BMP), choose the "Target File Size Limit" tab in the sidebar, input your desired file size in KB, and click "Optimize Size". The compressor will adjust the resolution scaling and JPEG quality factor to match your target size.
+                </p>
+              </div>
+              <div style={styles.faqCard}>
+                <h4 style={styles.faqQuestion}>Is there a free online photo compressor with a target size option?</h4>
+                <p style={styles.faqAnswer}>
+                  Yes, Quantum Qbit is a fully-featured client-side tool that allows you to specify a target KB limit. Our algorithm dynamically rescales the image canvas and applies optimized compression matrices to output files matching your constraints.
+                </p>
+              </div>
+              <div style={styles.faqCard}>
+                <h4 style={styles.faqQuestion}>Are my photos safe with this tool?</h4>
+                <p style={styles.faqAnswer}>
+                  Absolutely. Because all calculations, canvas manipulations, and compression routines execute locally in your web browser, your files are never uploaded to any remote server or database. It works 100% offline.
+                </p>
+              </div>
+              <div style={styles.faqCard}>
+                <h4 style={styles.faqQuestion}>Which file formats are supported?</h4>
+                <p style={styles.faqAnswer}>
+                  You can upload PNG, JPG, JPEG, WEBP, and BMP files. The tool also supports converting between these formats instantly while applying adjustments.
+                </p>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <h2 style={styles.seoSectionTitle}>Free Client-Side Image Studio</h2>
+            <p style={styles.seoSectionDesc}>
+              A comprehensive utility tool to edit, crop, resize, adjust DPI density, remove background colors, and convert images locally. Fast, responsive, and 100% private.
+            </p>
+            <div style={styles.faqGrid}>
+              <div style={styles.faqCard}>
+                <h4 style={styles.faqQuestion}>What adjustments can I make in the Image Studio?</h4>
+                <p style={styles.faqAnswer}>
+                  You can adjust brightness, contrast, saturation, gray, hue-rotation, blur radius, flip images horizontally or vertically, and rotate them in 90-degree increments.
+                </p>
+              </div>
+              <div style={styles.faqCard}>
+                <h4 style={styles.faqQuestion}>How does the Background Remover work?</h4>
+                <p style={styles.faqAnswer}>
+                  Enable the BG transparentizer, select the background color you want to key out using the picker or eye-dropper tool, and adjust the tolerance and feather sliders to smooth the edges. It keys out colors instantly using local pixel shaders.
+                </p>
+              </div>
+              <div style={styles.faqCard}>
+                <h4 style={styles.faqQuestion}>Can I adjust the DPI density of my images?</h4>
+                <p style={styles.faqAnswer}>
+                  Yes! Select the DPI tab, set your target density (e.g. 300 DPI for high-res printing, or 72 DPI for web), and click save. We write the exact density header specifications into the JPG APP0 metadata or PNG pHYs chunks.
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Final Preview Modal */}
       {showPreviewModal && (
@@ -2975,6 +3120,65 @@ const styles = {
     justifyContent: 'flex-end',
     gap: '12px',
     background: 'rgba(0, 0, 0, 0.1)',
+  },
+  seoContentSection: {
+    marginTop: '60px',
+    padding: '40px 24px',
+    background: 'rgba(255, 255, 255, 0.01)',
+    border: '1px solid var(--border-glass)',
+    borderRadius: '16px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '24px',
+  },
+  seoDivider: {
+    border: '0',
+    height: '1px',
+    background: 'linear-gradient(to right, transparent, var(--border-glass-active), transparent)',
+    margin: '10px 0 20px 0',
+  },
+  seoSectionTitle: {
+    fontSize: '1.75rem',
+    fontWeight: 700,
+    color: 'var(--primary)',
+    textAlign: 'center' as const,
+    textShadow: '0 0 10px var(--primary-glow)',
+  },
+  seoSectionDesc: {
+    fontSize: '1.05rem',
+    lineHeight: 1.6,
+    color: 'var(--text-secondary)',
+    textAlign: 'center' as const,
+    maxWidth: '800px',
+    margin: '0 auto',
+  },
+  faqGrid: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '16px',
+    marginTop: '16px',
+    maxWidth: '800px',
+    width: '100%',
+    margin: '0 auto',
+  },
+  faqCard: {
+    background: 'rgba(255, 255, 255, 0.01)',
+    border: '1px solid var(--border-glass)',
+    borderRadius: '10px',
+    padding: '16px 20px',
+    transition: 'var(--transition-smooth)',
+  },
+  faqQuestion: {
+    fontSize: '1.05rem',
+    fontWeight: 600,
+    color: 'var(--text-primary)',
+    marginBottom: '8px',
+    fontFamily: 'var(--font-heading)',
+  },
+  faqAnswer: {
+    fontSize: '0.95rem',
+    lineHeight: 1.5,
+    color: 'var(--text-secondary)',
   },
 };
 

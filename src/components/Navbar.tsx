@@ -26,6 +26,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'contact', label: 'Contact Us' },
   ];
 
+  const getHref = (id: string) => id === 'landing' ? '/' : `/${id}`;
+
   const handleNavClick = (pageId: string) => {
     setCurrentPage(pageId);
     setMobileMenuOpen(false);
@@ -47,9 +49,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Menu size={20} />
             </button>
           )}
-          <div style={styles.logoContainer} onClick={() => handleNavClick('landing')}>
-            <img src="/logo.png" alt="Quantum Qbit Logo" className="logo-img" />
-          </div>
+          <a href="/" onClick={(e) => { e.preventDefault(); handleNavClick('landing'); }} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+            <div style={styles.logoContainer}>
+              <img src="/logo.png" alt="Quantum Qbit Logo" className="logo-img" />
+            </div>
+          </a>
         </div>
 
         {/* Right Area (Desktop navigation, Theme Toggle, Mobile Hamburger) */}
@@ -57,16 +61,23 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Desktop Navigation */}
           <div className="desktop-nav" style={styles.desktopNav}>
             {navItems.map((item) => (
-              <button
+              <a
                 key={item.id}
-                onClick={() => handleNavClick(item.id)}
+                href={getHref(item.id)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavClick(item.id);
+                }}
                 style={{
                   ...styles.navLink,
+                  display: 'inline-block',
+                  textDecoration: 'none',
+                  textAlign: 'center',
                   ...(currentPage === item.id ? styles.activeNavLink : {}),
                 }}
               >
                 {item.label}
-              </button>
+              </a>
             ))}
           </div>
 
@@ -96,16 +107,22 @@ export const Navbar: React.FC<NavbarProps> = ({
       {mobileMenuOpen && (
         <div style={styles.mobileDrawer}>
           {navItems.map((item) => (
-            <button
+            <a
               key={item.id}
-              onClick={() => handleNavClick(item.id)}
+              href={getHref(item.id)}
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavClick(item.id);
+              }}
               style={{
                 ...styles.mobileNavLink,
+                display: 'block',
+                textDecoration: 'none',
                 ...(currentPage === item.id ? styles.mobileActiveNavLink : {}),
               }}
             >
               {item.label}
-            </button>
+            </a>
           ))}
         </div>
       )}

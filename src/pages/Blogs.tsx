@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, User, Clock, ArrowLeft, BookOpenText } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import AdSlot from '../components/AdSlot';
+import { updateSEO } from '../utils/seo';
 
 interface BlogPost {
   id: string;
@@ -24,13 +25,25 @@ interface Category {
 interface BlogsProps {
   selectedCategory?: string;
   setSelectedCategory?: (cat: string) => void;
+  postId?: string;
+  setPostId?: (id: string | null) => void;
 }
 
 export const Blogs: React.FC<BlogsProps> = ({
   selectedCategory = 'all',
-  setSelectedCategory
+  setSelectedCategory,
+  postId,
+  setPostId
 }) => {
-  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [localPostId, setLocalPostId] = useState<string | null>(null);
+  const activePostId = postId !== undefined ? postId : localPostId;
+  const setActivePostId = (id: string | null) => {
+    if (setPostId) {
+      setPostId(id);
+    } else {
+      setLocalPostId(id);
+    }
+  };
 
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -147,7 +160,26 @@ export const Blogs: React.FC<BlogsProps> = ({
     fetchBlogs();
   }, []);
 
-  const selectedPost = posts.find(p => p.id === selectedPostId);
+  const selectedPost = posts.find(p => p.id === activePostId);
+
+  // Dynamic SEO Updates for Blogs page or individual blog post
+  useEffect(() => {
+    if (selectedPost) {
+      updateSEO(
+        `${selectedPost.title} | Quantum Qbit Blog`,
+        selectedPost.excerpt,
+        `/blogs/${selectedPost.id}`
+      );
+    } else {
+      const catObj = categories.find(c => c.id === selectedCategory);
+      const categoryText = catObj ? ` - ${catObj.name}` : '';
+      updateSEO(
+        `Quantum Qbit Blog${categoryText} - Guides & Tech Breakdowns`,
+        "Explore articles on privacy-first web utilities, local browser tools, and client-side technology written by the Quantum Engineering Team.",
+        `/blogs`
+      );
+    }
+  }, [selectedPost, selectedCategory, categories]);
 
   const getCategoryName = (post: BlogPost) => {
     if (post.category_id) {
@@ -169,7 +201,7 @@ export const Blogs: React.FC<BlogsProps> = ({
     return (
       <div className="container" style={styles.readerFlexWrapper}>
         <div style={styles.articleCol}>
-          <button style={styles.backBtn} onClick={() => setSelectedPostId(null)}>
+          <button style={styles.backBtn} onClick={() => setActivePostId(null)}>
             <ArrowLeft size={16} /> Back to Blog List
           </button>
 
@@ -286,7 +318,7 @@ export const Blogs: React.FC<BlogsProps> = ({
                 
                 <div style={styles.cardInfo}>
                   <span style={styles.postCategory}>{getCategoryName(post)}</span>
-                  <h2 style={styles.postTitle} onClick={() => setSelectedPostId(post.id)}>
+                  <h2 style={styles.postTitle} onClick={() => setActivePostId(post.id)}>
                     {post.title}
                   </h2>
                   <p style={styles.postExcerpt}>{post.excerpt}</p>
@@ -298,7 +330,7 @@ export const Blogs: React.FC<BlogsProps> = ({
                     </div>
                     <button
                       style={styles.readMoreBtn}
-                      onClick={() => setSelectedPostId(post.id)}
+                      onClick={() => setActivePostId(post.id)}
                     >
                       Read Article <BookOpenText size={14} />
                     </button>

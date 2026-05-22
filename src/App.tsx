@@ -11,10 +11,13 @@ import TermsAndConditions from './pages/TermsAndConditions';
 import Admin from './pages/Admin';
 import AdSlot from './components/AdSlot';
 import Sidebar from './components/Sidebar';
+import { usePath, navigate } from './utils/router';
+import { updateSEO } from './utils/seo';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<string>('landing');
-  const [selectedTool, setSelectedTool] = useState<string>('none');
+  const rawPath = usePath();
+  const path = rawPath.endsWith('/') && rawPath.length > 1 ? rawPath.slice(0, -1) : rawPath;
+
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [blogCategory, setBlogCategory] = useState<string>('all');
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -31,20 +34,125 @@ function App() {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
+  // Route parser
+  let page = 'landing';
+  let tool = 'none';
+  let toolTab: any = undefined;
+  let blogPostId: string | undefined = undefined;
+
+  if (path.startsWith('/tools')) {
+    page = 'tools';
+    const subpath = path.substring(6); // e.g. "/pdf-editor", "/pdf-compressor"
+    if (subpath === '/image-editor') {
+      tool = 'image-editor';
+    } else if (subpath === '/image-compressor' || subpath === '/photo-compressor') {
+      tool = 'image-editor';
+      toolTab = 'compress';
+    } else if (subpath === '/pdf-editor') {
+      tool = 'pdf-editor';
+    } else if (subpath === '/pdf-compressor') {
+      tool = 'pdf-editor';
+      toolTab = 'compress';
+    } else if (subpath === '/images-to-pdf') {
+      tool = 'pdf-editor';
+      toolTab = 'imgToPdf';
+    } else if (subpath === '/convert-to-pdf') {
+      tool = 'pdf-editor';
+      toolTab = 'officeToPdf';
+    } else if (subpath === '/pdf-to-word') {
+      tool = 'pdf-editor';
+      toolTab = 'pdfToWord';
+    } else if (subpath === '/math-calculators') {
+      tool = 'math-calculators';
+    } else if (subpath === '' || subpath === '/') {
+      tool = 'none';
+    }
+  } else if (path.startsWith('/blogs')) {
+    page = 'blogs';
+    const match = path.match(/^\/blogs\/([^/]+)/);
+    if (match) {
+      blogPostId = match[1];
+    }
+  } else if (path === '/about') {
+    page = 'about';
+  } else if (path === '/contact') {
+    page = 'contact';
+  } else if (path === '/privacy') {
+    page = 'privacy';
+  } else if (path === '/terms') {
+    page = 'terms';
+  } else if (path === '/admin') {
+    page = 'admin';
+  }
+
+  // Dynamic SEO Updates for main pages (Tools and Blogs update their own metadata)
+  useEffect(() => {
+    if (page === 'landing') {
+      updateSEO(
+        "Quantum Qbit - Free Client-Side Web Utility Tools",
+        "Free, offline-first developer, designer, and student productivity tools. PDF editor, image compressor, Base/Math converters, and unit utilities. 100% private.",
+        "/"
+      );
+    } else if (page === 'tools' && tool === 'none') {
+      updateSEO(
+        "Web Applications & Tools Directory | Quantum Qbit",
+        "Browse our collection of free client-side utility applications. Compress images, merge/convert PDFs, and perform base math offline.",
+        "/tools"
+      );
+    } else if (page === 'about') {
+      updateSEO(
+        "About Our Mission - Privacy-First Web Utilities | Quantum Qbit",
+        "Learn about Quantum Qbit's offline-first architecture. All calculation, image resizing, and PDF editing happen 100% in your browser.",
+        "/about"
+      );
+    } else if (page === 'contact') {
+      updateSEO(
+        "Contact Us - Quantum Qbit Support",
+        "Get in touch with the Quantum Qbit development team. Send suggestions, feature requests, or business inquiries.",
+        "/contact"
+      );
+    } else if (page === 'privacy') {
+      updateSEO(
+        "Privacy Policy - 100% Client-Side Safe | Quantum Qbit",
+        "Read our privacy policy. Since all tools process data locally on your device, your private files never touch a remote server.",
+        "/privacy"
+      );
+    } else if (page === 'terms') {
+      updateSEO(
+        "Terms and Conditions - Quantum Qbit",
+        "Terms of service for utilizing the free tools and utility libraries on the Quantum Qbit workspace.",
+        "/terms"
+      );
+    } else if (page === 'admin') {
+      updateSEO(
+        "Admin Portal | Quantum Qbit",
+        "Management interface for blogging categories and publishing content.",
+        "/admin"
+      );
+    }
+  }, [page, tool]);
+
+  const handleSetCurrentPage = (p: string) => {
+    if (p === 'landing') navigate('/');
+    else navigate(`/${p}`);
+  };
+
   const renderPage = () => {
-    switch (currentPage) {
+    switch (page) {
       case 'landing':
-        return (
-          <LandingPage 
-            setCurrentPage={setCurrentPage} 
-            setSelectedTool={setSelectedTool} 
-          />
-        );
+        return <LandingPage />;
       case 'tools':
         return (
           <Tools 
-            selectedTool={selectedTool} 
-            setSelectedTool={setSelectedTool} 
+            selectedTool={tool} 
+            setSelectedTool={(newTool) => {
+              if (newTool === 'none') {
+                navigate('/tools');
+              } else {
+                navigate(`/tools/${newTool}`);
+              }
+            }} 
+            defaultTab={toolTab}
           />
         );
       case 'blogs':
@@ -52,6 +160,14 @@ function App() {
           <Blogs 
             selectedCategory={blogCategory} 
             setSelectedCategory={setBlogCategory} 
+            postId={blogPostId}
+            setPostId={(newPostId) => {
+              if (newPostId) {
+                navigate(`/blogs/${newPostId}`);
+              } else {
+                navigate('/blogs');
+              }
+            }}
           />
         );
       case 'about':
@@ -59,39 +175,37 @@ function App() {
       case 'contact':
         return <ContactUs />;
       case 'privacy':
-        return <PrivacyPolicy setCurrentPage={setCurrentPage} />;
+        return <PrivacyPolicy setCurrentPage={handleSetCurrentPage} />;
       case 'terms':
-        return <TermsAndConditions setCurrentPage={setCurrentPage} />;
+        return <TermsAndConditions setCurrentPage={handleSetCurrentPage} />;
       case 'admin':
-        return <Admin setCurrentPage={setCurrentPage} />;
+        return <Admin setCurrentPage={handleSetCurrentPage} />;
       default:
-        return (
-          <LandingPage 
-            setCurrentPage={setCurrentPage} 
-            setSelectedTool={setSelectedTool} 
-          />
-        );
+        return <LandingPage />;
     }
   };
 
   return (
     <div style={styles.appContainer}>
       <Navbar 
-        currentPage={currentPage} 
-        setCurrentPage={setCurrentPage} 
+        currentPage={page} 
+        setCurrentPage={handleSetCurrentPage} 
         theme={theme} 
         toggleTheme={toggleTheme} 
         setSidebarOpen={setSidebarOpen}
       />
       
-      {currentPage !== 'admin' && (
+      {page !== 'admin' && (
         <Sidebar 
           isOpen={sidebarOpen} 
           onClose={() => setSidebarOpen(false)}
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          selectedTool={selectedTool}
-          setSelectedTool={setSelectedTool}
+          currentPage={page}
+          setCurrentPage={handleSetCurrentPage}
+          selectedTool={tool}
+          setSelectedTool={(t) => {
+            if (t === 'none') navigate('/tools');
+            else navigate(`/tools/${t}`);
+          }}
           selectedCategory={blogCategory}
           setSelectedCategory={setBlogCategory}
         />
@@ -101,10 +215,10 @@ function App() {
         {renderPage()}
       </main>
 
-      <Footer setCurrentPage={setCurrentPage} />
+      <Footer setCurrentPage={handleSetCurrentPage} />
 
       {/* Dynamic Ad Slots (excluding Admin workspace for a clean portal experience) */}
-      {currentPage !== 'admin' && (
+      {page !== 'admin' && (
         <>
           <AdSlot id="bottom-sticky-banner-ad" type="banner" />
           <AdSlot id="interstitial-popup-ad" type="popup" />
