@@ -28,7 +28,10 @@ jobs:
       - name: Build application
         run: npm run build
 
-      - name: Deploy via FTP to Hostinger
+      - name: Install Python dependencies
+        run: pip install paramiko
+
+      - name: Deploy via SFTP/FTP to Hostinger
         env:
           FTP_HOST_RAW: ${{ secrets.SFTP_SERVER }}
           FTP_USER: ${{ secrets.SFTP_USERNAME }}
