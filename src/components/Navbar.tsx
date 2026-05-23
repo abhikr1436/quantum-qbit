@@ -51,7 +51,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
           <a href="/" onClick={(e) => { e.preventDefault(); handleNavClick('landing'); }} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
             <div style={styles.logoContainer}>
-              <img src="/logo.png" alt="Quantum Qbit Logo" className="logo-img" />
+              <img src="/logo.png" alt="Quantum Qbit Logo" className="logo-img" width="168" height="34" />
             </div>
           </a>
         </div>

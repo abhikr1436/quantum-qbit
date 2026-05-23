@@ -36,7 +36,7 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
           <div style={styles.brandCol}>
             <a href="/" onClick={(e) => handleDirectNavigate(e, '/')} style={{ textDecoration: 'none' }}>
               <div style={styles.logo}>
-                <img src="/logo.png" alt="Quantum Qbit Logo" className="logo-img" />
+                <img src="/logo.png" alt="Quantum Qbit Logo" className="logo-img" width="168" height="34" />
               </div>
             </a>
             <p style={styles.description}>
