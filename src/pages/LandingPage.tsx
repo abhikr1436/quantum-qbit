@@ -120,12 +120,16 @@ export const LandingPage: React.FC = () => {
                 </div>
                 <h3 style={styles.toolTitle}>{tool.title}</h3>
                 <p style={styles.toolDesc}>{tool.description}</p>
-                <button
-                  style={styles.toolBtn}
-                  onClick={() => handleToolClick(tool.id)}
+                <a
+                  href={`/tools/${tool.id}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleToolClick(tool.id);
+                  }}
+                  style={{ ...styles.toolBtn, textDecoration: 'none' }}
                 >
                   Open Application <ArrowRight size={14} style={styles.btnArrow} />
-                </button>
+                </a>
               </div>
             ))}
           </div>
