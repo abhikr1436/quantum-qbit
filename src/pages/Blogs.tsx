@@ -37,15 +37,7 @@ export const Blogs: React.FC<BlogsProps> = ({
   const [localPostId, setLocalPostId] = useState<string | null>(null);
   const activePostId = postId !== undefined ? postId : localPostId;
 
-  // Traditional Google AdSense sidebar ad trigger
-  useEffect(() => {
-    try {
-      // @ts-ignore
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch (err) {
-      console.warn('AdSense sidebar load error:', err);
-    }
-  }, [activePostId]);
+
   const setActivePostId = (id: string | null) => {
     if (setPostId) {
       setPostId(id);
@@ -257,18 +249,8 @@ export const Blogs: React.FC<BlogsProps> = ({
           </article>
         </div>
 
-        {/* Sidebar Column with AdSlot */}
+        {/* Sidebar Column */}
         <aside className="ad-sidebar-col" style={styles.sidebarCol}>
-          <div style={{ width: '100%', margin: '20px auto', display: 'flex', justifyContent: 'center' }}>
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block', width: '100%', maxWidth: '300px' }}
-              data-ad-client="ca-pub-6096598752695949"
-              data-ad-slot="1928374650"
-              data-ad-format="vertical"
-              data-full-width-responsive="true"
-            />
-          </div>
           <div style={sidebarStickyCardStyle} className="glass-card">
             <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '10px', fontFamily: 'var(--font-heading)' }}>Quantum Utilities</h4>
             <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.45, margin: 0 }}>
