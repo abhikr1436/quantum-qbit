@@ -113,8 +113,8 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
       );
     } else if (activeTab === 'compress') {
       updateSEO(
-        "Free PDF Compressor Online - Reduce PDF File Size | Quantum Qbit",
-        "Compress PDF files online for free. Choose custom compression ratios or preset quality to reduce PDF file size. Vector preservation. 100% private.",
+        "Easily compress PDF online free without login | Quantum Qbit",
+        "Easily compress PDF files online for free. Choose custom compression ratios or preset quality to reduce PDF file size. Vector preservation. 100% private.",
         "/tools/pdf-compressor",
         {
           "@context": "https://schema.org",

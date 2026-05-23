@@ -377,9 +377,9 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
       const isPhotoPath = window.location.pathname.includes('photo-compressor');
       updateSEO(
         isPhotoPath
-          ? "Free Photo Compressor Online - Reduce Photo File Size | Quantum Qbit"
-          : "Free Image Compressor Online - Compress Photos Free | Quantum Qbit",
-        "Compress images and photos online for free. Adjust target size (KB) or quality to reduce image size instantly. Supports JPG, PNG, and WebP. 100% private.",
+          ? "Easily compress photo online free without login | Quantum Qbit"
+          : "Easily compress image online free without login | Quantum Qbit",
+        "Easily compress images at optimal quality in seconds. Compress JPG, PNG, SVG or GIF with the best quality and compression. Reduce the filesize of your images at once. Upload your file and transform it.",
         isPhotoPath ? "/tools/photo-compressor" : "/tools/image-compressor",
         imageFaqSchema
       );

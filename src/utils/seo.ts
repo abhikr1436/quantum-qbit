@@ -27,7 +27,7 @@ export function updateSEO(
     canonical.setAttribute('rel', 'canonical');
     document.head.appendChild(canonical);
   }
-  const siteUrl = 'https://quantumqbit.com';
+  const siteUrl = 'https://quantumqbit.in';
   canonical.setAttribute('href', `${siteUrl}${path}`);
 
   // 4. JSON-LD Schema Script Tag

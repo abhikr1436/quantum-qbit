@@ -11,8 +11,8 @@
   RewriteCond %{DOCUMENT_ROOT}/dist/$1 -d
   RewriteRule ^(.*)$ dist/$1 [L]
 
-  # 3. For all other routes (SPA client-side routing), rewrite to dist/index.html
+  # 3. For all other routes (SPA client-side routing), rewrite to dist/index.php
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /dist/index.html [L]
+  RewriteRule . /dist/index.php [L]
 </IfModule>
