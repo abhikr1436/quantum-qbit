@@ -11,14 +11,15 @@ export const ContactUs: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [formError, setFormError] = useState('');
+  const [sending, setSending] = useState(false);
 
   const handleCopyEmail = () => {
-    navigator.clipboard.writeText('abhijeetkumar.workonly@gmail.com');
+    navigator.clipboard.writeText('contactus@quantumqbit.in');
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
 
@@ -33,16 +34,36 @@ export const ContactUs: React.FC = () => {
       return;
     }
 
-    // Success submission
-    setSubmitted(true);
-    
-    // Trigger celebration
-    confetti({
-      particleCount: 120,
-      spread: 80,
-      origin: { y: 0.7 },
-      colors: ['#00f2fe', '#9d4edd', '#ff007f']
-    });
+    setSending(true);
+
+    try {
+      const response = await fetch('/api/contact.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, subject, message }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setSubmitted(true);
+        // Trigger celebration
+        confetti({
+          particleCount: 120,
+          spread: 80,
+          origin: { y: 0.7 },
+          colors: ['#00f2fe', '#9d4edd', '#ff007f']
+        });
+      } else {
+        setFormError(data.error || 'Failed to dispatch message. Please try again.');
+      }
+    } catch (err) {
+      setFormError('A network error occurred. Please check your connection and try again.');
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleReset = () => {
@@ -77,7 +98,7 @@ export const ContactUs: React.FC = () => {
               Skip the contact form entirely and email our support and development desk directly.
             </p>
             <div style={styles.emailBox}>
-              <span style={styles.emailText}>abhijeetkumar.workonly@gmail.com</span>
+              <span style={styles.emailText}>contactus@quantumqbit.in</span>
               <button 
                 onClick={handleCopyEmail}
                 style={styles.copyBtn}
@@ -87,7 +108,7 @@ export const ContactUs: React.FC = () => {
               </button>
             </div>
             <a 
-              href="mailto:abhijeetkumar.workonly@gmail.com" 
+              href="mailto:contactus@quantumqbit.in" 
               style={styles.mailtoLink}
               className="btn-secondary"
             >
@@ -160,9 +181,10 @@ export const ContactUs: React.FC = () => {
                 <button 
                   type="submit" 
                   className="btn-primary"
-                  style={{ width: '100%', justifyContent: 'center', marginTop: '8px' }}
+                  style={{ width: '100%', justifyContent: 'center', marginTop: '8px', opacity: sending ? 0.7 : 1, cursor: sending ? 'not-allowed' : 'pointer' }}
+                  disabled={sending}
                 >
-                  Submit Message <Send size={14} />
+                  {sending ? 'Sending Message...' : 'Submit Message'} <Send size={14} />
                 </button>
               </form>
             ) : (

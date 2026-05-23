@@ -104,8 +104,8 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
             )}
             <div style={styles.contactEmailRow}>
               <Mail size={14} style={{ color: 'var(--primary)' }} />
-              <a href="mailto:abhijeetkumar.workonly@gmail.com" style={styles.emailLink}>
-                abhijeetkumar.workonly@gmail.com
+              <a href="mailto:contactus@quantumqbit.in" style={styles.emailLink}>
+                contactus@quantumqbit.in
               </a>
             </div>
           </div>

@@ -92,7 +92,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ setCurrentPage }) 
               4. Contact & Correspondence
             </h3>
             <p style={styles.text}>
-              If you contact us directly via email (e.g., at <a href="mailto:abhijeetkumar.workonly@gmail.com" style={{ color: 'var(--primary)' }}>abhijeetkumar.workonly@gmail.com</a>) or through our contact page, we receive the details you choose to share (such as your name, email address, and inquiry content). We use this information solely to respond to your request and never share it with third-party advertisers.
+              If you contact us directly via email (e.g., at <a href="mailto:contactus@quantumqbit.in" style={{ color: 'var(--primary)' }}>contactus@quantumqbit.in</a>) or through our contact page, we receive the details you choose to share (such as your name, email address, and inquiry content). We use this information solely to respond to your request and never share it with third-party advertisers.
             </p>
           </div>
         </div>
