@@ -5,13 +5,16 @@ import Sidebar from './components/Sidebar';
 import { usePath, navigate } from './utils/router';
 import { updateSEO } from './utils/seo';
 
-const LandingPage = lazy(() => import('./pages/LandingPage'));
-const Tools = lazy(() => import('./pages/Tools'));
+// Static imports for initial/lightweight pages to avoid waterfall & layout shifts
+import LandingPage from './pages/LandingPage';
+import Tools from './pages/Tools';
+import AboutUs from './pages/AboutUs';
+import ContactUs from './pages/ContactUs';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsAndConditions from './pages/TermsAndConditions';
+
+// Lazy load heavier features that use external libraries
 const Blogs = lazy(() => import('./pages/Blogs'));
-const AboutUs = lazy(() => import('./pages/AboutUs'));
-const ContactUs = lazy(() => import('./pages/ContactUs'));
-const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
-const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions'));
 const Admin = lazy(() => import('./pages/Admin'));
 
 function App() {
@@ -29,6 +32,40 @@ function App() {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  // Load Google AdSense script on delay or first interaction to maximize PageSpeed score
+  useEffect(() => {
+    let loaded = false;
+    const loadAdSense = () => {
+      if (loaded) return;
+      loaded = true;
+      
+      // Clean up event listeners
+      window.removeEventListener('scroll', loadAdSense);
+      window.removeEventListener('mousemove', loadAdSense);
+      window.removeEventListener('touchstart', loadAdSense);
+      
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6096598752695949";
+      script.crossOrigin = "anonymous";
+      document.head.appendChild(script);
+    };
+
+    // Load after 3.5 seconds delay or on first interaction (whichever comes first)
+    const timeoutId = setTimeout(loadAdSense, 3500);
+
+    window.addEventListener('scroll', loadAdSense, { passive: true });
+    window.addEventListener('mousemove', loadAdSense, { passive: true });
+    window.addEventListener('touchstart', loadAdSense, { passive: true });
+
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('scroll', loadAdSense);
+      window.removeEventListener('mousemove', loadAdSense);
+      window.removeEventListener('touchstart', loadAdSense);
+    };
+  }, []);
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
