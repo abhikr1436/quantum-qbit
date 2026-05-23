@@ -14,6 +14,8 @@ interface BlogPost {
   category: string;
   category_id?: string;
   imageGlow: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface Category {
@@ -262,9 +264,23 @@ export const Blogs: React.FC<BlogsProps> = ({
     );
   }
 
+  const sortedPosts = [...posts].sort((a, b) => {
+    const ta = a.updated_at || a.created_at || '';
+    const tb = b.updated_at || b.created_at || '';
+    if (ta && tb && ta !== tb) {
+      return tb.localeCompare(ta);
+    }
+    const da = a.date ? new Date(a.date).getTime() : 0;
+    const db = b.date ? new Date(b.date).getTime() : 0;
+    if (da !== db) {
+      return db - da;
+    }
+    return b.id.localeCompare(a.id);
+  });
+
   const filteredPosts = selectedCategory !== 'all'
-    ? posts.filter(post => post.category_id === selectedCategory || post.category === selectedCategory)
-    : posts;
+    ? sortedPosts.filter(post => post.category_id === selectedCategory || post.category === selectedCategory)
+    : sortedPosts;
 
   return (
     <div style={styles.blogFeed}>

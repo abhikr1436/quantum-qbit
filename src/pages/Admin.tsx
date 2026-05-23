@@ -15,6 +15,8 @@ interface BlogPost {
   category: string;
   category_id?: string;
   imageGlow: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface AdminProps {
@@ -824,7 +826,19 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
                   </div>
                 ) : (
                   <div style={styles.postsList}>
-                    {posts.map((post) => (
+                    {[...posts].sort((a, b) => {
+                      const ta = a.updated_at || a.created_at || '';
+                      const tb = b.updated_at || b.created_at || '';
+                      if (ta && tb && ta !== tb) {
+                        return tb.localeCompare(ta);
+                      }
+                      const da = a.date ? new Date(a.date).getTime() : 0;
+                      const db = b.date ? new Date(b.date).getTime() : 0;
+                      if (da !== db) {
+                        return db - da;
+                      }
+                      return b.id.localeCompare(a.id);
+                    }).map((post) => (
                       <div key={post.id} className="glass-card" style={styles.postRow}>
                         <div style={styles.postMeta}>
                           <span style={{ ...styles.categoryBadge, color: 'var(--primary)', borderColor: 'rgba(0, 242, 254, 0.15)' }}>

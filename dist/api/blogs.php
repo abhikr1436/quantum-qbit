@@ -129,12 +129,20 @@ $input = json_decode(file_get_contents('php://input'), true);
 // 1. GET ROUTE (Public)
 if ($method === 'GET') {
     if ($pdo) {
+        // Run migrations to ensure columns exist
+        try {
+            $pdo->exec("ALTER TABLE blogs ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+        } catch (PDOException $e) {}
+        try {
+            $pdo->exec("ALTER TABLE blogs ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
+        } catch (PDOException $e) {}
+
         try {
             $stmt = $pdo->query("
-                SELECT b.id, b.title, b.excerpt, b.content, b.author, b.date, b.read_time AS readTime, b.category_id, c.name AS category, b.image_glow AS imageGlow
+                SELECT b.id, b.title, b.excerpt, b.content, b.author, b.date, b.read_time AS readTime, b.category_id, c.name AS category, b.image_glow AS imageGlow, b.created_at, b.updated_at
                 FROM blogs b
                 LEFT JOIN categories c ON b.category_id = c.id
-                ORDER BY b.id DESC
+                ORDER BY COALESCE(b.updated_at, b.created_at) DESC, STR_TO_DATE(b.date, '%b %d, %Y') DESC, b.id DESC
             ");
             $posts = $stmt->fetchAll();
             
@@ -185,20 +193,48 @@ if ($method === 'GET') {
                 
                 // Re-fetch
                 $stmt = $pdo->query("
-                    SELECT b.id, b.title, b.excerpt, b.content, b.author, b.date, b.read_time AS readTime, b.category_id, c.name AS category, b.image_glow AS imageGlow
+                    SELECT b.id, b.title, b.excerpt, b.content, b.author, b.date, b.read_time AS readTime, b.category_id, c.name AS category, b.image_glow AS imageGlow, b.created_at, b.updated_at
                     FROM blogs b
                     LEFT JOIN categories c ON b.category_id = c.id
-                    ORDER BY b.id DESC
+                    ORDER BY COALESCE(b.updated_at, b.created_at) DESC, STR_TO_DATE(b.date, '%b %d, %Y') DESC, b.id DESC
                 ");
                 $posts = $stmt->fetchAll();
             }
             
             echo json_encode($posts);
         } catch (PDOException $e) {
-            echo json_encode(getFallbackBlogs($blogsFile));
+            $fallback = getFallbackBlogs($blogsFile);
+            usort($fallback, function($a, $b) {
+                $ta = isset($a['updated_at']) ? $a['updated_at'] : (isset($a['created_at']) ? $a['created_at'] : '');
+                $tb = isset($b['updated_at']) ? $b['updated_at'] : (isset($b['created_at']) ? $b['created_at'] : '');
+                if ($ta && $tb && $ta !== $tb) {
+                    return strcmp($tb, $ta);
+                }
+                $da = isset($a['date']) ? strtotime($a['date']) : 0;
+                $db = isset($b['date']) ? strtotime($b['date']) : 0;
+                if ($da !== $db) {
+                    return $db - $da;
+                }
+                return strcmp($b['id'], $a['id']);
+            });
+            echo json_encode($fallback);
         }
     } else {
-        echo json_encode(getFallbackBlogs($blogsFile));
+        $fallback = getFallbackBlogs($blogsFile);
+        usort($fallback, function($a, $b) {
+            $ta = isset($a['updated_at']) ? $a['updated_at'] : (isset($a['created_at']) ? $a['created_at'] : '');
+            $tb = isset($b['updated_at']) ? $b['updated_at'] : (isset($b['created_at']) ? $b['created_at'] : '');
+            if ($ta && $tb && $ta !== $tb) {
+                return strcmp($tb, $ta);
+            }
+            $da = isset($a['date']) ? strtotime($a['date']) : 0;
+            $db = isset($b['date']) ? strtotime($b['date']) : 0;
+            if ($da !== $db) {
+                return $db - $da;
+            }
+            return strcmp($b['id'], $a['id']);
+        });
+        echo json_encode($fallback);
     }
     exit;
 }
@@ -318,7 +354,9 @@ if ($method === 'POST') {
             'readTime' => $readTime,
             'category' => $categoryName,
             'category_id' => $categoryId,
-            'imageGlow' => $imageGlow
+            'imageGlow' => $imageGlow,
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
         ];
         
         array_unshift($blogs, $newPost);
@@ -364,7 +402,8 @@ if ($method === 'PUT') {
             $stmt = $pdo->prepare("
                 UPDATE blogs 
                 SET title = :title, excerpt = :excerpt, content = :content, author = :author, 
-                    read_time = :read_time, category_id = :category_id, image_glow = :image_glow 
+                    date = :date, read_time = :read_time, category_id = :category_id, image_glow = :image_glow,
+                    updated_at = NOW()
                 WHERE id = :id
             ");
             $stmt->execute([
@@ -373,6 +412,7 @@ if ($method === 'PUT') {
                 'excerpt' => $excerpt,
                 'content' => $content,
                 'author' => $author,
+                'date' => date('M d, Y'),
                 'read_time' => $readTime,
                 'category_id' => $categoryId,
                 'image_glow' => $imageGlow
@@ -411,6 +451,8 @@ if ($method === 'PUT') {
         $blogs[$foundIndex]['category_id'] = $categoryId;
         $blogs[$foundIndex]['imageGlow'] = $imageGlow;
         $blogs[$foundIndex]['readTime'] = $readTime;
+        $blogs[$foundIndex]['date'] = date('M d, Y');
+        $blogs[$foundIndex]['updated_at'] = date('Y-m-d H:i:s');
         
         if (saveFallbackBlogs($blogsFile, $blogs)) {
             echo json_encode(['success' => true]);
