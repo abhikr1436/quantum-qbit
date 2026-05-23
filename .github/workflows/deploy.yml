@@ -30,11 +30,12 @@ jobs:
       - name: Build application
         run: npm run build
 
-      - name: Deploy to Hostinger
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.SFTP_SERVER }}
-          username: ${{ secrets.SFTP_USERNAME }}
-          password: ${{ secrets.SFTP_PASSWORD }}
-          server-dir: domains/quantumqbit.in/public_html/
-          local-dir: ./dist/
+      - name: Install Python dependencies
+        run: pip install paramiko
+
+      - name: Deploy via SFTP/FTP to Hostinger
+        env:
+          FTP_HOST_RAW: ${{ secrets.SFTP_SERVER }}
+          FTP_USER: ${{ secrets.SFTP_USERNAME }}
+          FTP_PASS: ${{ secrets.SFTP_PASSWORD }}
+        run: python scripts/ftp_deploy.py
