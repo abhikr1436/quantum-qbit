@@ -1,17 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import LandingPage from './pages/LandingPage';
-import Tools from './pages/Tools';
-import Blogs from './pages/Blogs';
-import AboutUs from './pages/AboutUs';
-import ContactUs from './pages/ContactUs';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsAndConditions from './pages/TermsAndConditions';
-import Admin from './pages/Admin';
 import Sidebar from './components/Sidebar';
 import { usePath, navigate } from './utils/router';
 import { updateSEO } from './utils/seo';
+
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const Tools = lazy(() => import('./pages/Tools'));
+const Blogs = lazy(() => import('./pages/Blogs'));
+const AboutUs = lazy(() => import('./pages/AboutUs'));
+const ContactUs = lazy(() => import('./pages/ContactUs'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions'));
+const Admin = lazy(() => import('./pages/Admin'));
 
 function App() {
   const rawPath = usePath();
@@ -221,7 +222,23 @@ function App() {
       
       <div className="content-layout">
         <main style={styles.mainContent} className="main-content-area">
-          {renderPage()}
+          <Suspense fallback={
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: '60vh',
+              color: 'var(--primary)',
+              fontSize: '1.1rem',
+              fontFamily: 'var(--font-heading)',
+              textShadow: '0 0 10px var(--primary-glow)',
+              letterSpacing: '0.05em'
+            }}>
+              Loading Quantum Systems...
+            </div>
+          }>
+            {renderPage()}
+          </Suspense>
         </main>
       </div>
 

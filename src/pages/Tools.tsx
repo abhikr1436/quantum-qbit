@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Image, FileText, Calculator, ArrowLeft, Sliders, Hash, Percent } from 'lucide-react';
-import { ImageEditor } from './tools/ImageEditor';
-import { PdfEditor } from './tools/PdfEditor';
-import { MathCalculators } from './tools/MathCalculators';
+const ImageEditor = React.lazy(() => import('./tools/ImageEditor').then(m => ({ default: m.ImageEditor })));
+const PdfEditor = React.lazy(() => import('./tools/PdfEditor').then(m => ({ default: m.PdfEditor })));
+const MathCalculators = React.lazy(() => import('./tools/MathCalculators').then(m => ({ default: m.MathCalculators })));
 
 interface ToolsProps {
   selectedTool: string;
@@ -68,7 +68,11 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, def
             </span>
           </a>
         </div>
-        <ImageEditor defaultTab={defaultTab as any} />
+        <React.Suspense fallback={
+          <div style={styles.toolLoading}>Initialising Image Studio...</div>
+        }>
+          <ImageEditor defaultTab={defaultTab as any} />
+        </React.Suspense>
       </div>
     );
   }
@@ -83,7 +87,11 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, def
             </span>
           </a>
         </div>
-        <PdfEditor defaultTab={defaultTab as any} />
+        <React.Suspense fallback={
+          <div style={styles.toolLoading}>Initialising PDF Workshop...</div>
+        }>
+          <PdfEditor defaultTab={defaultTab as any} />
+        </React.Suspense>
       </div>
     );
   }
@@ -98,7 +106,11 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, def
             </span>
           </a>
         </div>
-        <MathCalculators />
+        <React.Suspense fallback={
+          <div style={styles.toolLoading}>Initialising Math Workbench...</div>
+        }>
+          <MathCalculators />
+        </React.Suspense>
       </div>
     );
   }
@@ -333,6 +345,16 @@ const styles = {
     textAlign: 'center' as const,
     padding: '40px 0',
     color: 'var(--text-secondary)',
+  },
+  toolLoading: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '40vh',
+    color: 'var(--primary)',
+    fontSize: '1rem',
+    fontFamily: 'var(--font-heading)',
+    textShadow: '0 0 8px var(--primary-glow)',
   },
 };
 export default Tools;
