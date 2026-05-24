@@ -488,6 +488,63 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
   const [bgFeather, setBgFeather] = useState<number>(5);
   const [eyeDropperActive, setEyeDropperActive] = useState<boolean>(false);
 
+  // Input draft string states for text field deletion and validation
+  const [dpiInput, setDpiInput] = useState<string>('96');
+  const [cropXInput, setCropXInput] = useState<string>('0');
+  const [cropYInput, setCropYInput] = useState<string>('0');
+  const [cropWidthInput, setCropWidthInput] = useState<string>('0');
+  const [cropHeightInput, setCropHeightInput] = useState<string>('0');
+  const [resizeWidthInput, setResizeWidthInput] = useState<string>('0');
+  const [resizeHeightInput, setResizeHeightInput] = useState<string>('0');
+  const [targetSizeKBInput, setTargetSizeKBInput] = useState<string>('150');
+
+  // Synchronize draft states when core numeric states change
+  useEffect(() => {
+    setDpiInput(String(dpi));
+  }, [dpi]);
+
+  useEffect(() => {
+    setCropXInput(String(cropX));
+  }, [cropX]);
+
+  useEffect(() => {
+    setCropYInput(String(cropY));
+  }, [cropY]);
+
+  useEffect(() => {
+    setCropWidthInput(String(cropWidth));
+  }, [cropWidth]);
+
+  useEffect(() => {
+    setCropHeightInput(String(cropHeight));
+  }, [cropHeight]);
+
+  useEffect(() => {
+    if (resizeWidth === 0) {
+      setResizeWidthInput('');
+    } else if (resizeUnit === 'px') {
+      setResizeWidthInput(String(resizeWidth));
+    } else if (resizeUnit === 'inches') {
+      setResizeWidthInput(String(parseFloat((resizeWidth / dpi).toFixed(3))));
+    } else {
+      setResizeWidthInput(String(parseFloat(((resizeWidth / dpi) * 2.54).toFixed(3))));
+    }
+
+    if (resizeHeight === 0) {
+      setResizeHeightInput('');
+    } else if (resizeUnit === 'px') {
+      setResizeHeightInput(String(resizeHeight));
+    } else if (resizeUnit === 'inches') {
+      setResizeHeightInput(String(parseFloat((resizeHeight / dpi).toFixed(3))));
+    } else {
+      setResizeHeightInput(String(parseFloat(((resizeHeight / dpi) * 2.54).toFixed(3))));
+    }
+  }, [resizeWidth, resizeHeight, resizeUnit, dpi]);
+
+  useEffect(() => {
+    setTargetSizeKBInput(String(targetSizeKB));
+  }, [targetSizeKB]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -1344,6 +1401,10 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
 
   const handleApplyCompression = async () => {
     if (!image) return;
+    if (targetSizeKBInput === '' || isNaN(Number(targetSizeKBInput)) || Number(targetSizeKBInput) <= 0) {
+      if ((window as any).showToast) (window as any).showToast('Please enter a valid target size (KB) greater than 0.');
+      return;
+    }
     setCompressing(true);
     // Force format to image/jpeg for compression control (PNG is lossless and doesn't compress/adjust quality factor)
     const mime = originalFileType === 'image/png' ? 'image/jpeg' : originalFileType;
@@ -1429,6 +1490,11 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
   const downloadEditedImage = async () => {
     if (!image || !previewCanvasRef.current) return;
     
+    if (dpiInput === '' || isNaN(Number(dpiInput)) || Number(dpiInput) <= 0) {
+      if ((window as any).showToast) (window as any).showToast('Please enter a valid DPI density greater than 0.');
+      return;
+    }
+    
     setCompressing(true);
     
     // Redraw without crop overlay for clean export
@@ -1508,21 +1574,42 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
     setCropHeight(newHeight);
   };
 
-  const handleCropXChange = (val: number) => {
+  const handleCropXChange = (val: string) => {
+    setCropXInput(val);
+    if (val === '') return;
+    const num = Number(val);
+    if (isNaN(num) || num < 0) {
+      if ((window as any).showToast) (window as any).showToast('Crop X must be a non-negative number.');
+      return;
+    }
     const maxVal = imageSize.width - cropWidth;
-    const newX = Math.min(Math.max(0, val), maxVal);
+    const newX = Math.min(Math.round(num), maxVal);
     setCropX(newX);
   };
 
-  const handleCropYChange = (val: number) => {
+  const handleCropYChange = (val: string) => {
+    setCropYInput(val);
+    if (val === '') return;
+    const num = Number(val);
+    if (isNaN(num) || num < 0) {
+      if ((window as any).showToast) (window as any).showToast('Crop Y must be a non-negative number.');
+      return;
+    }
     const maxVal = imageSize.height - cropHeight;
-    const newY = Math.min(Math.max(0, val), maxVal);
+    const newY = Math.min(Math.max(0, Math.round(num)), maxVal);
     setCropY(newY);
   };
 
-  const handleCropWidthChange = (val: number) => {
+  const handleCropWidthChange = (val: string) => {
+    setCropWidthInput(val);
+    if (val === '') return;
+    const num = Number(val);
+    if (isNaN(num) || num <= 0) {
+      if ((window as any).showToast) (window as any).showToast('Crop Width must be a positive number.');
+      return;
+    }
     const maxWidth = imageSize.width - cropX;
-    let newW = Math.min(Math.max(10, val), maxWidth);
+    let newW = Math.min(Math.max(10, Math.round(num)), maxWidth);
     
     if (cropAspect !== 'free') {
       let ratio = 1;
@@ -1543,9 +1630,16 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
     }
   };
 
-  const handleCropHeightChange = (val: number) => {
+  const handleCropHeightChange = (val: string) => {
+    setCropHeightInput(val);
+    if (val === '') return;
+    const num = Number(val);
+    if (isNaN(num) || num <= 0) {
+      if ((window as any).showToast) (window as any).showToast('Crop Height must be a positive number.');
+      return;
+    }
     const maxHeight = imageSize.height - cropY;
-    let newH = Math.min(Math.max(10, val), maxHeight);
+    let newH = Math.min(Math.max(10, Math.round(num)), maxHeight);
     
     if (cropAspect !== 'free') {
       let ratio = 1;
@@ -1568,6 +1662,11 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
 
   const applyCropSelection = () => {
     if (!image || !imageRef.current) return;
+    
+    if (cropXInput === '' || cropYInput === '' || cropWidthInput === '' || cropHeightInput === '') {
+      if ((window as any).showToast) (window as any).showToast('Crop coordinates and dimensions cannot be empty.');
+      return;
+    }
     
     const cropCanvas = document.createElement('canvas');
     cropCanvas.width = cropWidth;
@@ -1998,8 +2097,8 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
                       type="number"
                       min="0"
                       max={imageSize.width - cropWidth}
-                      value={cropX}
-                      onChange={(e) => handleCropXChange(Number(e.target.value))}
+                      value={cropXInput}
+                      onChange={(e) => handleCropXChange(e.target.value)}
                       style={styles.numberInput}
                     />
                   </div>
@@ -2009,8 +2108,8 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
                       type="number"
                       min="0"
                       max={imageSize.height - cropHeight}
-                      value={cropY}
-                      onChange={(e) => handleCropYChange(Number(e.target.value))}
+                      value={cropYInput}
+                      onChange={(e) => handleCropYChange(e.target.value)}
                       style={styles.numberInput}
                     />
                   </div>
@@ -2023,8 +2122,8 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
                       type="number"
                       min="10"
                       max={imageSize.width - cropX}
-                      value={cropWidth}
-                      onChange={(e) => handleCropWidthChange(Number(e.target.value))}
+                      value={cropWidthInput}
+                      onChange={(e) => handleCropWidthChange(e.target.value)}
                       style={styles.numberInput}
                     />
                   </div>
@@ -2034,8 +2133,8 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
                       type="number"
                       min="10"
                       max={imageSize.height - cropY}
-                      value={cropHeight}
-                      onChange={(e) => handleCropHeightChange(Number(e.target.value))}
+                      value={cropHeightInput}
+                      onChange={(e) => handleCropHeightChange(e.target.value)}
                       style={styles.numberInput}
                     />
                   </div>
@@ -2105,8 +2204,31 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
                     <input
                       type="number"
                       step={resizeUnit === 'px' ? '1' : '0.01'}
-                      value={getDisplayWidth()}
-                      onChange={(e) => handleDisplayWidthChange(Number(e.target.value))}
+                      value={resizeWidthInput}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setResizeWidthInput(val);
+                        if (val === '') {
+                          if (maintainRatio) setResizeHeightInput('');
+                          return;
+                        }
+                        const num = Number(val);
+                        if (isNaN(num) || num <= 0) {
+                          if ((window as any).showToast) (window as any).showToast('Width must be a positive number.');
+                          return;
+                        }
+                        
+                        // Parse to pixels and update core state
+                        let pxVal = num;
+                        if (resizeUnit === 'inches') pxVal = Math.round(num * dpi);
+                        if (resizeUnit === 'cm') pxVal = Math.round((num / 2.54) * dpi);
+                        pxVal = Math.max(1, pxVal);
+                        
+                        setResizeWidth(pxVal);
+                        if (maintainRatio) {
+                          setResizeHeight(Math.round(pxVal / originalRatio));
+                        }
+                      }}
                       style={styles.numberInput}
                     />
                   </div>
@@ -2115,8 +2237,31 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
                     <input
                       type="number"
                       step={resizeUnit === 'px' ? '1' : '0.01'}
-                      value={getDisplayHeight()}
-                      onChange={(e) => handleDisplayHeightChange(Number(e.target.value))}
+                      value={resizeHeightInput}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setResizeHeightInput(val);
+                        if (val === '') {
+                          if (maintainRatio) setResizeWidthInput('');
+                          return;
+                        }
+                        const num = Number(val);
+                        if (isNaN(num) || num <= 0) {
+                          if ((window as any).showToast) (window as any).showToast('Height must be a positive number.');
+                          return;
+                        }
+                        
+                        // Parse to pixels and update core state
+                        let pxVal = num;
+                        if (resizeUnit === 'inches') pxVal = Math.round(num * dpi);
+                        if (resizeUnit === 'cm') pxVal = Math.round((num / 2.54) * dpi);
+                        pxVal = Math.max(1, pxVal);
+                        
+                        setResizeHeight(pxVal);
+                        if (maintainRatio) {
+                          setResizeWidth(Math.round(pxVal / originalRatio));
+                        }
+                      }}
                       style={styles.numberInput}
                     />
                   </div>
@@ -2165,8 +2310,18 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <input
                       type="number"
-                      value={dpi}
-                      onChange={(e) => setDpi(Math.max(1, Math.round(Number(e.target.value))))}
+                      value={dpiInput}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setDpiInput(val);
+                        if (val === '') return;
+                        const num = Number(val);
+                        if (isNaN(num) || num <= 0) {
+                          if ((window as any).showToast) (window as any).showToast('DPI must be a positive number.');
+                          return;
+                        }
+                        setDpi(Math.round(num));
+                      }}
                       style={styles.numberInput}
                     />
                     <button 
@@ -2210,11 +2365,19 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
                     <input
                       type="number"
-                      value={targetSizeKB}
+                      value={targetSizeKBInput}
                       onChange={(e) => {
-                        setTargetSizeKB(Math.max(1, Number(e.target.value)));
+                        const val = e.target.value;
+                        setTargetSizeKBInput(val);
                         setCompressedBlob(null);
                         setCompressedSizeStr('');
+                        if (val === '') return;
+                        const num = Number(val);
+                        if (isNaN(num) || num <= 0) {
+                          if ((window as any).showToast) (window as any).showToast('Target size must be a positive number.');
+                          return;
+                        }
+                        setTargetSizeKB(num);
                       }}
                       style={styles.numberInput}
                     />

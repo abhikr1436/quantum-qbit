@@ -27,11 +27,24 @@ function App() {
     const saved = localStorage.getItem('theme');
     return (saved === 'light' || saved === 'dark') ? saved : 'dark';
   });
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    let timer: any;
+    (window as any).showToast = (message: string, type: 'success' | 'error' = 'error') => {
+      setToast({ message, type });
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        setToast(null);
+      }, 4000);
+    };
+    return () => clearTimeout(timer);
+  }, []);
 
   // Load heavy external tracking/ad scripts on delay or first interaction to maximize PageSpeed score
   useEffect(() => {
@@ -359,6 +372,19 @@ function App() {
 
       <Footer setCurrentPage={handleSetCurrentPage} />
 
+      {toast && (
+        <div className="toast-animation">
+          <div className="toast-card" style={{
+            borderLeft: toast.type === 'error' ? '4px solid #ef4444' : '4px solid #10b981'
+          }}>
+            <span style={{ color: toast.type === 'error' ? '#ef4444' : '#10b981', display: 'flex', alignItems: 'center' }}>
+              {toast.type === 'error' ? '⚠️' : '✨'}
+            </span>
+            <span>{toast.message}</span>
+            <button className="toast-close-btn" onClick={() => setToast(null)}>×</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

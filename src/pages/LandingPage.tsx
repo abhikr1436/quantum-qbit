@@ -1,8 +1,81 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Cpu, Image, FileText, Calculator, ShieldCheck, Zap, Lock, ArrowRight, BookOpen } from 'lucide-react';
 import { navigate } from '../utils/router';
 
+interface BlogPost {
+  id: string;
+  title: string;
+  excerpt: string;
+  author: string;
+  date: string;
+  readTime: string;
+  category: string;
+  imageGlow: string;
+}
+
 export const LandingPage: React.FC = () => {
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const response = await fetch('/api/blogs.php');
+        if (response.ok) {
+          const data = await response.json();
+          setPosts(data);
+        } else {
+          loadFallbackBlogs();
+        }
+      } catch (err) {
+        loadFallbackBlogs();
+      }
+    };
+
+    const loadFallbackBlogs = () => {
+      const local = localStorage.getItem('quantum_blogs');
+      if (local) {
+        setPosts(JSON.parse(local));
+      } else {
+        const defaultPosts: BlogPost[] = [
+          {
+            id: 'browser-privacy',
+            title: "Why Browser-Only Tools Are the Future of Web Utility Apps",
+            excerpt: "In an era of rising security concerns, running calculations, converting PDFs, and editing photos locally protects user data from server hazards.",
+            author: "Quantum Engineering Team",
+            date: "May 18, 2026",
+            readTime: "4 min read",
+            category: "Privacy & Security",
+            imageGlow: 'rgba(0, 242, 254, 0.1)'
+          },
+          {
+            id: 'base-math',
+            title: "The Logic Behind Real-Time Cross-Input Number Base Conversions",
+            excerpt: "Understanding how computers translate binary, octal, decimal, and hexadecimal representations under the hood to optimize data structures.",
+            author: "Dr. Clara Chen",
+            date: "May 10, 2026",
+            readTime: "5 min read",
+            category: "Computer Science",
+            imageGlow: 'rgba(157, 78, 221, 0.1)'
+          },
+          {
+            id: 'image-optimization',
+            title: "Image Formats Decoded: Choosing Between JPG, PNG, and WEBP",
+            excerpt: "A deep dive into compression algorithms and when to use each format to achieve visual clarity while keeping load times minimal.",
+            author: "Marcus Vance",
+            date: "May 02, 2026",
+            readTime: "3 min read",
+            category: "Creative Tech",
+            imageGlow: 'rgba(0, 242, 254, 0.1)'
+          }
+        ];
+        localStorage.setItem('quantum_blogs', JSON.stringify(defaultPosts));
+        setPosts(defaultPosts);
+      }
+    };
+
+    fetchBlogs();
+  }, []);
+
   const features = [
     {
       icon: <Lock size={20} style={{ color: 'var(--primary)' }} />,
@@ -20,34 +93,6 @@ export const LandingPage: React.FC = () => {
       description: "A clean, modern workspace designed for professionals and developers. No login required, no paywalls, just pure tools."
     }
   ];
-
-  const toolsShowcase = [
-    {
-      id: 'image-editor',
-      icon: <Image size={24} style={{ color: 'var(--primary)' }} />,
-      title: "Image Studio",
-      tag: "Creative",
-      description: "Crop, rotate, adjust colors, apply filters, and resize images locally in high definition."
-    },
-    {
-      id: 'pdf-editor',
-      icon: <FileText size={24} style={{ color: 'var(--secondary)' }} />,
-      title: "PDF Workshop",
-      tag: "Productivity",
-      description: "Convert photos directly to PDF and extract text data from documents instantly."
-    },
-    {
-      id: 'math-calculators',
-      icon: <Calculator size={24} style={{ color: 'var(--primary)' }} />,
-      title: "Math Workbench",
-      tag: "Scientific",
-      description: "Scientific solver, hexadecimal-binary base converters, and comprehensive unit adapters."
-    }
-  ];
-
-  const handleToolClick = (toolId: string) => {
-    navigate(`/tools/${toolId}`);
-  };
 
   return (
     <div style={styles.landing}>
@@ -67,14 +112,6 @@ export const LandingPage: React.FC = () => {
           <p style={styles.heroSubtitle}>
             A curated suite of minimal, high-performance web applications designed with absolute privacy. No uploads, no registrations, completely client-side.
           </p>
-          <div style={styles.ctaGroup}>
-            <button className="btn-primary" onClick={() => navigate('/tools')}>
-              Explore Tools <ArrowRight size={16} />
-            </button>
-            <button className="btn-secondary" onClick={() => navigate('/about')}>
-              Learn Our Mission
-            </button>
-          </div>
         </div>
       </section>
 
@@ -99,37 +136,110 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Tools Showcase */}
+      {/* Horizontally Scrollable Tools Frame */}
       <section style={styles.showcaseSection}>
         <div className="container">
           <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Featured Utilities</h2>
-            <p style={styles.sectionSubtitle}>A look at some of the tools built directly into the Quantum Qbit shell.</p>
+            <h2 style={styles.sectionTitle}>Quantum Utilities Directory</h2>
+            <p style={styles.sectionSubtitle}>Select a utility app below to begin client-side processing immediately.</p>
           </div>
-          <div style={styles.toolsGrid}>
-            {toolsShowcase.map((tool) => (
-              <div key={tool.id} className="glass-card" style={styles.toolCard}>
-                <div style={styles.toolCardHeader}>
-                  <div style={styles.toolIconWrapper}>{tool.icon}</div>
-                  <span style={{
-                    ...styles.toolTag,
-                    color: tool.tag === 'Creative' ? 'var(--primary)' : 'var(--secondary)',
-                    borderColor: tool.tag === 'Creative' ? 'rgba(0, 242, 254, 0.15)' : 'rgba(157, 78, 221, 0.15)',
-                    background: tool.tag === 'Creative' ? 'rgba(0, 242, 254, 0.02)' : 'rgba(157, 78, 221, 0.02)'
-                  }}>{tool.tag}</span>
+          
+          <div className="horizontal-scroll-row">
+            {/* Card 1: Image Studio */}
+            <div className="glass-card horizontal-scroll-card">
+              <div className="scroll-card-glow" style={{ background: 'radial-gradient(circle, rgba(0, 242, 254, 0.12) 0%, transparent 70%)' }}></div>
+              <div className="scroll-card-content">
+                <h3 className="scroll-card-title">
+                  <Image size={24} style={{ color: 'var(--primary)' }} />
+                  <span>Image Studio</span>
+                </h3>
+                <p className="scroll-card-desc">
+                  Edit, compress, crop, and transform digital images locally in high definition without server latency.
+                </p>
+                <div className="scroll-card-links-grid">
+                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/image-editor')}>Editor</button>
+                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/image-compressor')}>Compressor</button>
+                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/image-transform')}>Transform</button>
+                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/remove-bg')}>BG Removal</button>
                 </div>
-                <h3 style={styles.toolTitle}>{tool.title}</h3>
-                <p style={styles.toolDesc}>{tool.description}</p>
-                <a
-                  href={`/tools/${tool.id}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleToolClick(tool.id);
-                  }}
-                  style={{ ...styles.toolBtn, textDecoration: 'none' }}
-                >
-                  Open Application <ArrowRight size={14} style={styles.btnArrow} />
-                </a>
+              </div>
+            </div>
+
+            {/* Card 2: PDF Workshop */}
+            <div className="glass-card horizontal-scroll-card">
+              <div className="scroll-card-glow" style={{ background: 'radial-gradient(circle, rgba(157, 78, 221, 0.12) 0%, transparent 70%)' }}></div>
+              <div className="scroll-card-content">
+                <h3 className="scroll-card-title">
+                  <FileText size={24} style={{ color: 'var(--secondary)' }} />
+                  <span>PDF Workshop</span>
+                </h3>
+                <p className="scroll-card-desc">
+                  Shrink PDF file sizes client-side or compile image sequences directly to standard PDF pages offline.
+                </p>
+                <div className="scroll-card-links-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+                  <button className="scroll-card-link-btn btn-purple" onClick={() => navigate('/tools/pdf-compressor')}>Compressor</button>
+                  <button className="scroll-card-link-btn btn-purple" onClick={() => navigate('/tools/images-to-pdf')}>Converter</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Math Calculator */}
+            <div className="glass-card horizontal-scroll-card">
+              <div className="scroll-card-glow" style={{ background: 'radial-gradient(circle, rgba(0, 242, 254, 0.12) 0%, transparent 70%)' }}></div>
+              <div className="scroll-card-content">
+                <h3 className="scroll-card-title">
+                  <Calculator size={24} style={{ color: 'var(--primary)' }} />
+                  <span>Math Calculator</span>
+                </h3>
+                <p className="scroll-card-desc">
+                  Scientific notation calculator, real-time hexadecimal/binary base converter, and equation solver.
+                </p>
+                <div style={{ marginTop: 'auto' }}>
+                  <button className="scroll-card-link-btn" style={{ width: '100%' }} onClick={() => navigate('/tools/math-calculators')}>
+                    Open Calculator Workbench
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Horizontally Scrollable Blogs Section */}
+      <section style={styles.blogsSection}>
+        <div className="container">
+          <div style={styles.sectionHeader}>
+            <h2 style={styles.sectionTitle}>Latest Publications & Guides</h2>
+            <p style={styles.sectionSubtitle}>Learn security tips, browser performance tricks, and utility tutorials.</p>
+          </div>
+          
+          <div className="horizontal-scroll-row">
+            {posts.map((post) => (
+              <div key={post.id} className="glass-card blog-scroll-card">
+                <div className="scroll-card-glow" style={{ background: `radial-gradient(circle at top right, ${post.imageGlow} 0%, transparent 75%)` }}></div>
+                <div className="blog-body">
+                  <span style={{
+                    fontSize: '0.78rem',
+                    color: 'var(--primary)',
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
+                  }}>{post.category}</span>
+                  <h3 className="blog-title" onClick={() => navigate(`/blogs/${post.id}`)}>
+                    {post.title}
+                  </h3>
+                  <p className="blog-excerpt">{post.excerpt}</p>
+                </div>
+                <div className="blog-footer">
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{post.readTime}</span>
+                  <button 
+                    className="scroll-card-link-btn" 
+                    onClick={() => navigate(`/blogs/${post.id}`)}
+                    style={{ padding: '6px 12px' }}
+                  >
+                    Read
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -161,6 +271,9 @@ export const LandingPage: React.FC = () => {
 const styles = {
   landing: {
     paddingBottom: '80px',
+  },
+  blogsSection: {
+    padding: '80px 0',
   },
   heroSection: {
     position: 'relative' as const,

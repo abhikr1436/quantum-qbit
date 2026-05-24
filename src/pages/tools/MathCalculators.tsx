@@ -94,6 +94,10 @@ export const MathCalculators: React.FC = () => {
       
       switch (base) {
         case 10:
+          if (/[^0-9]/.test(value)) {
+            if ((window as any).showToast) (window as any).showToast('Decimal input must contain only digits (0-9).');
+            return;
+          }
           decimal = parseInt(value, 10);
           if (isNaN(decimal)) return;
           setDecVal(value);
@@ -102,7 +106,10 @@ export const MathCalculators: React.FC = () => {
           setOctVal(decimal.toString(8));
           break;
         case 2:
-          if (/[^0-1]/.test(value)) return; // Allow only binary digits
+          if (/[^0-1]/.test(value)) {
+            if ((window as any).showToast) (window as any).showToast('Binary input must contain only 0 and 1.');
+            return;
+          }
           decimal = parseInt(value, 2);
           setBinVal(value);
           setDecVal(isNaN(decimal) ? '' : decimal.toString(10));
@@ -110,7 +117,10 @@ export const MathCalculators: React.FC = () => {
           setOctVal(isNaN(decimal) ? '' : decimal.toString(8));
           break;
         case 16:
-          if (/[^0-9a-fA-F]/.test(value)) return; // Allow only hex digits
+          if (/[^0-9a-fA-F]/.test(value)) {
+            if ((window as any).showToast) (window as any).showToast('Hexadecimal input must contain only 0-9 and A-F.');
+            return;
+          }
           decimal = parseInt(value, 16);
           setHexVal(value.toUpperCase());
           setDecVal(isNaN(decimal) ? '' : decimal.toString(10));
@@ -118,7 +128,10 @@ export const MathCalculators: React.FC = () => {
           setOctVal(isNaN(decimal) ? '' : decimal.toString(8));
           break;
         case 8:
-          if (/[^0-7]/.test(value)) return; // Allow only octal digits
+          if (/[^0-7]/.test(value)) {
+            if ((window as any).showToast) (window as any).showToast('Octal input must contain only digits (0-7).');
+            return;
+          }
           decimal = parseInt(value, 8);
           setOctVal(value);
           setDecVal(isNaN(decimal) ? '' : decimal.toString(10));
@@ -228,6 +241,16 @@ export const MathCalculators: React.FC = () => {
   };
 
   const handleUnitValChange = (val: string) => {
+    if (val === '') {
+      setConvertVal('');
+      setConvertedResult('');
+      return;
+    }
+    const num = parseFloat(val);
+    if (isNaN(num)) {
+      if ((window as any).showToast) (window as any).showToast('Please enter a valid numeric value.');
+      return;
+    }
     setConvertVal(val);
     runUnitConversion(val, unitFrom, unitTo, unitCategory);
   };
@@ -286,13 +309,17 @@ export const MathCalculators: React.FC = () => {
   const [sysResult, setSysResult] = useState<{ x: string; y: string; steps: string[] } | null>(null);
 
   const solveLinear = () => {
+    if (linearA === '' || linearB === '' || linearC === '' || linearD === '') {
+      if ((window as any).showToast) (window as any).showToast('Coefficients cannot be empty.');
+      return;
+    }
     const a = parseFloat(linearA);
     const b = parseFloat(linearB);
     const c = parseFloat(linearC);
     const d = parseFloat(linearD);
 
     if (isNaN(a) || isNaN(b) || isNaN(c) || isNaN(d)) {
-      setLinearResult({ x: 'Error', steps: ['Please enter valid coefficients.'] });
+      if ((window as any).showToast) (window as any).showToast('Please enter valid numeric coefficients.');
       return;
     }
 
@@ -323,17 +350,21 @@ export const MathCalculators: React.FC = () => {
   };
 
   const solveQuadratic = () => {
+    if (quadA === '' || quadB === '' || quadC === '') {
+      if ((window as any).showToast) (window as any).showToast('Coefficients cannot be empty.');
+      return;
+    }
     const a = parseFloat(quadA);
     const b = parseFloat(quadB);
     const c = parseFloat(quadC);
 
     if (isNaN(a) || isNaN(b) || isNaN(c)) {
-      setQuadResult({ x1: 'Error', x2: 'Error', steps: ['Please enter valid coefficients.'] });
+      if ((window as any).showToast) (window as any).showToast('Please enter valid numeric coefficients.');
       return;
     }
 
     if (a === 0) {
-      setQuadResult({ x1: 'Error', x2: 'Error', steps: ['Coefficient "a" cannot be 0 in a quadratic equation. Use linear solver instead.'] });
+      if ((window as any).showToast) (window as any).showToast('Coefficient "a" cannot be 0 in a quadratic equation.');
       return;
     }
 
@@ -404,6 +435,10 @@ export const MathCalculators: React.FC = () => {
   };
 
   const solveSystem = () => {
+    if (sysA1 === '' || sysB1 === '' || sysC1 === '' || sysA2 === '' || sysB2 === '' || sysC2 === '') {
+      if ((window as any).showToast) (window as any).showToast('Coefficients cannot be empty.');
+      return;
+    }
     const a1 = parseFloat(sysA1);
     const b1 = parseFloat(sysB1);
     const c1 = parseFloat(sysC1);
@@ -412,7 +447,7 @@ export const MathCalculators: React.FC = () => {
     const c2 = parseFloat(sysC2);
 
     if (isNaN(a1) || isNaN(b1) || isNaN(c1) || isNaN(a2) || isNaN(b2) || isNaN(c2)) {
-      setSysResult({ x: 'Error', y: 'Error', steps: ['Please enter valid coefficients.'] });
+      if ((window as any).showToast) (window as any).showToast('Please enter valid numeric coefficients.');
       return;
     }
 
@@ -991,7 +1026,7 @@ export const MathCalculators: React.FC = () => {
                 <input
                   type="text"
                   value={decVal}
-                  onChange={(e) => handleBaseChange(e.target.value.replace(/[^0-9]/g, ''), 10)}
+                  onChange={(e) => handleBaseChange(e.target.value, 10)}
                   className="form-input"
                   style={{ fontFamily: 'monospace', fontSize: '1.05rem' }}
                   placeholder="e.g. 255"
@@ -1528,7 +1563,19 @@ export const MathCalculators: React.FC = () => {
                       <input
                         type="number"
                         value={xMin}
-                        onChange={(e) => setXMin(e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '' || val === '-') {
+                            setXMin(val);
+                            return;
+                          }
+                          const num = parseFloat(val);
+                          if (isNaN(num)) {
+                            if ((window as any).showToast) (window as any).showToast('Limit must be a valid number.');
+                            return;
+                          }
+                          setXMin(val);
+                        }}
                         className="form-input"
                         style={styles.rangeInput}
                       />
@@ -1538,7 +1585,19 @@ export const MathCalculators: React.FC = () => {
                       <input
                         type="number"
                         value={xMax}
-                        onChange={(e) => setXMax(e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '' || val === '-') {
+                            setXMax(val);
+                            return;
+                          }
+                          const num = parseFloat(val);
+                          if (isNaN(num)) {
+                            if ((window as any).showToast) (window as any).showToast('Limit must be a valid number.');
+                            return;
+                          }
+                          setXMax(val);
+                        }}
                         className="form-input"
                         style={styles.rangeInput}
                       />
@@ -1548,7 +1607,19 @@ export const MathCalculators: React.FC = () => {
                       <input
                         type="number"
                         value={yMin}
-                        onChange={(e) => setYMin(e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '' || val === '-') {
+                            setYMin(val);
+                            return;
+                          }
+                          const num = parseFloat(val);
+                          if (isNaN(num)) {
+                            if ((window as any).showToast) (window as any).showToast('Limit must be a valid number.');
+                            return;
+                          }
+                          setYMin(val);
+                        }}
                         className="form-input"
                         style={styles.rangeInput}
                       />
@@ -1558,7 +1629,19 @@ export const MathCalculators: React.FC = () => {
                       <input
                         type="number"
                         value={yMax}
-                        onChange={(e) => setYMax(e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '' || val === '-') {
+                            setYMax(val);
+                            return;
+                          }
+                          const num = parseFloat(val);
+                          if (isNaN(num)) {
+                            if ((window as any).showToast) (window as any).showToast('Limit must be a valid number.');
+                            return;
+                          }
+                          setYMax(val);
+                        }}
                         className="form-input"
                         style={styles.rangeInput}
                       />

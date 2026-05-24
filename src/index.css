@@ -1101,3 +1101,225 @@ input[type="range"]::-webkit-slider-thumb:hover {
 body.page-admin #bottom-sticky-banner-ad {
   display: none !important;
 }
+
+/* ==========================================================================
+   Global Toast Notification Styles
+   ========================================================================== */
+.toast-animation {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 10000;
+  animation: slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(30px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.toast-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(10, 12, 22, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  max-width: 380px;
+  transition: var(--transition-smooth);
+}
+
+.toast-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.25rem;
+  cursor: pointer;
+  margin-left: auto;
+  padding-left: 12px;
+  transition: var(--transition-fast);
+  line-height: 1;
+}
+
+.toast-close-btn:hover {
+  color: var(--text-primary);
+}
+
+/* ==========================================================================
+   Horizontal Scroll Frame Layout Styles
+   ========================================================================== */
+.horizontal-scroll-row {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  padding: 16px 8px 32px 8px;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  width: 100%;
+}
+
+.horizontal-scroll-row::-webkit-scrollbar {
+  height: 6px;
+}
+
+.horizontal-scroll-row::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.horizontal-scroll-row::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+}
+
+.horizontal-scroll-row::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+  box-shadow: 0 0 8px var(--primary-glow);
+}
+
+.horizontal-scroll-card {
+  flex: 0 0 350px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 30px;
+  min-height: 280px;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .horizontal-scroll-card {
+    flex: 0 0 300px;
+    padding: 24px;
+  }
+}
+
+.scroll-card-glow {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 160px;
+  height: 160px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.scroll-card-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 12px;
+}
+
+.scroll-card-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scroll-card-desc {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  flex-grow: 1;
+}
+
+.scroll-card-links-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.scroll-card-link-btn {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-glass);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  transition: var(--transition-fast);
+  cursor: pointer;
+}
+
+.scroll-card-link-btn:hover {
+  background: var(--primary-glow);
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.scroll-card-link-btn.btn-purple:hover {
+  background: var(--secondary-glow);
+  border-color: var(--secondary);
+  color: var(--secondary);
+  box-shadow: 0 0 10px var(--secondary-glow);
+}
+
+.blog-scroll-card {
+  flex: 0 0 320px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  height: 380px;
+  justify-content: space-between;
+}
+
+.blog-scroll-card .blog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-grow: 1;
+}
+
+.blog-scroll-card .blog-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.35;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.blog-scroll-card .blog-title:hover {
+  color: var(--primary);
+}
+
+.blog-scroll-card .blog-excerpt {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+}
+
+.blog-scroll-card .blog-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border-glass);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+

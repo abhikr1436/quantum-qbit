@@ -298,7 +298,7 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
   const [originalCompressSizeStr, setOriginalCompressSizeStr] = useState('');
   const [compressionType, setCompressionType] = useState<'preset' | 'target'>('preset');
   const [compressionPreset, setCompressionPreset] = useState<'low' | 'medium' | 'high'>('medium');
-  const [targetSizeKB, setTargetSizeKB] = useState<number>(300);
+  const [targetSizeKB, setTargetSizeKB] = useState<number | ''>(300);
   const [compressProgress, setCompressProgress] = useState<string>('');
   const [compressPercent, setCompressPercent] = useState<number>(0);
   const [isCompressing, setIsCompressing] = useState(false);
@@ -323,6 +323,10 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
 
   const handleCompressPdf = async () => {
     if (!compressFile) return;
+    if (compressionType === 'target' && (targetSizeKB === '' || isNaN(Number(targetSizeKB)) || Number(targetSizeKB) <= 0)) {
+      if ((window as any).showToast) (window as any).showToast('Please enter a valid target size (KB) greater than 0.');
+      return;
+    }
     setIsCompressing(true);
     setCompressPercent(10);
     setCompressProgress('Reading PDF file structure...');
@@ -348,7 +352,7 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
         }
       } else {
         // Target size based optimization logic
-        const targetBytes = targetSizeKB * 1024;
+        const targetBytes = Number(targetSizeKB) * 1024;
         const originalBytes = compressFile.size;
         const ratio = targetBytes / originalBytes;
 
@@ -1036,9 +1040,22 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
                     <input
                       type="number"
                       value={targetSizeKB}
-                      onChange={(e) => { setTargetSizeKB(Math.max(10, Number(e.target.value))); setCompressedBlob(null); }}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '') {
+                          setTargetSizeKB('');
+                          setCompressedBlob(null);
+                          return;
+                        }
+                        const num = Number(val);
+                        if (isNaN(num) || num <= 0) {
+                          if ((window as any).showToast) (window as any).showToast('Target size must be a positive number.');
+                          return;
+                        }
+                        setTargetSizeKB(num);
+                        setCompressedBlob(null);
+                      }}
                       className="form-input"
-                      min="10"
                     />
                   </div>
                 )}
