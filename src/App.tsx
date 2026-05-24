@@ -5,15 +5,15 @@ import Sidebar from './components/Sidebar';
 import { usePath, navigate } from './utils/router';
 import { updateSEO } from './utils/seo';
 
-// Static imports for initial/lightweight pages to avoid waterfall & layout shifts
+// Static import for LandingPage to ensure immediate rendering of homepage
 import LandingPage from './pages/LandingPage';
-import Tools from './pages/Tools';
-import AboutUs from './pages/AboutUs';
-import ContactUs from './pages/ContactUs';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsAndConditions from './pages/TermsAndConditions';
 
-// Lazy load heavier features that use external libraries
+// Lazy load other views to keep the initial JS bundle size minimal for mobile PageSpeed (90+)
+const Tools = lazy(() => import('./pages/Tools'));
+const AboutUs = lazy(() => import('./pages/AboutUs'));
+const ContactUs = lazy(() => import('./pages/ContactUs'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions'));
 const Blogs = lazy(() => import('./pages/Blogs'));
 const Admin = lazy(() => import('./pages/Admin'));
 
@@ -87,11 +87,27 @@ function App() {
   if (path.startsWith('/tools')) {
     page = 'tools';
     const subpath = path.substring(6); // e.g. "/pdf-editor", "/pdf-compressor"
-    if (subpath === '/image-editor') {
+    if (subpath === '/image-editor' || subpath === '/image-transform') {
       tool = 'image-editor';
+      toolTab = 'adjust';
     } else if (subpath === '/image-compressor' || subpath === '/photo-compressor') {
       tool = 'image-editor';
       toolTab = 'compress';
+    } else if (subpath === '/remove-bg' || subpath === '/bg-remove' || subpath === '/remove-background') {
+      tool = 'image-editor';
+      toolTab = 'bg-remove';
+    } else if (subpath === '/image-crop' || subpath === '/crop-image') {
+      tool = 'image-editor';
+      toolTab = 'crop';
+    } else if (subpath === '/image-resize' || subpath === '/resize-image') {
+      tool = 'image-editor';
+      toolTab = 'resize';
+    } else if (subpath === '/image-dpi' || subpath === '/change-dpi' || subpath === '/dpi-converter') {
+      tool = 'image-editor';
+      toolTab = 'dpi';
+    } else if (subpath === '/image-converter' || subpath === '/convert-image') {
+      tool = 'image-editor';
+      toolTab = 'convert';
     } else if (subpath === '/pdf-editor') {
       tool = 'pdf-editor';
     } else if (subpath === '/pdf-compressor') {
@@ -111,6 +127,34 @@ function App() {
     } else if (subpath === '' || subpath === '/') {
       tool = 'none';
     }
+  } else if (path === '/image-editor' || path === '/image-transform') {
+    page = 'tools';
+    tool = 'image-editor';
+    toolTab = 'adjust';
+  } else if (path === '/image-compressor' || path === '/photo-compressor') {
+    page = 'tools';
+    tool = 'image-editor';
+    toolTab = 'compress';
+  } else if (path === '/remove-bg' || path === '/bg-remove' || path === '/remove-background') {
+    page = 'tools';
+    tool = 'image-editor';
+    toolTab = 'bg-remove';
+  } else if (path === '/image-crop' || path === '/crop-image') {
+    page = 'tools';
+    tool = 'image-editor';
+    toolTab = 'crop';
+  } else if (path === '/image-resize' || path === '/resize-image') {
+    page = 'tools';
+    tool = 'image-editor';
+    toolTab = 'resize';
+  } else if (path === '/image-dpi' || path === '/change-dpi' || path === '/dpi-converter') {
+    page = 'tools';
+    tool = 'image-editor';
+    toolTab = 'dpi';
+  } else if (path === '/image-converter' || path === '/convert-image') {
+    page = 'tools';
+    tool = 'image-editor';
+    toolTab = 'convert';
   } else if (path.startsWith('/blogs')) {
     page = 'blogs';
     const match = path.match(/^\/blogs\/([^/]+)/);

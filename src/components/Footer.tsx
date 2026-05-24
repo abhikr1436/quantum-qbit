@@ -74,7 +74,8 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
             <ul style={styles.linksList}>
               <li><a href="/tools/pdf-compressor" onClick={(e) => handleDirectNavigate(e, '/tools/pdf-compressor')} style={{...styles.footerBtn, textDecoration: 'none'}}>PDF Compressor Online</a></li>
               <li><a href="/tools/image-compressor" onClick={(e) => handleDirectNavigate(e, '/tools/image-compressor')} style={{...styles.footerBtn, textDecoration: 'none'}}>Image Compressor Free</a></li>
-              <li><a href="/tools/image-editor" onClick={(e) => handleDirectNavigate(e, '/tools/image-editor')} style={{...styles.footerBtn, textDecoration: 'none'}}>Image Studio (Editor)</a></li>
+              <li><a href="/tools/remove-bg" onClick={(e) => handleDirectNavigate(e, '/tools/remove-bg')} style={{...styles.footerBtn, textDecoration: 'none'}}>Background Remover Online</a></li>
+              <li><a href="/tools/image-transform" onClick={(e) => handleDirectNavigate(e, '/tools/image-transform')} style={{...styles.footerBtn, textDecoration: 'none'}}>Image Studio (Filters & Editor)</a></li>
               <li><a href="/tools/pdf-editor" onClick={(e) => handleDirectNavigate(e, '/tools/pdf-editor')} style={{...styles.footerBtn, textDecoration: 'none'}}>PDF Workshop (Convert)</a></li>
               <li><a href="/tools/math-calculators" onClick={(e) => handleDirectNavigate(e, '/tools/math-calculators')} style={{...styles.footerBtn, textDecoration: 'none'}}>Math Workbench</a></li>
             </ul>

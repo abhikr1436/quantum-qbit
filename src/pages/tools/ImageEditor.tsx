@@ -373,26 +373,55 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
       ]
     };
 
+    let canonicalPath = '/tools/image-editor';
+    let title = 'Free Client-Side Image Studio | Quantum Qbit';
+    let description = 'Crop, resize, convert, adjust DPI, remove background, and apply settings to images locally inside your browser. 100% private and fast.';
+
     if (activeTab === 'compress') {
       const isPhotoPath = window.location.pathname.includes('photo-compressor');
-      updateSEO(
-        isPhotoPath
-          ? "Easily compress photo online free without login | Quantum Qbit"
-          : "Easily compress image online free without login | Quantum Qbit",
-        "Easily compress images at optimal quality in seconds. Compress JPG, PNG, SVG or GIF with the best quality and compression. Reduce the filesize of your images at once. Upload your file and transform it.",
-        isPhotoPath ? "/tools/photo-compressor" : "/tools/image-compressor",
-        imageFaqSchema
-      );
-    } else {
-      let tabName = activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
-      if (activeTab === 'bg-remove') tabName = 'Background Remover';
-      updateSEO(
-        `${tabName} - Free Client-Side Image Studio | Quantum Qbit`,
-        `Crop, resize, convert, adjust DPI, remove background, and apply settings to images locally inside your browser. 100% private and fast.`,
-        `/tools/image-editor`,
-        imageFaqSchema
-      );
+      title = isPhotoPath
+        ? "Easily compress photo online free without login | Quantum Qbit"
+        : "Easily compress image online free without login | Quantum Qbit";
+      description = "Easily compress images at optimal quality in seconds. Compress JPG, PNG, SVG or GIF with the best quality and compression. Reduce the filesize of your images at once. Upload your file and transform it.";
+      canonicalPath = isPhotoPath ? "/tools/photo-compressor" : "/tools/image-compressor";
+    } else if (activeTab === 'bg-remove') {
+      const isRemoveBgPath = window.location.pathname.includes('remove-bg');
+      const isRemoveBackgroundPath = window.location.pathname.includes('remove-background');
+      title = "Remove Background from Image Free Online | Quantum Qbit";
+      description = "Remove background from your images locally and free of charge. 100% client-side background remover, your photos never touch a remote server.";
+      canonicalPath = isRemoveBgPath 
+        ? "/tools/remove-bg" 
+        : (isRemoveBackgroundPath ? "/tools/remove-background" : "/tools/bg-remove");
+    } else if (activeTab === 'crop') {
+      const isCropImagePath = window.location.pathname.includes('crop-image');
+      title = "Crop Image Online Free - Interactive Image Cropper | Quantum Qbit";
+      description = "Crop images online free of charge. Lock aspect ratio or crop freeform. Fast, secure, client-side photo cropper tool.";
+      canonicalPath = isCropImagePath ? "/tools/crop-image" : "/tools/image-crop";
+    } else if (activeTab === 'resize') {
+      const isResizeImagePath = window.location.pathname.includes('resize-image');
+      title = "Resize Image Online Free - Maintain Aspect Ratio | Quantum Qbit";
+      description = "Resize images in pixels, cm, or inches. Maintain aspect ratio and scale photos instantly in your browser.";
+      canonicalPath = isResizeImagePath ? "/tools/resize-image" : "/tools/image-resize";
+    } else if (activeTab === 'dpi') {
+      const isChangeDpiPath = window.location.pathname.includes('change-dpi');
+      const isDpiConverterPath = window.location.pathname.includes('dpi-converter');
+      title = "300 DPI Converter Online - Change Image DPI | Quantum Qbit";
+      description = "Change the DPI of your images online without losing quality. Set to 300 DPI, 150 DPI, or custom DPI values instantly.";
+      canonicalPath = isChangeDpiPath 
+        ? "/tools/change-dpi" 
+        : (isDpiConverterPath ? "/tools/dpi-converter" : "/tools/image-dpi");
+    } else if (activeTab === 'convert') {
+      const isConvertImagePath = window.location.pathname.includes('convert-image');
+      title = "Image Converter Online Free - WebP, PNG, JPG, BMP | Quantum Qbit";
+      description = "Convert images between WEBP, PNG, JPEG, BMP, and PDF formats online. Free client-side image file converter.";
+      canonicalPath = isConvertImagePath ? "/tools/convert-image" : "/tools/image-converter";
+    } else if (activeTab === 'adjust') {
+      title = "Adjust Image Online - Free Image Transform & Filters | Quantum Qbit";
+      description = "Apply filters, adjust brightness, contrast, saturation, blur, rotate, and flip images online for free.";
+      canonicalPath = "/tools/image-transform";
     }
+
+    updateSEO(title, description, canonicalPath, imageFaqSchema);
   }, [activeTab]);
 
   // Format Conversion states
@@ -1738,29 +1767,29 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
             {/* Categories tab container */}
             <div className="editor-tabs-container">
               <a 
-                href="/tools/image-editor"
-                onClick={(e) => { e.preventDefault(); navigate('/tools/image-editor'); setActiveTab('adjust'); setEyeDropperActive(false); }} 
+                href="/tools/image-transform"
+                onClick={(e) => { e.preventDefault(); navigate('/tools/image-transform'); setActiveTab('adjust'); setEyeDropperActive(false); }} 
                 className={`editor-tab-btn ${activeTab === 'adjust' ? 'active' : ''}`}
               >
                 Filters
               </a>
               <a 
-                href="/tools/image-editor"
-                onClick={(e) => { e.preventDefault(); navigate('/tools/image-editor'); setActiveTab('crop'); setEyeDropperActive(false); }} 
+                href="/tools/image-crop"
+                onClick={(e) => { e.preventDefault(); navigate('/tools/image-crop'); setActiveTab('crop'); setEyeDropperActive(false); }} 
                 className={`editor-tab-btn ${activeTab === 'crop' ? 'active' : ''}`}
               >
                 Crop
               </a>
               <a 
-                href="/tools/image-editor"
-                onClick={(e) => { e.preventDefault(); navigate('/tools/image-editor'); setActiveTab('resize'); setEyeDropperActive(false); }} 
+                href="/tools/image-resize"
+                onClick={(e) => { e.preventDefault(); navigate('/tools/image-resize'); setActiveTab('resize'); setEyeDropperActive(false); }} 
                 className={`editor-tab-btn ${activeTab === 'resize' ? 'active' : ''}`}
               >
                 Resize
               </a>
               <a 
-                href="/tools/image-editor"
-                onClick={(e) => { e.preventDefault(); navigate('/tools/image-editor'); setActiveTab('dpi'); setEyeDropperActive(false); }} 
+                href="/tools/image-dpi"
+                onClick={(e) => { e.preventDefault(); navigate('/tools/image-dpi'); setActiveTab('dpi'); setEyeDropperActive(false); }} 
                 className={`editor-tab-btn ${activeTab === 'dpi' ? 'active' : ''}`}
               >
                 DPI
@@ -1773,15 +1802,15 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
                 Compress
               </a>
               <a 
-                href="/tools/image-editor"
-                onClick={(e) => { e.preventDefault(); navigate('/tools/image-editor'); setActiveTab('bg-remove'); }} 
+                href="/tools/remove-bg"
+                onClick={(e) => { e.preventDefault(); navigate('/tools/remove-bg'); setActiveTab('bg-remove'); }} 
                 className={`editor-tab-btn ${activeTab === 'bg-remove' ? 'active' : ''}`}
               >
                 Remove BG
               </a>
               <a 
-                href="/tools/image-editor"
-                onClick={(e) => { e.preventDefault(); navigate('/tools/image-editor'); setActiveTab('convert'); setEyeDropperActive(false); }} 
+                href="/tools/image-converter"
+                onClick={(e) => { e.preventDefault(); navigate('/tools/image-converter'); setActiveTab('convert'); setEyeDropperActive(false); }} 
                 className={`editor-tab-btn ${activeTab === 'convert' ? 'active' : ''}`}
               >
                 Convert

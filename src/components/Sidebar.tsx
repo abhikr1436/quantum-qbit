@@ -13,6 +13,7 @@ import {
   Phone,
   Compass
 } from 'lucide-react';
+import { navigate } from '../utils/router';
 
 interface Category {
   id: string;
@@ -160,9 +161,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {toolsExpanded && (
               <div style={styles.subItemsContainer}>
                 <a 
-                  href="/tools/image-editor"
+                  href="/tools/image-transform"
                   className={`sidebar-sub-item ${currentPage === 'tools' && selectedTool === 'image-editor' ? 'active' : ''}`}
-                  onClick={(e) => { e.preventDefault(); handleToolNav('image-editor'); }}
+                  onClick={(e) => { e.preventDefault(); navigate('/tools/image-transform'); onClose(); }}
                   style={{ textDecoration: 'none' }}
                 >
                   <Image size={15} />
