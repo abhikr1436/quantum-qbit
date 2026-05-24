@@ -122,7 +122,7 @@ export const LandingPage: React.FC = () => {
             <h2 style={styles.sectionTitle}>Quantum Utilities Directory</h2>
             <p style={styles.sectionSubtitle}>Select a utility app below to begin client-side processing immediately.</p>
           </div>
-          
+
           <div className="horizontal-scroll-row">
             {/* Card 1: Image Studio */}
             <div className="glass-card horizontal-scroll-card">
@@ -196,10 +196,10 @@ export const LandingPage: React.FC = () => {
       <section style={styles.blogsSection}>
         <div className="container">
           <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Latest Publications & Guides</h2>
-            <p style={styles.sectionSubtitle}>Learn security tips, browser performance tricks, and utility tutorials.</p>
+            <h2 style={styles.sectionTitle}>Latest Blogs and Articles</h2>
+            <p style={styles.sectionSubtitle}>Latest Blogs in Tech, Politics, Geo-Politics and everything.</p>
           </div>
-          
+
           <div className="horizontal-scroll-row">
             {posts.map((post) => (
               <div key={post.id} className="glass-card blog-scroll-card">
@@ -219,8 +219,8 @@ export const LandingPage: React.FC = () => {
                 </div>
                 <div className="blog-footer">
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{post.readTime}</span>
-                  <button 
-                    className="scroll-card-link-btn" 
+                  <button
+                    className="scroll-card-link-btn"
                     onClick={() => navigate(`/blogs/${post.id}`)}
                     style={{ padding: '6px 12px' }}
                   >
