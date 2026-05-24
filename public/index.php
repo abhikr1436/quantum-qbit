@@ -91,8 +91,8 @@ if (preg_match('#^/tools/image-compressor#', $path) || preg_match('#^/tools/phot
         }
     }
 } elseif (preg_match('#^/blogs#', $path)) {
-    $title = "Quantum Qbit Publication - Guides & Tech Breakdowns";
-    $description = "Explore articles on privacy-first web utilities, local browser tools, and client-side technology written by the Quantum Engineering Team.";
+    $title = "Quantum Qbit Blogs & Articles";
+    $description = "Explore blogs and articles on privacy-first web utilities, local browser tools, and client-side technology written by the Quantum Engineering Team.";
 }
 
 // Read index.html template

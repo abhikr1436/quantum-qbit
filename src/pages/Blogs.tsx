@@ -177,8 +177,8 @@ export const Blogs: React.FC<BlogsProps> = ({
       const catObj = categories.find(c => c.id === selectedCategory);
       const categoryText = catObj ? ` - ${catObj.name}` : '';
       updateSEO(
-        `Quantum Qbit Blog${categoryText} - Guides & Tech Breakdowns`,
-        "Explore articles on privacy-first web utilities, local browser tools, and client-side technology written by the Quantum Engineering Team.",
+        `Quantum Qbit Blog${categoryText} - Blogs & Articles`,
+        "Explore blogs and articles on privacy-first web utilities, local browser tools, and client-side technology written by the Quantum Engineering Team.",
         `/blogs`
       );
     }
@@ -287,9 +287,9 @@ export const Blogs: React.FC<BlogsProps> = ({
       <div className="container">
         {/* Header */}
         <div style={styles.header}>
-          <h1 style={styles.title}>Quantum Qbit Publication</h1>
+          <h1 style={styles.title}>Quantum Qbit Blogs & Articles</h1>
           <p style={styles.subtitle}>
-            Guides, insights, and technical breakdowns about web tools, data security, and client-side processing.
+            Blogs, articles, and technical breakdowns about web tools, data security, and client-side processing.
           </p>
         </div>
 
@@ -316,11 +316,11 @@ export const Blogs: React.FC<BlogsProps> = ({
         {/* Blog Post List */}
         {isLoading ? (
           <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-secondary)' }}>
-            Loading publications database...
+            Loading blogs and articles database...
           </div>
         ) : filteredPosts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-secondary)' }}>
-            No publication articles found in this category.
+            No blogs or articles found in this category.
           </div>
         ) : (
           <div style={styles.postsGrid}>
