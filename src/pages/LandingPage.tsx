@@ -115,27 +115,6 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section style={styles.featuresSection}>
-        <div className="container">
-          <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Engineered for Speed & Security</h2>
-            <p style={styles.sectionSubtitle}>We reimagined utility tools to put privacy and desktop-level performance first.</p>
-          </div>
-          <div style={styles.featuresGrid}>
-            {features.map((feature, idx) => (
-              <div key={idx} className="glass-card" style={styles.featureCard}>
-                <div style={styles.featureIconContainer}>
-                  {feature.icon}
-                </div>
-                <h3 style={styles.featureTitle}>{feature.title}</h3>
-                <p style={styles.featureDesc}>{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Horizontally Scrollable Tools Frame */}
       <section style={styles.showcaseSection}>
         <div className="container">
@@ -161,6 +140,10 @@ export const LandingPage: React.FC = () => {
                   <button className="scroll-card-link-btn" onClick={() => navigate('/tools/image-compressor')}>Compressor</button>
                   <button className="scroll-card-link-btn" onClick={() => navigate('/tools/image-transform')}>Transform</button>
                   <button className="scroll-card-link-btn" onClick={() => navigate('/tools/remove-bg')}>BG Removal</button>
+                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/image-crop')}>Crop</button>
+                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/image-resize')}>Resize</button>
+                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/image-dpi')}>DPI Settings</button>
+                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/image-converter')}>Converter</button>
                 </div>
               </div>
             </div>
@@ -176,9 +159,11 @@ export const LandingPage: React.FC = () => {
                 <p className="scroll-card-desc">
                   Shrink PDF file sizes client-side or compile image sequences directly to standard PDF pages offline.
                 </p>
-                <div className="scroll-card-links-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+                <div className="scroll-card-links-grid">
                   <button className="scroll-card-link-btn btn-purple" onClick={() => navigate('/tools/pdf-compressor')}>Compressor</button>
-                  <button className="scroll-card-link-btn btn-purple" onClick={() => navigate('/tools/images-to-pdf')}>Converter</button>
+                  <button className="scroll-card-link-btn btn-purple" onClick={() => navigate('/tools/images-to-pdf')}>Images to PDF</button>
+                  <button className="scroll-card-link-btn btn-purple" onClick={() => navigate('/tools/convert-to-pdf')}>Office to PDF</button>
+                  <button className="scroll-card-link-btn btn-purple" onClick={() => navigate('/tools/pdf-to-word')}>PDF to Word</button>
                 </div>
               </div>
             </div>
@@ -194,10 +179,12 @@ export const LandingPage: React.FC = () => {
                 <p className="scroll-card-desc">
                   Scientific notation calculator, real-time hexadecimal/binary base converter, and equation solver.
                 </p>
-                <div style={{ marginTop: 'auto' }}>
-                  <button className="scroll-card-link-btn" style={{ width: '100%' }} onClick={() => navigate('/tools/math-calculators')}>
-                    Open Calculator Workbench
-                  </button>
+                <div className="scroll-card-links-grid">
+                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/math-scientific')}>Scientific</button>
+                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/math-base')}>Base Converter</button>
+                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/math-unit')}>Unit Adapter</button>
+                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/math-solver')}>Equation Solver</button>
+                  <button className="scroll-card-link-btn" style={{ gridColumn: 'span 2' }} onClick={() => navigate('/tools/math-plotter')}>Graph Plotter</button>
                 </div>
               </div>
             </div>
@@ -246,6 +233,27 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
+      {/* Features Grid */}
+      <section style={styles.featuresSection}>
+        <div className="container">
+          <div style={styles.sectionHeader}>
+            <h2 style={styles.sectionTitle}>Engineered for Speed & Security</h2>
+            <p style={styles.sectionSubtitle}>We reimagined utility tools to put privacy and desktop-level performance first.</p>
+          </div>
+          <div style={styles.featuresGrid}>
+            {features.map((feature, idx) => (
+              <div key={idx} className="glass-card" style={styles.featureCard}>
+                <div style={styles.featureIconContainer}>
+                  {feature.icon}
+                </div>
+                <h3 style={styles.featureTitle}>{feature.title}</h3>
+                <p style={styles.featureDesc}>{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section style={styles.ctaSection}>
         <div style={styles.ctaGlow}></div>
@@ -273,16 +281,15 @@ const styles = {
     paddingBottom: '80px',
   },
   blogsSection: {
-    padding: '80px 0',
+    padding: '20px 0',
   },
   heroSection: {
     position: 'relative' as const,
-    minHeight: '85vh',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     textAlign: 'center' as const,
-    padding: '120px 24px 80px 24px',
+    padding: '45px 24px 10px 24px',
     overflow: 'hidden',
   },
   heroGlow1: {
@@ -351,10 +358,10 @@ const styles = {
   },
   sectionHeader: {
     textAlign: 'center' as const,
-    marginBottom: '50px',
+    marginBottom: '20px',
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '12px',
+    gap: '8px',
     alignItems: 'center',
   },
   sectionTitle: {
@@ -398,7 +405,7 @@ const styles = {
     fontSize: '0.95rem',
   },
   showcaseSection: {
-    padding: '80px 0',
+    padding: '20px 0',
   },
   toolsGrid: {
     display: 'grid',

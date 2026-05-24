@@ -2,8 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Calculator, Binary, RefreshCw, Hash, Copy, Check, Equal, LineChart, Trash2, Plus, Download } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-export const MathCalculators: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'scientific' | 'base' | 'unit' | 'solver' | 'plotter'>('scientific');
+interface MathCalculatorsProps {
+  defaultTab?: 'scientific' | 'base' | 'unit' | 'solver' | 'plotter';
+}
+
+export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) => {
+  const [activeTab, setActiveTab] = useState<'scientific' | 'base' | 'unit' | 'solver' | 'plotter'>(defaultTab || 'scientific');
+
+  useEffect(() => {
+    if (defaultTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab]);
 
   // Theme state to re-draw canvas when theme changes
   const [theme, setTheme] = useState(document.documentElement.getAttribute('data-theme') || 'dark');

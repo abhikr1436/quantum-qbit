@@ -137,6 +137,21 @@ function App() {
       toolTab = 'pdfToWord';
     } else if (subpath === '/math-calculators') {
       tool = 'math-calculators';
+    } else if (subpath === '/math-scientific') {
+      tool = 'math-calculators';
+      toolTab = 'scientific';
+    } else if (subpath === '/math-base') {
+      tool = 'math-calculators';
+      toolTab = 'base';
+    } else if (subpath === '/math-unit') {
+      tool = 'math-calculators';
+      toolTab = 'unit';
+    } else if (subpath === '/math-solver') {
+      tool = 'math-calculators';
+      toolTab = 'solver';
+    } else if (subpath === '/math-plotter') {
+      tool = 'math-calculators';
+      toolTab = 'plotter';
     } else if (subpath === '' || subpath === '/') {
       tool = 'none';
     }

@@ -109,7 +109,7 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, def
         <React.Suspense fallback={
           <div style={styles.toolLoading}>Initialising Math Workbench...</div>
         }>
-          <MathCalculators />
+          <MathCalculators defaultTab={defaultTab as any} />
         </React.Suspense>
       </div>
     );

@@ -1195,7 +1195,7 @@ body.page-admin #bottom-sticky-banner-ad {
   flex-direction: column;
   gap: 20px;
   padding: 30px;
-  min-height: 280px;
+  height: 380px;
   text-align: left;
   position: relative;
   overflow: hidden;
@@ -1205,6 +1205,8 @@ body.page-admin #bottom-sticky-banner-ad {
   .horizontal-scroll-card {
     flex: 0 0 300px;
     padding: 24px;
+    height: auto;
+    min-height: 380px;
   }
 }
 
