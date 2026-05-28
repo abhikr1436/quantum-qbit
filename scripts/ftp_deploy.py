@@ -2,10 +2,12 @@
 Hostinger SFTP & FTP Deploy Script
 Tries SFTP first (ports 65002, 22), falls back to FTP (port 21).
 Uploads all files from local ./dist/ to remote directory.
+Detects the correct web root by probing for known files.
 """
 import ftplib
 import os
 import sys
+import io
 
 def get_env(key):
     val = os.environ.get(key, '').strip()
@@ -91,6 +93,105 @@ def upload_dir_sftp(sftp, local_path, remote_path, verbose=True):
                 failed += 1
     return success, failed
 
+def find_web_root_sftp(sftp):
+    """
+    Detect the correct web root by trying known paths and checking for our
+    marker file (index.html) or standard Hostinger layouts.
+    Returns the absolute path to the web root.
+    """
+    # Hostinger shared hosting possible paths, ordered by priority
+    candidate_paths = [
+        'domains/quantumqbit.in/public_html',
+        'public_html',
+        'htdocs',
+        '.',
+    ]
+    
+    print("\n=== DETECTING WEB ROOT ===")
+    original_dir = sftp.getcwd() or '/'
+    best_match = None
+
+    for p in candidate_paths:
+        try:
+            sftp.chdir(original_dir)
+            sftp.chdir(p)
+            cwd = sftp.getcwd()
+            files = sftp.listdir('.')
+            print(f"  Path '{p}' -> cwd={cwd}, files={files[:10]}")
+            
+            # Prefer the path that already has index.html or index.php (our web app)
+            if 'index.html' in files or 'index.php' in files:
+                print(f"  *** MATCH: Found index.html/index.php in '{p}' — this is the web root!")
+                best_match = (p, cwd)
+                break
+            elif best_match is None:
+                # Track first accessible path as fallback
+                best_match = (p, cwd)
+        except Exception as e:
+            print(f"  Path '{p}' not accessible: {e}")
+
+    # Reset to original
+    try:
+        sftp.chdir(original_dir)
+    except:
+        pass
+
+    if best_match:
+        path_rel, path_abs = best_match
+        print(f"\n=== SELECTED WEB ROOT: {path_abs} (via '{path_rel}') ===")
+        sftp.chdir(path_rel)
+        return path_abs
+    
+    print("WARNING: Could not detect web root. Deploying to current directory.")
+    return sftp.getcwd() or '.'
+
+def find_web_root_ftp(ftp):
+    """
+    Detect the correct FTP web root.
+    Returns True if successfully navigated.
+    """
+    candidate_paths = [
+        'domains/quantumqbit.in/public_html',
+        'public_html',
+        'htdocs',
+    ]
+
+    print("\n=== DETECTING FTP WEB ROOT ===")
+    # Show root listing
+    root_lines = []
+    try:
+        ftp.retrlines('LIST', root_lines.append)
+        print("FTP root contents:")
+        for line in root_lines:
+            print(f"  {line}")
+    except Exception as e:
+        print(f"  Could not list root: {e}")
+
+    for p in candidate_paths:
+        try:
+            ftp.cwd(p)
+            cwd = ftp.pwd()
+            # List files to probe
+            listing = []
+            try:
+                ftp.retrlines('NLST', listing.append)
+            except:
+                pass
+            print(f"  Path '{p}' -> cwd={cwd}, files={listing[:10]}")
+            
+            if 'index.html' in listing or 'index.php' in listing:
+                print(f"  *** MATCH: Found index.html/index.php — web root confirmed at {cwd}")
+                return True
+        except ftplib.error_perm as e:
+            print(f"  Path '{p}' not accessible: {e}")
+            try:
+                ftp.cwd('/')
+            except:
+                pass
+
+    print("WARNING: Could not find web root, deploying to current directory.")
+    return False
+
 def deploy_sftp(host, user, password, dist_path):
     try:
         import paramiko
@@ -120,30 +221,9 @@ def deploy_sftp(host, user, password, dist_path):
         
     try:
         sftp = ssh.open_sftp()
-        print(f"SFTP Connection established. Current working directory: {sftp.getcwd()}")
+        print(f"SFTP Connection established. CWD: {sftp.getcwd()}")
         
-        # Check possible document root directories
-        possible_paths = [
-            'domains/quantumqbit.in/public_html',
-            'public_html',
-            '.'
-        ]
-        
-        target_dir = '.'
-        for p in possible_paths:
-            try:
-                sftp.chdir(p)
-                print(f"Successfully changed SFTP directory to: {sftp.getcwd()}")
-                target_dir = sftp.getcwd()
-                break
-            except IOError:
-                continue
-                
-        print("\n=== CURRENT REMOTE FILES ===")
-        try:
-            print(sftp.listdir(target_dir))
-        except Exception as e:
-            print(f"Could not list directory contents: {e}")
+        target_dir = find_web_root_sftp(sftp)
         
         file_count = sum(len(fs) for _, _, fs in os.walk(dist_path))
         print(f"\nUploading {file_count} files from: {dist_path} to {target_dir}")
@@ -186,23 +266,7 @@ def deploy_ftp(host, user, password, dist_path):
         print("Login successful!")
         ftp.set_pasv(True)
 
-        # Show FTP root
-        print("\n=== FTP ROOT ===")
-        ftp.retrlines('LIST')
-
-        # Navigate to document root
-        print("\nNavigating to document root...")
-        navigated = False
-        for p in ['domains/quantumqbit.in/public_html', 'public_html']:
-            try:
-                ftp.cwd(p)
-                print(f"Successfully changed FTP directory to: {ftp.pwd()}")
-                navigated = True
-                break
-            except ftplib.error_perm:
-                continue
-        if not navigated:
-            print("Deploying to the current root directory.")
+        find_web_root_ftp(ftp)
 
         print("\n=== FTP CURRENT FILES ===")
         ftp.retrlines('LIST')

@@ -39,3 +39,17 @@ jobs:
           FTP_USER: ${{ secrets.SFTP_USERNAME }}
           FTP_PASS: ${{ secrets.SFTP_PASSWORD }}
         run: python scripts/ftp_deploy.py
+
+      - name: Trigger live sync (ping blogs API to sync JSON to MySQL)
+        run: |
+          echo "Waiting 10 seconds for Hostinger to finish processing uploaded files..."
+          sleep 10
+          echo "Pinging live blogs API to trigger JSON-to-MySQL synchronization..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://quantumqbit.in/api/blogs.php)
+          echo "blogs.php response status: $STATUS"
+          if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 401 ]; then
+            echo "✅ Live sync ping successful (HTTP $STATUS)"
+          else
+            echo "⚠️ Unexpected response: HTTP $STATUS (site may still be propagating)"
+          fi
+          echo "Deployment pipeline complete!"
