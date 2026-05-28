@@ -138,10 +138,21 @@ async function syncLiveUpdates(db) {
 
 // Directives Parser
 async function parseBoardroomDirective(db, directive) {
+  // 1. Extract URLs and scrape content
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const urls = directive.match(urlRegex) || [];
+  let scrapedInfo = '';
+  for (const url of urls) {
+    const cleanUrl = url.replace(/[.,;:!?)]+$/, '');
+    const scrapedText = await scrapeWebpage(cleanUrl);
+    scrapedInfo += `\n\n--- Source Webpage Content (${cleanUrl}) ---\n${scrapedText}\n`;
+  }
+  const finalDirective = directive + scrapedInfo;
+
   const openai = getDeepseekClient(db.config);
   
   if (!openai) {
-    simulateMockBoardroomParsing(db, directive);
+    await simulateMockBoardroomParsing(db, directive);
     return;
   }
 
@@ -149,7 +160,7 @@ async function parseBoardroomDirective(db, directive) {
   try {
     const prompt = `You are Alex, the AI Manager of Quantum Qbit Virtual Company.
 The Board of Directors (the user) has given the following directive:
-"${directive}"
+"${finalDirective}"
 
 Your job is to parse this directive and decide what operational task(s) should be created to fulfill it.
 You can assign tasks to one of these specialist agents:
@@ -181,10 +192,15 @@ Ensure the tasks cover the user's directive fully.`;
 
     for (const t of tasks) {
       if (t.title && t.assignee) {
+        let desc = t.description || '';
+        if (scrapedInfo && t.assignee === 'Mark') {
+          desc += `\n\nUse the following scraped source material to rewrite the article in your own words:\n${scrapedInfo}`;
+        }
+        
         const newTask = {
           id: 'task-' + Math.random().toString(36).substr(2, 9),
           title: t.title,
-          description: t.description || '',
+          description: desc,
           type: t.type || 'blog',
           assignee: t.assignee,
           status: 'todo',
@@ -207,17 +223,27 @@ Ensure the tasks cover the user's directive fully.`;
   } catch (err) {
     console.error("Deepseek boardroom parsing error:", err.message);
     setAgentStatus(db, 'Alex', 'Idle');
-    simulateMockBoardroomParsing(db, directive);
+    await simulateMockBoardroomParsing(db, directive);
   }
 }
 
-function simulateMockBoardroomParsing(db, directive) {
+async function simulateMockBoardroomParsing(db, directive) {
+  // Extract URLs and scrape content
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const urls = directive.match(urlRegex) || [];
+  let scrapedInfo = '';
+  for (const url of urls) {
+    const cleanUrl = url.replace(/[.,;:!?)]+$/, '');
+    const scrapedText = await scrapeWebpage(cleanUrl);
+    scrapedInfo += `\n\n--- Source Webpage Content (${cleanUrl}) ---\n${scrapedText}\n`;
+  }
+
   let mockTask = null;
   const key = directive.toLowerCase();
   if (key.includes('blog') || key.includes('article') || key.includes('write')) {
     mockTask = {
-      title: "Write Article on Client-Side File Processing",
-      description: "Draft an educational post focusing on user data privacy, position it for SEO keywords.",
+      title: "Rewrite Article from Webpage",
+      description: "Draft a fresh blog post rewriting the source material in our own words.\n" + scrapedInfo,
       type: "blog",
       assignee: "Mark"
     };
@@ -258,6 +284,53 @@ function simulateMockBoardroomParsing(db, directive) {
     timestamp: new Date().toISOString(),
     taskId: newTask.id
   });
+}
+
+// ─── WEBPAGE SCRAPER ──────────────────────────────────────────────────────────
+
+async function scrapeWebpage(url) {
+  try {
+    console.log(`Scraping source webpage: ${url}`);
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!response.ok) return `(Failed to fetch webpage: HTTP ${response.status})`;
+    const html = await response.text();
+    
+    // Remove scripts, styles, head, nav, footer
+    let cleanHtml = html
+      .replace(/<head>[\s\S]*?<\/head>/gi, '')
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<nav>[\s\S]*?<\/nav>/gi, '')
+      .replace(/<footer>[\s\S]*?<\/footer>/gi, '');
+      
+    // Extract paragraph text content
+    const pMatches = [...cleanHtml.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)];
+    if (pMatches.length > 0) {
+      const paragraphs = pMatches.map(m => {
+        return m[1]
+          .replace(/<[^>]+>/g, '') // Strip HTML tags
+          .replace(/\s+/g, ' ')    // Condense whitespaces
+          .trim();
+      }).filter(text => text.length > 20);
+      
+      if (paragraphs.length > 0) {
+        return paragraphs.slice(0, 30).join('\n\n').slice(0, 4000);
+      }
+    }
+    
+    // Fallback: Strip all HTML tags
+    const textOnly = cleanHtml
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return textOnly.slice(0, 3500);
+  } catch (err) {
+    console.error("Scraper error:", err.message);
+    return `(Error reading webpage: ${err.message})`;
+  }
 }
 
 // ─── RESEARCH SCRAPING ──────────────────────────────────────────────────────────
