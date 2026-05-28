@@ -15,6 +15,7 @@ export const AiOfficeTab: React.FC = () => {
   const [agents, setAgents] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
   const [chatLogs, setChatLogs] = useState<any[]>([]);
+  const [systemLogs, setSystemLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -34,6 +35,7 @@ export const AiOfficeTab: React.FC = () => {
         setAgents(data.agents || []);
         setTasks(data.tasks || []);
         setChatLogs(data.chatLogs || []);
+        setSystemLogs(data.systemLogs || []);
         setErrorMsg(null);
       } else {
         setErrorMsg('Failed to read status data from AI Office backend.');
@@ -293,6 +295,7 @@ export const AiOfficeTab: React.FC = () => {
                 onSendDirective={handleSendDirective}
                 isProcessing={boardroomProcessing}
                 agents={agents}
+                systemLogs={systemLogs}
               />
             )}
             

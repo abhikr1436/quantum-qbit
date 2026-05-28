@@ -40,11 +40,44 @@ function getDeepseekClient(config) {
   });
 }
 
-// Helper to change agent status in DB
-function setAgentStatus(db, agentName, status) {
-  const agent = db.agents.find(a => a.name === agentName);
-  if (agent) {
-    agent.status = status;
+// Helper to change agent status in DB and post real-time updates to live server
+function setAgentStatus(db, agentName, status, logText = null) {
+  if (agentName) {
+    const agent = db.agents.find(a => a.name === agentName);
+    if (agent) {
+      agent.status = status;
+    }
+  }
+  
+  if (logText) {
+    if (!db.systemLogs) db.systemLogs = [];
+    db.systemLogs.push({
+      timestamp: new Date().toISOString(),
+      agent: agentName || 'System',
+      message: logText
+    });
+    if (db.systemLogs.length > 150) {
+      db.systemLogs = db.systemLogs.slice(-150);
+    }
+  }
+  
+  const apiKey = process.env.DEEPSEEK_API_KEY || db.config.deepseekKey || db.config.githubToken;
+  if (apiKey) {
+    fetch("https://quantumqbit.in/api/ai_office.php?action=agent_status_update", {
+      method: 'POST',
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        agent: agentName,
+        status: status,
+        log: logText
+      }),
+      signal: AbortSignal.timeout(5000)
+    }).catch(err => {
+      // Ignore background connection/timeout errors silently
+    });
   }
 }
 
@@ -863,15 +896,28 @@ async function main() {
   console.log("=== Quantum AI Office Cloud Runner Starting ===");
   const db = readDB();
   
+  setAgentStatus(db, 'System', 'Idle', '=== Runner process started on GitHub Actions ===');
+  
   // 1. Sync live updates from Hostinger
-  await syncLiveUpdates(db);
+  try {
+    setAgentStatus(db, 'System', 'Idle', 'Fetching boardroom directives and live chats from server...');
+    await syncLiveUpdates(db);
+  } catch (e) {
+    setAgentStatus(db, 'System', 'Idle', 'Live sync error: ' + e.message);
+  }
   
   if (!db.config.isAutomationActive) {
     console.log("Autonomous agent loop is disabled in configurations. Exiting.");
+    setAgentStatus(db, 'System', 'Idle', 'Automation loop is disabled in configurations. Exiting.');
     return;
   }
 
   const openai = getDeepseekClient(db.config);
+  if (!openai) {
+    setAgentStatus(db, 'System', 'Idle', 'Deepseek API key not set or invalid. Running in simulated offline mode.');
+  } else {
+    setAgentStatus(db, 'System', 'Idle', 'Deepseek client authorized successfully.');
+  }
   
   // 2. Run sequential cycles to process task pipeline
   let maxCycles = 5;
@@ -880,13 +926,20 @@ async function main() {
 
   while (progress && cycle < maxCycles) {
     console.log(`\n--- Running State Machine Cycle ${cycle + 1} ---`);
-    progress = await runAutomationCycleStep(db, openai);
+    setAgentStatus(db, 'System', 'Idle', `Executing task cycle state machine step ${cycle + 1}...`);
+    try {
+      progress = await runAutomationCycleStep(db, openai);
+    } catch (e) {
+      setAgentStatus(db, 'System', 'Idle', `Error during cycle step ${cycle + 1}: ${e.message}`);
+      progress = false;
+    }
     if (progress) {
       writeDB(db);
     }
     cycle++;
   }
 
+  setAgentStatus(db, 'System', 'Idle', '=== Runner completed all cycle steps and finished successfully ===');
   console.log("\n=== Quantum AI Office Cloud Runner Completed ===");
 }
 

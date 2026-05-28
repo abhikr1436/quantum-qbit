@@ -1,8 +1,51 @@
 <?php
 // Retrieve database connection status and connection object
 
+function getQuantumDataDir() {
+    $localDir = __DIR__ . '/data';
+    
+    // Check if we are on a web server
+    if (isset($_SERVER['DOCUMENT_ROOT']) && !empty($_SERVER['DOCUMENT_ROOT'])) {
+        // Use a directory outside the public web root so it survives Git redeployment checkout wipes
+        $serverDir = realpath($_SERVER['DOCUMENT_ROOT'] . '/../') . '/quantum_data';
+        
+        // Auto-create directory
+        if (!file_exists($serverDir)) {
+            @mkdir($serverDir, 0755, true);
+        }
+        
+        if (file_exists($serverDir) && is_writable($serverDir)) {
+            return $serverDir;
+        }
+    }
+    
+    // Local development fallback
+    if (!file_exists($localDir)) {
+        @mkdir($localDir, 0755, true);
+    }
+    return $localDir;
+}
+
 function getDBStatus() {
-    $configFile = __DIR__ . '/data/config.json';
+    $persistentConfig = getQuantumDataDir() . '/config.json';
+    $publicConfig = __DIR__ . '/data/config.json';
+    
+    // Synchronize deployed configurations with persistent config
+    if (file_exists($publicConfig)) {
+        if (!file_exists($persistentConfig)) {
+            copy($publicConfig, $persistentConfig);
+        } else {
+            $pub = json_decode(file_get_contents($publicConfig), true);
+            $pers = json_decode(file_get_contents($persistentConfig), true);
+            if (is_array($pub) && is_array($pers)) {
+                // Merge config, preserving persistent database credentials
+                $merged = array_merge($pub, $pers);
+                file_put_contents($persistentConfig, json_encode($merged, JSON_PRETTY_PRINT));
+            }
+        }
+    }
+    
+    $configFile = $persistentConfig;
     if (!file_exists($configFile)) {
         return ['status' => 'fallback', 'message' => 'Config file not initialized.'];
     }

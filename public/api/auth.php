@@ -21,7 +21,8 @@ if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
 session_start();
 header('Content-Type: application/json');
 
-$configFile = __DIR__ . '/data/config.json';
+require_once __DIR__ . '/db_config.php';
+$configFile = getQuantumDataDir() . '/config.json';
 
 // Helper to initialize and retrieve configuration
 function getConfig($configFile) {

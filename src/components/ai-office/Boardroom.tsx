@@ -1,13 +1,28 @@
-import React, { useState } from 'react';
-import { Send, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Send, Sparkles, AlertCircle, RefreshCw, Terminal } from 'lucide-react';
+
+interface SystemLog {
+  timestamp: string;
+  agent: string;
+  message: string;
+}
 
 interface BoardroomProps {
   onSendDirective: (text: string) => Promise<void>;
   isProcessing: boolean;
   agents: any[];
+  systemLogs?: SystemLog[];
 }
 
-export const Boardroom: React.FC<BoardroomProps> = ({ onSendDirective, isProcessing, agents }) => {
+export const Boardroom: React.FC<BoardroomProps> = ({ onSendDirective, isProcessing, agents, systemLogs = [] }) => {
+  const logEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to latest log when new ones arrive
+  useEffect(() => {
+    if (logEndRef.current) {
+      logEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [systemLogs]);
   const [directiveText, setDirectiveText] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -131,6 +146,51 @@ export const Boardroom: React.FC<BoardroomProps> = ({ onSendDirective, isProcess
         </div>
 
       </div>
+
+      {/* Real-Time Agent Subprocess Log Terminal */}
+      <div style={styles.logPanel} className="glass-card">
+        <div style={styles.logHeader}>
+          <Terminal size={16} style={{ color: 'var(--primary, #00f2fe)' }} />
+          <span style={styles.logTitle}>Agent Subprocess Logs</span>
+          <span style={styles.logCount}>{systemLogs.length} entries</span>
+          <span style={{ marginLeft: 'auto', fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)' }}>Auto-updating every 6s</span>
+        </div>
+        <div style={styles.logBody}>
+          {systemLogs.length === 0 ? (
+            <div style={styles.logEmpty}>
+              <Terminal size={20} style={{ opacity: 0.3 }} />
+              <span>No agent logs yet. Trigger a cloud cycle or issue a board directive to start.</span>
+            </div>
+          ) : (
+            [...systemLogs].reverse().map((log, idx) => {
+              const agentColor = {
+                'System':   'rgba(160,160,160,0.8)',
+                'Alex':     'rgba(0, 242, 254, 0.9)',
+                'Sophia':   'rgba(255, 200, 80, 0.9)',
+                'Mark':     'rgba(100, 220, 130, 0.9)',
+                'Sarah':    'rgba(200, 130, 255, 0.9)',
+                'Codey':    'rgba(80, 190, 255, 0.9)',
+                'Deployer': 'rgba(255, 130, 80, 0.9)',
+                'Harper':   'rgba(255, 170, 200, 0.9)',
+              }[log.agent] || 'rgba(200, 200, 200, 0.8)';
+
+              const timeStr = new Date(log.timestamp).toLocaleTimeString([], {
+                hour: '2-digit', minute: '2-digit', second: '2-digit'
+              });
+
+              return (
+                <div key={idx} style={styles.logRow}>
+                  <span style={styles.logTime}>{timeStr}</span>
+                  <span style={{ ...styles.logAgent, color: agentColor }}>[{log.agent}]</span>
+                  <span style={styles.logMsg}>{log.message}</span>
+                </div>
+              );
+            })
+          )}
+          <div ref={logEndRef} />
+        </div>
+      </div>
+
     </div>
   );
 };
@@ -291,5 +351,80 @@ const styles = {
     height: '3px',
     background: 'linear-gradient(90deg, transparent, var(--primary, #00f2fe), transparent)',
     boxShadow: '0 0 10px var(--primary, #00f2fe)',
+  },
+  // Agent Subprocess Logs Terminal
+  logPanel: {
+    padding: '20px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0',
+    background: 'rgba(0, 0, 0, 0.45)',
+    border: '1px solid rgba(0, 242, 254, 0.12)',
+    borderRadius: '12px',
+    fontFamily: "'Courier New', monospace",
+  },
+  logHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    borderBottom: '1px solid rgba(0, 242, 254, 0.08)',
+    paddingBottom: '12px',
+    marginBottom: '12px',
+  },
+  logTitle: {
+    fontSize: '0.9rem',
+    fontWeight: 600,
+    color: '#fff',
+    fontFamily: 'var(--font-heading)',
+  },
+  logCount: {
+    background: 'rgba(0, 242, 254, 0.1)',
+    border: '1px solid rgba(0, 242, 254, 0.15)',
+    borderRadius: '10px',
+    fontSize: '0.7rem',
+    padding: '2px 8px',
+    color: 'var(--primary, #00f2fe)',
+  },
+  logBody: {
+    maxHeight: '220px',
+    overflowY: 'auto' as const,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '4px',
+    paddingRight: '4px',
+  },
+  logEmpty: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    justifyContent: 'center',
+    padding: '30px',
+    color: 'rgba(255,255,255,0.3)',
+    fontSize: '0.82rem',
+    flexDirection: 'column' as const,
+  },
+  logRow: {
+    display: 'flex',
+    gap: '10px',
+    alignItems: 'flex-start',
+    fontSize: '0.78rem',
+    lineHeight: '1.5',
+    padding: '2px 0',
+    borderBottom: '1px solid rgba(255,255,255,0.03)',
+  },
+  logTime: {
+    color: 'rgba(255,255,255,0.3)',
+    minWidth: '78px',
+    flexShrink: 0,
+  },
+  logAgent: {
+    minWidth: '82px',
+    flexShrink: 0,
+    fontWeight: 600,
+  },
+  logMsg: {
+    color: 'rgba(255,255,255,0.75)',
+    lineHeight: '1.4',
+    wordBreak: 'break-word' as const,
   }
 };
