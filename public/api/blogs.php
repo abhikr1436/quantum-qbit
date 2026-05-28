@@ -146,6 +146,58 @@ if ($method === 'GET') {
             ");
             $posts = $stmt->fetchAll();
             
+            // Sync blogs.json with MySQL database dynamically
+            if (!empty($posts)) {
+                $fallbackBlogs = getFallbackBlogs($blogsFile);
+                $existingIds = array_column($posts, 'id');
+                $insertedAny = false;
+                
+                $stmtBlog = $pdo->prepare("
+                    INSERT IGNORE INTO blogs (id, title, excerpt, content, author, date, read_time, category_id, image_glow) 
+                    VALUES (:id, :title, :excerpt, :content, :author, :date, :read_time, :category_id, :image_glow)
+                ");
+                
+                foreach ($fallbackBlogs as $post) {
+                    if (!in_array($post['id'], $existingIds)) {
+                        $catId = isset($post['category_id']) ? $post['category_id'] : createCategorySlugHelper($post['category']);
+                        
+                        // Convert paragraph array to HTML paragraphs if needed
+                        $htmlContent = '';
+                        if (is_array($post['content'])) {
+                            foreach ($post['content'] as $para) {
+                                $htmlContent .= '<p>' . htmlspecialchars($para) . '</p>';
+                            }
+                        } else {
+                            $htmlContent = $post['content'];
+                        }
+                        
+                        $stmtBlog->execute([
+                            'id' => $post['id'],
+                            'title' => $post['title'],
+                            'excerpt' => $post['excerpt'],
+                            'content' => $htmlContent,
+                            'author' => $post['author'],
+                            'date' => $post['date'],
+                            'read_time' => $post['readTime'],
+                            'category_id' => $catId,
+                            'image_glow' => $post['imageGlow']
+                        ]);
+                        $insertedAny = true;
+                    }
+                }
+                
+                if ($insertedAny) {
+                    // Re-fetch posts so the output contains the newly synced blogs
+                    $stmt = $pdo->query("
+                        SELECT b.id, b.title, b.excerpt, b.content, b.author, b.date, b.read_time AS readTime, b.category_id, c.name AS category, b.image_glow AS imageGlow, b.created_at, b.updated_at
+                        FROM blogs b
+                        LEFT JOIN categories c ON b.category_id = c.id
+                        ORDER BY COALESCE(b.updated_at, b.created_at) DESC, STR_TO_DATE(b.date, '%b %d, %Y') DESC, b.id DESC
+                    ");
+                    $posts = $stmt->fetchAll();
+                }
+            }
+            
             // Seed MySQL if database has no posts
             if (empty($posts)) {
                 $defaultCategories = [
