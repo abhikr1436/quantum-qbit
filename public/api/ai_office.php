@@ -21,6 +21,32 @@ header('Content-Type: application/json');
 
 $dbFile = __DIR__ . '/data/db.json';
 $liveUpdatesFile = __DIR__ . '/data/live_updates.json';
+$keysFile = __DIR__ . '/data/keys.json';
+
+// Helper to load keys.json (ignored by Git for security)
+function getAIKeys($keysFile) {
+    if (!file_exists(dirname($keysFile))) {
+        mkdir(dirname($keysFile), 0755, true);
+    }
+    if (!file_exists($keysFile)) {
+        return [
+            'deepseekKey' => '',
+            'githubToken' => ''
+        ];
+    }
+    $content = file_get_contents($keysFile);
+    $data = json_decode($content, true);
+    return is_array($data) ? $data : ['deepseekKey' => '', 'githubToken' => ''];
+}
+
+// Helper to save keys.json
+function saveAIKeys($keysFile, $data) {
+    if (!file_exists(dirname($keysFile))) {
+        mkdir(dirname($keysFile), 0755, true);
+    }
+    return file_put_contents($keysFile, json_encode($data, JSON_PRETTY_PRINT)) !== false;
+}
+
 
 // Helper to initialize and retrieve db.json
 function getAIDB($dbFile) {
@@ -111,9 +137,9 @@ if ($action === 'get_live_updates') {
         $token = trim($matches[1]);
     }
     
-    $db = getAIDB($dbFile);
-    $storedDeepseekKey = isset($db['config']['deepseekKey']) ? $db['config']['deepseekKey'] : '';
-    $storedGithubToken = isset($db['config']['githubToken']) ? $db['config']['githubToken'] : '';
+    $keys = getAIKeys($keysFile);
+    $storedDeepseekKey = isset($keys['deepseekKey']) ? $keys['deepseekKey'] : '';
+    $storedGithubToken = isset($keys['githubToken']) ? $keys['githubToken'] : '';
     
     if (empty($token) || ($token !== $storedDeepseekKey && $token !== $storedGithubToken)) {
         http_response_code(401);
@@ -143,12 +169,21 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 switch ($action) {
     case 'dashboard':
         $db = getAIDB($dbFile);
+        $keys = getAIKeys($keysFile);
+        
+        // Initialize config keys to empty
+        $db['config']['deepseekKey'] = '';
+        $db['config']['githubToken'] = '';
+        
+        $dsKey = isset($keys['deepseekKey']) ? $keys['deepseekKey'] : '';
+        $ghToken = isset($keys['githubToken']) ? $keys['githubToken'] : '';
+        
         // Mask keys before serving to client dashboard
-        if (!empty($db['config']['deepseekKey']) && strlen($db['config']['deepseekKey']) > 10) {
-            $db['config']['deepseekKey'] = substr($db['config']['deepseekKey'], 0, 5) . '...' . substr($db['config']['deepseekKey'], -4);
+        if (!empty($dsKey) && strlen($dsKey) > 10) {
+            $db['config']['deepseekKey'] = substr($dsKey, 0, 5) . '...' . substr($dsKey, -4);
         }
-        if (!empty($db['config']['githubToken']) && strlen($db['config']['githubToken']) > 10) {
-            $db['config']['githubToken'] = substr($db['config']['githubToken'], 0, 5) . '...' . substr($db['config']['githubToken'], -4);
+        if (!empty($ghToken) && strlen($ghToken) > 10) {
+            $db['config']['githubToken'] = substr($ghToken, 0, 5) . '...' . substr($ghToken, -4);
         }
         echo json_encode($db);
         break;
@@ -156,23 +191,31 @@ switch ($action) {
     case 'save_config':
         $db = getAIDB($dbFile);
         $newConfig = $input;
+        $keys = getAIKeys($keysFile);
         
-        // Preserve keys if user submitted the masked versions
+        // Extract and save key configs separately if not masked
         if (isset($newConfig['deepseekKey'])) {
-            if (strpos($newConfig['deepseekKey'], '...') !== false) {
-                unset($newConfig['deepseekKey']); // Keep current
+            if (strpos($newConfig['deepseekKey'], '...') === false) {
+                $keys['deepseekKey'] = $newConfig['deepseekKey'];
             }
+            unset($newConfig['deepseekKey']);
         }
         if (isset($newConfig['githubToken'])) {
-            if (strpos($newConfig['githubToken'], '...') !== false) {
-                unset($newConfig['githubToken']); // Keep current
+            if (strpos($newConfig['githubToken'], '...') === false) {
+                $keys['githubToken'] = $newConfig['githubToken'];
             }
+            unset($newConfig['githubToken']);
         }
+        saveAIKeys($keysFile, $keys);
+        
+        // Remove keys from db.json config
+        unset($db['config']['deepseekKey']);
+        unset($db['config']['githubToken']);
         
         $db['config'] = array_merge($db['config'], $newConfig);
         saveAIDB($dbFile, $db);
         
-        // Push config override to queue
+        // Push config override to queue (without sensitive keys!)
         queueLiveUpdate($liveUpdatesFile, 'config', $newConfig);
         echo json_encode(['success' => true]);
         break;
@@ -339,8 +382,8 @@ switch ($action) {
         break;
         
     case 'trigger_cycle':
-        $db = getAIDB($dbFile);
-        $token = isset($db['config']['githubToken']) ? $db['config']['githubToken'] : '';
+        $keys = getAIKeys($keysFile);
+        $token = isset($keys['githubToken']) ? $keys['githubToken'] : '';
         
         if (empty($token)) {
             http_response_code(400);

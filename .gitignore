@@ -11,6 +11,10 @@ node_modules
 dist-ssr
 *.local
 
+# Keys configuration
+public/api/data/keys.json
+dist/api/data/keys.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
