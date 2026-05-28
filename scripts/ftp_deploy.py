@@ -39,6 +39,22 @@ def upload_dir_ftp(ftp, local_path, verbose=True):
                     print(f'  ✓ {item} ({size:,} bytes)')
                 success += 1
             except Exception as e:
+                err_str = str(e)
+                if "already exists" in err_str and ".in." in err_str:
+                    print(f'  ⚠️ Stale temp file detected for {item}. Attempting to clean and retry...')
+                    try:
+                        temp_name = f".in.{item}."
+                        ftp.delete(temp_name)
+                        print(f'  Deleted stale temp file: {temp_name}')
+                        with open(lp, 'rb') as f:
+                            ftp.storbinary(f'STOR {item}', f)
+                        if verbose:
+                            size = os.path.getsize(lp)
+                            print(f'  ✓ {item} ({size:,} bytes) [after cleanup retry]')
+                        success += 1
+                        continue
+                    except Exception as retry_err:
+                        print(f'  ✗ Retry failed for {item}: {retry_err}')
                 print(f'  ✗ FAILED {item}: {e}')
                 failed += 1
         elif os.path.isdir(lp):
