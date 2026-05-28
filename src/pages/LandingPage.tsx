@@ -90,6 +90,13 @@ export const LandingPage: React.FC = () => {
 
   // Intersection Observer for scroll animations
   useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined') {
+      // Fallback for environment without IntersectionObserver (e.g. Node/Vitest run)
+      const elements = document.querySelectorAll('.reveal-on-scroll');
+      elements.forEach(el => el.classList.add('active'));
+      return;
+    }
+
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
