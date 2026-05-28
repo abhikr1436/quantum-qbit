@@ -31,24 +31,12 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
   // =========================================================================
   const [calcDisplay, setCalcDisplay] = useState('');
   const [calcResult, setCalcResult] = useState('');
+  const [angleMode, setAngleMode] = useState<'deg' | 'rad'>('deg');
 
-  const handleCalcKeyPress = (key: string) => {
-    if (key === 'C') {
-      setCalcDisplay('');
-      setCalcResult('');
-    } else if (key === '⌫') {
-      setCalcDisplay((prev) => prev.slice(0, -1));
-    } else if (key === '=') {
-      calculateResult();
-    } else {
-      setCalcDisplay((prev) => prev + key);
-    }
-  };
-
-  const calculateResult = () => {
+  const calculateResult = (display = calcDisplay, mode = angleMode) => {
     try {
       // Sanitize expression: only allow numbers, math operators, math functions
-      let expression = calcDisplay
+      let expression = display
         .replace(/π/g, 'Math.PI')
         .replace(/e/g, 'Math.E')
         .replace(/sin\(/g, 'Math.sin(')
@@ -65,22 +53,69 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
       }
 
       // Safe evaluation using Function
-      const evalFunc = new Function(`return ${expression}`);
-      const res = evalFunc();
+      const customMath = Object.create(Math);
+      customMath.sin = mode === 'deg' ? (x: number) => Math.sin((x * Math.PI) / 180) : Math.sin;
+      customMath.cos = mode === 'deg' ? (x: number) => Math.cos((x * Math.PI) / 180) : Math.cos;
+      customMath.tan = mode === 'deg' ? (x: number) => {
+        const normalized = ((x % 180) + 180) % 180;
+        if (Math.abs(normalized - 90) < 1e-9) return NaN;
+        return Math.tan((x * Math.PI) / 180);
+      } : (x: number) => {
+        const normalized = ((x % Math.PI) + Math.PI) % Math.PI;
+        if (Math.abs(normalized - Math.PI / 2) < 1e-9) return NaN;
+        return Math.tan(x);
+      };
+
+      const evalFunc = new Function('Math', `return ${expression}`);
+      const res = evalFunc(customMath);
       
-      if (res === null || res === undefined || isNaN(res)) {
-        setCalcResult('Error');
-      } else {
-        setCalcResult(Number(res.toFixed(8)).toString());
-        // Small success vibration/confetti if they compute something neat
-        if (calcDisplay.includes('sin') || calcDisplay.includes('cos') || calcDisplay.includes('π')) {
-          confetti({ particleCount: 30, spread: 40, colors: ['#00f2fe', '#ffffff'] });
+      if (res === null || res === undefined) {
+        setCalcResult('undefined');
+      } else if (typeof res === 'number') {
+        if (isNaN(res)) {
+          setCalcResult('undefined');
+        } else if (res === Infinity) {
+          setCalcResult('Infinity');
+        } else if (res === -Infinity) {
+          setCalcResult('-Infinity');
+        } else {
+          let val = res;
+          if (Math.abs(val) < 1e-12) {
+            val = 0;
+          }
+          setCalcResult(Number(val.toFixed(8)).toString());
+          // Small success vibration/confetti if they compute something neat
+          if (display.includes('sin') || display.includes('cos') || display.includes('π')) {
+            confetti({ particleCount: 30, spread: 40, colors: ['#00f2fe', '#ffffff'] });
+          }
         }
+      } else {
+        setCalcResult(String(res));
       }
     } catch (e) {
       setCalcResult('Error');
     }
   };
+
+  useEffect(() => {
+    if (calcDisplay) {
+      calculateResult(calcDisplay, angleMode);
+    }
+  }, [angleMode]);
+
+  const handleCalcKeyPress = (key: string) => {
+    if (key === 'C') {
+      setCalcDisplay('');
+      setCalcResult('');
+    } else if (key === '⌫') {
+      setCalcDisplay((prev) => prev.slice(0, -1));
+    } else if (key === '=') {
+      calculateResult(calcDisplay, angleMode);
+    } else {
+      setCalcDisplay((prev) => prev + key);
+    }
+  };
+
 
   // =========================================================================
   // Base Converter State & Actions
@@ -292,7 +327,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
   // =========================================================================
   // Equation Solver State & Actions
   // =========================================================================
-  const [solverMode, setSolverMode] = useState<'linear' | 'quadratic' | 'system'>('linear');
+  const [solverMode, setSolverMode] = useState<'linear' | 'quadratic' | 'system' | 'custom'>('custom');
 
   // Linear states: ax + b = cx + d
   const [linearA, setLinearA] = useState('2');
@@ -317,6 +352,14 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
   const [sysB2, setSysB2] = useState('-1');
   const [sysC2, setSysC2] = useState('1');
   const [sysResult, setSysResult] = useState<{ x: string; y: string; steps: string[] } | null>(null);
+
+  // Custom equation solver states
+  const [customEq, setCustomEq] = useState('x^2 - 5x + 6 = 0');
+  const [customResult, setCustomResult] = useState<{
+    roots: (number | string)[];
+    type: 'linear' | 'quadratic' | 'general' | 'invalid';
+    steps: string[];
+  } | null>(null);
 
   const solveLinear = () => {
     if (linearA === '' || linearB === '' || linearC === '' || linearD === '') {
@@ -499,6 +542,280 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
         steps
       });
       confetti({ particleCount: 30, spread: 40, colors: ['#00f2fe', '#9d4edd'] });
+    }
+  };
+
+  const solveCustomEquation = () => {
+    if (!customEq.trim()) {
+      if ((window as any).showToast) (window as any).showToast('Please enter an equation.');
+      return;
+    }
+
+    const steps: string[] = [];
+    steps.push(`Entered equation: \`${customEq}\``);
+
+    // 1. Split into LHS and RHS
+    const parts = customEq.split('=');
+    if (parts.length > 2) {
+      setCustomResult({
+        roots: [],
+        type: 'invalid',
+        steps: [...steps, 'Error: An equation can have at most one "=" sign.']
+      });
+      return;
+    }
+
+    let lhsRaw = parts[0].trim();
+    let rhsRaw = parts.length === 2 ? parts[1].trim() : '0';
+
+    if (!lhsRaw) lhsRaw = '0';
+    if (!rhsRaw) rhsRaw = '0';
+
+    steps.push(`Separate sides: LHS = \`${lhsRaw}\`, RHS = \`${rhsRaw}\``);
+
+    // 2. Helper to clean math expression with variable x
+    const cleanExpr = (str: string): string => {
+      let expr = str.toLowerCase();
+      // Constants
+      expr = expr.replace(/π/g, 'Math.PI').replace(/\bpi\b/g, 'Math.PI').replace(/\be\b/g, 'Math.E');
+      // Functions
+      expr = expr.replace(/\bsin\(/g, 'Math.sin(')
+                 .replace(/\bcos\(/g, 'Math.cos(')
+                 .replace(/\btan\(/g, 'Math.tan(')
+                 .replace(/\bln\(/g, 'Math.log(')
+                 .replace(/\bsqrt\(/g, 'Math.sqrt(');
+      
+      // Powers
+      expr = expr.replace(/\^/g, '**');
+
+      // Implicit multiplication
+      // Number followed by x or Math or (
+      expr = expr.replace(/(\d+(?:\.\d+)?)\s*([x(]|math)/gi, '$1*$2');
+      // x or ) followed by number or Math or (
+      expr = expr.replace(/([x)])\s*(\d|math|\()/gi, '$1*$2');
+
+      return expr;
+    };
+
+    const lhsClean = cleanExpr(lhsRaw);
+    const rhsClean = cleanExpr(rhsRaw);
+
+    // 3. Create evaluation function f(x) = LHS - RHS
+    // We validate if characters are safe
+    const allowedRegex = /^[0-9x.+\-*/%()eMathPIElnsqrt,\s*]+$/i;
+    const lhsSanitized = lhsClean.replace(/Math\.[a-zA-Z]+/g, '');
+    const rhsSanitized = rhsClean.replace(/Math\.[a-zA-Z]+/g, '');
+
+    if (!allowedRegex.test(lhsSanitized) || !allowedRegex.test(rhsSanitized)) {
+      setCustomResult({
+        roots: [],
+        type: 'invalid',
+        steps: [...steps, 'Error: The equation contains invalid characters or unsupported functions. Please use x as the variable.']
+      });
+      return;
+    }
+
+    let f: (x: number) => number;
+    try {
+      const evalLHS = new Function('x', `return ${lhsClean};`);
+      const evalRHS = new Function('x', `return ${rhsClean};`);
+      f = (x: number) => {
+        const lhs = evalLHS(x);
+        const rhs = evalRHS(x);
+        return lhs - rhs;
+      };
+      
+      // Test run to see if it doesn't throw immediate errors
+      const testVal = f(0);
+      if (isNaN(testVal) && f(1) === testVal && f(-1) === testVal) {
+        throw new Error("Invalid expression");
+      }
+    } catch (err) {
+      setCustomResult({
+        roots: [],
+        type: 'invalid',
+        steps: [...steps, 'Error: Could not parse equation. Please make sure the syntax is correct (e.g. x^2 - 5x + 6 = 0).']
+      });
+      return;
+    }
+
+    // 4. Try to analyze if it is linear/quadratic by evaluating f(x) at points
+    const y0 = f(0);
+    const y1 = f(1);
+    const yn1 = f(-1);
+    
+    const a = (y1 + yn1 - 2 * y0) / 2;
+    const b = (y1 - yn1) / 2;
+    const c = y0;
+
+    const y2 = f(2);
+    const expectedY2 = 4 * a + 2 * b + c;
+    const yn2 = f(-2);
+    const expectedYn2 = 4 * a - 2 * b + c;
+
+    const isPoly = Math.abs(y2 - expectedY2) < 1e-7 && Math.abs(yn2 - expectedYn2) < 1e-7 && 
+                   !isNaN(y0) && !isNaN(y1) && !isNaN(yn1) && !isNaN(y2) && !isNaN(yn2);
+
+    if (isPoly) {
+      steps.push(`Rearrange equation to standard form: f(x) = LHS - RHS = 0`);
+      
+      if (Math.abs(a) < 1e-9) {
+        // Linear equation: bx + c = 0
+        steps.push(`Simplified linear form: Bx + C = 0`);
+        steps.push(`Coefficients: B = ${Number(b.toFixed(6))}, C = ${Number(c.toFixed(6))}`);
+        
+        if (Math.abs(b) < 1e-9) {
+          if (Math.abs(c) < 1e-9) {
+            steps.push(`Since 0 = 0 is always true, there are infinite solutions.`);
+            setCustomResult({ roots: ['Infinite solutions'], type: 'linear', steps });
+          } else {
+            steps.push(`Since ${Number(c.toFixed(6))} = 0 is false, there is no solution.`);
+            setCustomResult({ roots: ['No solution'], type: 'linear', steps });
+          }
+        } else {
+          const root = -c / b;
+          steps.push(`Subtract C from both sides: Bx = -C`);
+          steps.push(`Divide by B: x = -C / B = -(${Number(c.toFixed(6))}) / ${Number(b.toFixed(6))}`);
+          steps.push(`x = ${Number(root.toFixed(6))}`);
+          
+          setCustomResult({ roots: [Number(root.toFixed(6))], type: 'linear', steps });
+          confetti({ particleCount: 30, spread: 40, colors: ['#00f2fe', '#9d4edd'] });
+        }
+      } else {
+        // Quadratic equation: ax^2 + bx + c = 0
+        steps.push(`Simplified quadratic form: Ax² + Bx + C = 0`);
+        steps.push(`Coefficients: A = ${Number(a.toFixed(6))}, B = ${Number(b.toFixed(6))}, C = ${Number(c.toFixed(6))}`);
+        
+        const disc = b * b - 4 * a * c;
+        steps.push(`Calculate discriminant D = B² - 4AC:`);
+        steps.push(`D = (${Number(b.toFixed(6))})² - 4 * (${Number(a.toFixed(6))}) * (${Number(c.toFixed(6))}) = ${Number(disc.toFixed(6))}`);
+        
+        if (disc > 0) {
+          const sqrtD = Math.sqrt(disc);
+          steps.push(`Since D > 0, there are two distinct real roots.`);
+          steps.push(`x = (-B ± √D) / 2A`);
+          const x1 = (-b + sqrtD) / (2 * a);
+          const x2 = (-b - sqrtD) / (2 * a);
+          steps.push(`x₁ = (${Number(-b.toFixed(6))} + ${Number(sqrtD.toFixed(6))}) / ${Number((2*a).toFixed(6))} = ${Number(x1.toFixed(6))}`);
+          steps.push(`x₂ = (${Number(-b.toFixed(6))} - ${Number(sqrtD.toFixed(6))}) / ${Number((2*a).toFixed(6))} = ${Number(x2.toFixed(6))}`);
+          
+          setCustomResult({ roots: [Number(x1.toFixed(6)), Number(x2.toFixed(6))], type: 'quadratic', steps });
+          confetti({ particleCount: 30, spread: 40, colors: ['#00f2fe', '#9d4edd'] });
+        } else if (Math.abs(disc) < 1e-9) {
+          steps.push(`Since D = 0, there is one double real root.`);
+          steps.push(`x = -B / 2A`);
+          const root = -b / (2 * a);
+          steps.push(`x = ${Number(root.toFixed(6))}`);
+          
+          setCustomResult({ roots: [Number(root.toFixed(6))], type: 'quadratic', steps });
+          confetti({ particleCount: 30, spread: 40, colors: ['#00f2fe', '#9d4edd'] });
+        } else {
+          steps.push(`Since D < 0, there are two complex roots.`);
+          steps.push(`x = (-B ± i√|D|) / 2A`);
+          const realPart = -b / (2 * a);
+          const imagPart = Math.sqrt(Math.abs(disc)) / (2 * a);
+          const rStr = Number(realPart.toFixed(6)).toString();
+          const iStr = Number(imagPart.toFixed(6)).toString();
+          const x1 = `${rStr} + ${iStr}i`;
+          const x2 = `${rStr} - ${iStr}i`;
+          steps.push(`x₁ = ${x1}`);
+          steps.push(`x₂ = ${x2}`);
+          
+          setCustomResult({ roots: [x1, x2], type: 'quadratic', steps });
+          confetti({ particleCount: 30, spread: 40, colors: ['#00f2fe', '#9d4edd'] });
+        }
+      }
+    } else {
+      // General equation: solve numerically in range [-100, 100]
+      steps.push(`The equation is non-linear or of higher degree. Solving numerically in range [-100, 100]...`);
+      
+      const numericalRoots: number[] = [];
+      const searchMin = -100;
+      const searchMax = 100;
+      const searchSteps = 1000;
+      const searchStepSize = (searchMax - searchMin) / searchSteps;
+
+      const bisection = (leftVal: number, rightVal: number): number | null => {
+        let left = leftVal;
+        let right = rightVal;
+        
+        let fL = f(left);
+        let fR = f(right);
+        
+        if (Math.abs(fL) < 1e-8) return left;
+        if (Math.abs(fR) < 1e-8) return right;
+        
+        for (let iter = 0; iter < 100; iter++) {
+          const mid = (left + right) / 2;
+          const fM = f(mid);
+          
+          if (Math.abs(fM) < 1e-10) return mid;
+          if (fL * fM < 0) {
+            right = mid;
+            fR = fM;
+          } else {
+            left = mid;
+            fL = fM;
+          }
+        }
+        return (left + right) / 2;
+      };
+
+      for (let i = 0; i < searchSteps; i++) {
+        const x1 = searchMin + i * searchStepSize;
+        const x2 = x1 + searchStepSize;
+        
+        const y1 = f(x1);
+        const y2 = f(x2);
+        
+        if (isNaN(y1) || isNaN(y2) || !isFinite(y1) || !isFinite(y2)) continue;
+        
+        if (y1 * y2 <= 0) {
+          const root = bisection(x1, x2);
+          if (root !== null && isFinite(root) && !isNaN(root)) {
+            if (Math.abs(f(root)) < 1e-5) {
+              if (!numericalRoots.some(r => Math.abs(r - root) < 1e-4)) {
+                numericalRoots.push(Number(root.toFixed(6)));
+              }
+            }
+          }
+        }
+      }
+
+      if (numericalRoots.length > 0) {
+        steps.push(`Found ${numericalRoots.length} approximate root(s) in range [-100, 100].`);
+        setCustomResult({ roots: numericalRoots, type: 'general', steps });
+        confetti({ particleCount: 30, spread: 40, colors: ['#00f2fe', '#9d4edd'] });
+      } else {
+        const startPoints = [-10, -5, -1, 0, 1, 5, 10];
+        const newtonRoots: number[] = [];
+        
+        startPoints.forEach(start => {
+          let x = start;
+          for (let iter = 0; iter < 50; iter++) {
+            const fx = f(x);
+            if (Math.abs(fx) < 1e-8) {
+              if (isFinite(x) && !isNaN(x) && !newtonRoots.some(r => Math.abs(r - x) < 1e-4)) {
+                newtonRoots.push(Number(x.toFixed(6)));
+              }
+              break;
+            }
+            const h = 1e-5;
+            const df = (f(x + h) - fx) / h;
+            if (Math.abs(df) < 1e-12) break;
+            x = x - fx / df;
+          }
+        });
+        
+        if (newtonRoots.length > 0) {
+          steps.push(`Found ${newtonRoots.length} approximate root(s) via numerical refinement.`);
+          setCustomResult({ roots: newtonRoots, type: 'general', steps });
+          confetti({ particleCount: 30, spread: 40, colors: ['#00f2fe', '#9d4edd'] });
+        } else {
+          steps.push(`No real roots found in range [-100, 100].`);
+          setCustomResult({ roots: ['No real solutions found in [-100, 100]'], type: 'general', steps });
+        }
+      }
     }
   };
 
@@ -952,6 +1269,48 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
               <div style={styles.result}>{calcResult ? `= ${calcResult}` : ''}</div>
             </div>
 
+            {/* Angle Mode Toggle (DEG/RAD) */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              <button
+                type="button"
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  fontFamily: 'monospace',
+                  cursor: 'pointer',
+                  background: angleMode === 'deg' ? 'rgba(0, 242, 254, 0.12)' : 'rgba(255, 255, 255, 0.02)',
+                  border: `1px solid ${angleMode === 'deg' ? 'var(--primary)' : 'var(--border-glass)'}`,
+                  color: angleMode === 'deg' ? 'var(--primary)' : 'var(--text-secondary)',
+                  fontWeight: 600,
+                  transition: 'all 0.2s ease',
+                }}
+                onClick={() => setAngleMode('deg')}
+              >
+                DEG (Degrees)
+              </button>
+              <button
+                type="button"
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  fontFamily: 'monospace',
+                  cursor: 'pointer',
+                  background: angleMode === 'rad' ? 'rgba(0, 242, 254, 0.12)' : 'rgba(255, 255, 255, 0.02)',
+                  border: `1px solid ${angleMode === 'rad' ? 'var(--primary)' : 'var(--border-glass)'}`,
+                  color: angleMode === 'rad' ? 'var(--primary)' : 'var(--text-secondary)',
+                  fontWeight: 600,
+                  transition: 'all 0.2s ease',
+                }}
+                onClick={() => setAngleMode('rad')}
+              >
+                RAD (Radians)
+              </button>
+            </div>
+
             {/* Keys Grid */}
             <div style={styles.keysGrid}>
               {/* Scientific row */}
@@ -1195,8 +1554,9 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
             {/* Solver Mode Selector */}
             <div style={styles.solverModes}>
               {[
-                { id: 'linear', label: 'Linear (ax + b = cx + d)' },
-                { id: 'quadratic', label: 'Quadratic (ax² + bx + c = 0)' },
+                { id: 'custom', label: 'Custom Equation' },
+                { id: 'linear', label: 'Linear' },
+                { id: 'quadratic', label: 'Quadratic' },
                 { id: 'system', label: 'System (2 Variables)' }
               ].map((mode) => (
                 <button
@@ -1213,6 +1573,77 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
             </div>
 
             {/* Solver Inputs based on Mode */}
+            {solverMode === 'custom' && (
+              <div style={styles.solverInputsContainer}>
+                <div style={styles.equationDisplay}>
+                  <span>Enter your equation (e.g. <code>x^2 - 5x + 6 = 0</code>):</span>
+                </div>
+                <div className="form-group">
+                  <input
+                    type="text"
+                    value={customEq}
+                    onChange={(e) => setCustomEq(e.target.value)}
+                    className="form-input"
+                    style={{
+                      fontFamily: 'monospace',
+                      fontSize: '1.1rem',
+                      padding: '12px 14px',
+                      borderRadius: '8px',
+                      background: 'rgba(0,0,0,0.2)',
+                      border: '1px solid var(--border-glass)',
+                      color: 'var(--text-primary)',
+                      outline: 'none',
+                      width: '100%',
+                    }}
+                    placeholder="e.g. x^2 - 5x + 6 = 0"
+                  />
+                  <div style={{ marginTop: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                    Supports custom equations with variable <code>x</code>. You can use <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>^</code>, and functions like <code>sin(x)</code>, <code>cos(x)</code>, <code>tan(x)</code>, <code>ln(x)</code>, <code>sqrt(x)</code>.
+                  </div>
+                </div>
+
+                <button className="btn btn-primary" onClick={solveCustomEquation} style={styles.solveBtn}>
+                  Solve Equation
+                </button>
+
+                {customResult && (
+                  <div style={styles.resultContainer}>
+                    <h4 style={styles.resultTitle}>Solution:</h4>
+                    {customResult.type === 'invalid' ? (
+                      <div style={{ ...styles.resultBox, borderColor: 'rgba(239, 68, 68, 0.3)', background: 'rgba(239, 68, 68, 0.05)' }}>
+                        <span style={{ color: '#fca5a5', fontWeight: 600 }}>{customResult.steps[customResult.steps.length - 1] || 'Invalid equation'}</span>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {customResult.roots.map((root, idx) => (
+                          <div key={idx} style={styles.resultBox}>
+                            <span style={styles.resultLabelText}>
+                              {customResult.roots.length > 1
+                                ? (customResult.type === 'quadratic'
+                                  ? (idx === 0 ? 'x₁ = ' : 'x₂ = ')
+                                  : `x${idx + 1} = `)
+                                : 'x = '}
+                            </span>
+                            <span style={styles.resultValueText}>{root}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <h4 style={styles.stepsTitle}>Solving Steps:</h4>
+                    <div style={styles.stepsBox}>
+                      {customResult.steps.map((step, idx) => (
+                        <div key={idx} style={styles.stepRow}>
+                          <span style={styles.stepNumber}>{idx + 1}.</span>
+                          <span style={styles.stepText}>{step}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {solverMode === 'linear' && (
               <div style={styles.solverInputsContainer}>
                 <div style={styles.equationDisplay}>
