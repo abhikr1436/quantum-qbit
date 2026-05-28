@@ -28,44 +28,6 @@ function getAIKeys($keysFile) {
     if (!file_exists(dirname($keysFile))) {
         mkdir(dirname($keysFile), 0755, true);
     }
-    
-    // Auto-migrate keys from db.json if present
-    $dbFile = __DIR__ . '/data/db.json';
-    if (file_exists($dbFile)) {
-        $dbContent = file_get_contents($dbFile);
-        $dbData = json_decode($dbContent, true);
-        if (is_array($dbData) && isset($dbData['config']) && (isset($dbData['config']['deepseekKey']) || isset($dbData['config']['githubToken']))) {
-            $dsKey = isset($dbData['config']['deepseekKey']) ? trim($dbData['config']['deepseekKey']) : '';
-            $ghToken = isset($dbData['config']['githubToken']) ? trim($dbData['config']['githubToken']) : '';
-            
-            $keys = [
-                'deepseekKey' => '',
-                'githubToken' => ''
-            ];
-            if (file_exists($keysFile)) {
-                $keysData = json_decode(file_get_contents($keysFile), true);
-                if (is_array($keysData)) $keys = array_merge($keys, $keysData);
-            }
-            
-            $updated = false;
-            if (!empty($dsKey) && strpos($dsKey, '...') === false) {
-                $keys['deepseekKey'] = $dsKey;
-                $updated = true;
-            }
-            if (!empty($ghToken) && strpos($ghToken, '...') === false) {
-                $keys['githubToken'] = $ghToken;
-                $updated = true;
-            }
-            
-            // Remove them from db.json config
-            unset($dbData['config']['deepseekKey']);
-            unset($dbData['config']['githubToken']);
-            
-            saveAIKeys($keysFile, $keys);
-            file_put_contents($dbFile, json_encode($dbData, JSON_PRETTY_PRINT));
-        }
-    }
-
     if (!file_exists($keysFile)) {
         return [
             'deepseekKey' => '',
