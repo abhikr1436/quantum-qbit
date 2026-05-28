@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Cpu, Image, FileText, Calculator, ShieldCheck, Zap, Lock, ArrowRight, BookOpen } from 'lucide-react';
+import { Cpu, Image as ImageIcon, FileText, Calculator, ShieldCheck, Zap, Lock, BookOpen } from 'lucide-react';
 import { navigate } from '../utils/router';
+import qbitCoreImg from '../assets/qbit_core.png';
 
 interface BlogPost {
   id: string;
@@ -15,6 +16,8 @@ interface BlogPost {
 
 export const LandingPage: React.FC = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [scrollY, setScrollY] = useState(0);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const fetchBlogs = async () => {
@@ -76,47 +79,169 @@ export const LandingPage: React.FC = () => {
     fetchBlogs();
   }, []);
 
+  // Track scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Intersection Observer for scroll animations
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+        }
+      });
+    }, { threshold: 0.12 });
+
+    const elements = document.querySelectorAll('.reveal-on-scroll');
+    elements.forEach(el => observer.observe(el));
+    return () => {
+      elements.forEach(el => observer.unobserve(el));
+    };
+  }, [posts]);
+
+  // Handle mouse move for 3D tilt effect in Hero section
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5; // range: -0.5 to 0.5
+    const y = (e.clientY - rect.top) / rect.height - 0.5; // range: -0.5 to 0.5
+    setMousePos({ x, y });
+  };
+
+  const handleMouseLeave = () => {
+    setMousePos({ x: 0, y: 0 });
+  };
+
   const features = [
     {
-      icon: <Lock size={20} style={{ color: 'var(--primary)' }} />,
+      icon: <Lock size={22} style={{ color: 'var(--primary)' }} />,
       title: "100% Client-Side Privacy",
       description: "Your files never touch a server. All operations (image resize, PDF conversion, calculations) happen securely in your browser."
     },
     {
-      icon: <Zap size={20} style={{ color: 'var(--secondary)' }} />,
+      icon: <Zap size={22} style={{ color: 'var(--secondary)' }} />,
       title: "Sub-Second Execution",
       description: "Powered by modern WebAssembly and HTML5 Canvas API. Experience instant processing speeds without network latency."
     },
     {
-      icon: <ShieldCheck size={20} style={{ color: 'var(--primary)' }} />,
+      icon: <ShieldCheck size={22} style={{ color: 'var(--primary)' }} />,
       title: "Zero Ads & Tracker Free",
       description: "A clean, modern workspace designed for professionals and developers. No login required, no paywalls, just pure tools."
     }
   ];
 
+  // Dynamically calculate Qbit core transform values
+  const rotateX = mousePos.y * -35 + (scrollY * 0.08);
+  const rotateY = mousePos.x * 35 + (scrollY * 0.12);
+  const scale = Math.max(0.6, 1 - scrollY * 0.0008);
+  const translateY = scrollY * 0.15; // Parallax drift
+  const opacity = Math.max(0, 1 - scrollY * 0.0022);
+
+  // Generate glowing floating particles surrounding the Qbit core
+  const particles = Array.from({ length: 12 }).map((_, i) => {
+    const x = Math.sin(i) * 120 + (Math.random() * 20 - 10);
+    const y = Math.cos(i) * 120 - 60 + (Math.random() * 20 - 10);
+    const z = Math.sin(i * 2) * 50;
+    const delay = i * 0.8;
+    return (
+      <div 
+        key={i} 
+        className="glow-particle" 
+        style={{
+          left: `calc(50% + ${x}px)`,
+          top: `calc(50% + ${y}px)`,
+          animationDelay: `${delay}s`,
+          '--x': `${x * 1.6}px`,
+          '--y': `${y - 120}px`,
+          '--z': `${z}px`
+        } as React.CSSProperties}
+      />
+    );
+  });
+
   return (
     <div style={styles.landing}>
-      {/* Hero Section */}
-      <section style={styles.heroSection}>
-        <div style={styles.heroGlow1}></div>
-        <div style={styles.heroGlow2}></div>
-        <div style={styles.heroContent}>
-          <div style={styles.badge}>
-            <Cpu size={12} style={{ color: 'var(--primary)' }} />
-            <span>Introducing Quantum Qbit v1.0</span>
+      
+      {/* 3D Perspective Cyber Grid Background */}
+      <div className="cyber-grid-container">
+        <div className="cyber-grid" />
+      </div>
+
+      {/* Hero / Centerpiece Section */}
+      <section 
+        style={styles.heroSection} 
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      >
+        <div className="container" style={styles.heroGrid}>
+          
+          {/* Hero Left Content */}
+          <div style={{ ...styles.heroContent, opacity: Math.max(0, 1 - scrollY * 0.002) }}>
+            <div style={styles.badge} className="animate-fade-in">
+              <Cpu size={12} style={{ color: 'var(--primary)' }} />
+              <span>Introducing Quantum Qbit v1.0</span>
+            </div>
+            
+            <h1 style={styles.heroTitle} className="animate-fade-in">
+              Modern Web Tools,<br />
+              <span className="gradient-text">Zero Server Latency.</span>
+            </h1>
+            
+            <p style={styles.heroSubtitle} className="animate-fade-in">
+              A curated suite of minimal, high-performance web applications designed with absolute privacy. No uploads, no registrations, completely client-side.
+            </p>
+
+            <div style={styles.ctaGroup} className="animate-fade-in">
+              <button className="btn-primary" onClick={() => navigate('/tools')}>
+                Start Using Tools
+              </button>
+              <button className="btn-secondary" onClick={() => navigate('/blogs')}>
+                <BookOpen size={16} /> Read the Blog
+              </button>
+            </div>
           </div>
-          <h1 style={styles.heroTitle}>
-            Modern Web Tools,<br />
-            <span className="gradient-text">Zero Server Latency.</span>
-          </h1>
-          <p style={styles.heroSubtitle}>
-            A curated suite of minimal, high-performance web applications designed with absolute privacy. No uploads, no registrations, completely client-side.
-          </p>
+
+          {/* Hero Right 3D Scene */}
+          <div style={{ 
+            ...styles.hero3DCol, 
+            transform: `translateY(${translateY}px)`, 
+            opacity: opacity 
+          }}>
+            <div className="qbit-3d-scene">
+              {/* Spinning Orbital Neon Rings */}
+              <div className="qbit-ring qbit-ring-1" />
+              <div className="qbit-ring qbit-ring-2" />
+              <div className="qbit-ring qbit-ring-3" />
+              
+              {/* Floating Glowing Particles */}
+              {particles}
+
+              {/* Floating & Rotating 3D Qbit Core */}
+              <div 
+                className="qbit-core-wrapper"
+                style={{
+                  transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`,
+                }}
+              >
+                <img 
+                  src={qbitCoreImg} 
+                  alt="Quantum Core" 
+                  className="qbit-core-img"
+                />
+              </div>
+            </div>
+          </div>
+          
         </div>
       </section>
 
       {/* Horizontally Scrollable Tools Frame */}
-      <section style={styles.showcaseSection}>
+      <section className="reveal-on-scroll" style={styles.showcaseSection}>
         <div className="container">
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>Quantum Utilities Directory</h2>
@@ -129,7 +254,7 @@ export const LandingPage: React.FC = () => {
               <div className="scroll-card-glow" style={{ background: 'radial-gradient(circle, rgba(0, 242, 254, 0.12) 0%, transparent 70%)' }}></div>
               <div className="scroll-card-content">
                 <h3 className="scroll-card-title">
-                  <Image size={24} style={{ color: 'var(--primary)' }} />
+                  <ImageIcon size={24} style={{ color: 'var(--primary)' }} />
                   <span>Image Studio</span>
                 </h3>
                 <p className="scroll-card-desc">
@@ -193,11 +318,11 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Horizontally Scrollable Blogs Section */}
-      <section style={styles.blogsSection}>
+      <section className="reveal-on-scroll" style={styles.blogsSection}>
         <div className="container">
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>Latest Blogs and Articles</h2>
-            <p style={styles.sectionSubtitle}>Latest Blogs in Tech, Politics, Geo-Politics and everything.</p>
+            <p style={styles.sectionSubtitle}>Latest updates in technology, engineering, privacy, and guides.</p>
           </div>
 
           <div className="horizontal-scroll-row">
@@ -234,7 +359,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Features Grid */}
-      <section style={styles.featuresSection}>
+      <section className="reveal-on-scroll" style={styles.featuresSection}>
         <div className="container">
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>Engineered for Speed & Security</h2>
@@ -255,7 +380,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section style={styles.ctaSection}>
+      <section className="reveal-on-scroll" style={styles.ctaSection}>
         <div style={styles.ctaGlow}></div>
         <div className="glass-card" style={styles.ctaCard}>
           <h2 style={styles.ctaTitle}>Ready to experience the quantum leap?</h2>
@@ -279,49 +404,42 @@ export const LandingPage: React.FC = () => {
 const styles = {
   landing: {
     paddingBottom: '80px',
+    position: 'relative' as const,
   },
   blogsSection: {
-    padding: '20px 0',
+    padding: '60px 0',
   },
   heroSection: {
     position: 'relative' as const,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    textAlign: 'center' as const,
-    padding: '45px 24px 10px 24px',
+    padding: '80px 24px 100px 24px',
     overflow: 'hidden',
+    minHeight: '85vh',
   },
-  heroGlow1: {
-    position: 'absolute' as const,
-    top: '20%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: '400px',
-    height: '400px',
-    background: 'radial-gradient(circle, rgba(0, 242, 254, 0.08) 0%, transparent 70%)',
-    pointerEvents: 'none' as const,
-    zIndex: 1,
-  },
-  heroGlow2: {
-    position: 'absolute' as const,
-    bottom: '20%',
-    left: '50%',
-    transform: 'translate(-50%, 50%)',
-    width: '500px',
-    height: '500px',
-    background: 'radial-gradient(circle, rgba(157, 78, 221, 0.06) 0%, transparent 70%)',
-    pointerEvents: 'none' as const,
-    zIndex: 1,
+  heroGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1.1fr 0.9fr',
+    gap: '40px',
+    alignItems: 'center',
+    width: '100%',
   },
   heroContent: {
-    position: 'relative' as const,
-    zIndex: 2,
-    maxWidth: '800px',
     display: 'flex',
     flexDirection: 'column' as const,
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: '24px',
+    textAlign: 'left' as const,
+    zIndex: 2,
+    transition: 'opacity 0.2s ease-out',
+  },
+  hero3DCol: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
+    transition: 'transform 0.1s ease-out, opacity 0.2s ease-out',
   },
   badge: {
     display: 'inline-flex',
@@ -336,42 +454,45 @@ const styles = {
     color: 'var(--text-secondary)',
   },
   heroTitle: {
-    fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
+    fontSize: 'clamp(2.5rem, 5.5vw, 4.2rem)',
     lineHeight: 1.1,
     fontWeight: 800,
+    margin: 0,
   },
   heroSubtitle: {
-    fontSize: 'clamp(1rem, 2vw, 1.2rem)',
+    fontSize: 'clamp(1rem, 2vw, 1.15rem)',
     color: 'var(--text-secondary)',
     lineHeight: 1.6,
-    maxWidth: '650px',
+    maxWidth: '580px',
+    margin: 0,
   },
   ctaGroup: {
     display: 'flex',
     gap: '16px',
-    marginTop: '12px',
+    marginTop: '8px',
     flexWrap: 'wrap' as const,
-    justifyContent: 'center',
   },
   featuresSection: {
     padding: '80px 0',
   },
   sectionHeader: {
     textAlign: 'center' as const,
-    marginBottom: '20px',
+    marginBottom: '40px',
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '8px',
+    gap: '10px',
     alignItems: 'center',
   },
   sectionTitle: {
     fontSize: 'clamp(1.8rem, 4vw, 2.5rem)',
     fontWeight: 700,
+    margin: 0,
   },
   sectionSubtitle: {
     color: 'var(--text-secondary)',
     fontSize: '1rem',
     maxWidth: '550px',
+    margin: 0,
   },
   featuresGrid: {
     display: 'grid',
@@ -386,8 +507,8 @@ const styles = {
     gap: '18px',
   },
   featureIconContainer: {
-    width: '46px',
-    height: '46px',
+    width: '48px',
+    height: '48px',
     borderRadius: '10px',
     background: 'rgba(255,255,255,0.02)',
     border: '1px solid var(--border-glass)',
@@ -398,83 +519,20 @@ const styles = {
   featureTitle: {
     fontSize: '1.25rem',
     fontWeight: 600,
+    margin: 0,
   },
   featureDesc: {
     color: 'var(--text-secondary)',
     lineHeight: 1.6,
     fontSize: '0.95rem',
+    margin: 0,
   },
   showcaseSection: {
-    padding: '20px 0',
-  },
-  toolsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-    gap: '24px',
-  },
-  toolCard: {
-    padding: '30px',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '16px',
-    textAlign: 'left' as const,
-  },
-  toolCardHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  toolIconWrapper: {
-    width: '42px',
-    height: '42px',
-    borderRadius: '8px',
-    background: 'rgba(255, 255, 255, 0.02)',
-    border: '1px solid var(--border-glass)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  toolTag: {
-    fontSize: '0.75rem',
-    fontWeight: 600,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.05em',
-    padding: '4px 10px',
-    borderRadius: '100px',
-    border: '1px solid',
-  },
-  toolTitle: {
-    fontSize: '1.3rem',
-    fontWeight: 600,
-    marginTop: '6px',
-  },
-  toolDesc: {
-    color: 'var(--text-secondary)',
-    fontSize: '0.92rem',
-    lineHeight: 1.5,
-    flexGrow: 1,
-  },
-  toolBtn: {
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--text-primary)',
-    fontFamily: 'var(--font-heading)',
-    fontSize: '0.9rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '6px 0',
-    width: 'fit-content',
-    transition: 'var(--transition-fast)',
-  },
-  btnArrow: {
-    transition: 'transform 0.2s ease',
+    padding: '60px 0',
   },
   ctaSection: {
     position: 'relative' as const,
-    padding: '100px 24px',
+    padding: '80px 24px 100px 24px',
     display: 'flex',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -506,12 +564,14 @@ const styles = {
   ctaTitle: {
     fontSize: 'clamp(1.5rem, 3.5vw, 2.2rem)',
     fontWeight: 700,
+    margin: 0,
   },
   ctaDesc: {
     color: 'var(--text-secondary)',
     maxWidth: '600px',
     lineHeight: 1.6,
     fontSize: '0.98rem',
+    margin: 0,
   },
   ctaButtons: {
     display: 'flex',

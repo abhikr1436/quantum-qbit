@@ -1325,3 +1325,182 @@ body.page-admin #bottom-sticky-banner-ad {
   margin-top: 12px;
 }
 
+/* Futuristic 3D Redesign Elements */
+
+.cyber-grid-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  perspective: 1000px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cyber-grid {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background-image: 
+    linear-gradient(to right, rgba(0, 242, 254, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 242, 254, 0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+  transform: rotateX(65deg);
+  animation: grid-scroll 20s linear infinite;
+  transform-origin: center center;
+}
+
+@keyframes grid-scroll {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 1200px;
+  }
+}
+
+.qbit-3d-scene {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  height: 480px;
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.qbit-core-wrapper {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  transform-style: preserve-3d;
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: qbit-float 6s ease-in-out infinite;
+}
+
+.qbit-core-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 35px rgba(0, 242, 254, 0.4)) drop-shadow(0 0 70px rgba(157, 78, 221, 0.25));
+  transform: translateZ(30px);
+  pointer-events: none;
+}
+
+@keyframes qbit-float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(2deg);
+  }
+}
+
+.qbit-ring {
+  position: absolute;
+  border: 1px solid rgba(0, 242, 254, 0.15);
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(0, 242, 254, 0.05), inset 0 0 20px rgba(0, 242, 254, 0.05);
+  pointer-events: none;
+}
+
+.qbit-ring-1 {
+  width: 380px;
+  height: 380px;
+  transform: rotateX(70deg) rotateY(20deg);
+  animation: ring-rotate-1 25s linear infinite;
+  border-color: rgba(0, 242, 254, 0.25);
+}
+
+.qbit-ring-2 {
+  width: 320px;
+  height: 320px;
+  transform: rotateX(30deg) rotateY(-50deg);
+  animation: ring-rotate-2 18s linear infinite;
+  border-color: rgba(157, 78, 221, 0.25);
+}
+
+.qbit-ring-3 {
+  width: 440px;
+  height: 440px;
+  transform: rotateX(80deg) rotateY(10deg);
+  animation: ring-rotate-3 35s linear infinite;
+  border-color: rgba(255, 0, 127, 0.15);
+}
+
+@keyframes ring-rotate-1 {
+  0% { transform: rotateX(70deg) rotateY(20deg) rotateZ(0deg); }
+  100% { transform: rotateX(70deg) rotateY(20deg) rotateZ(360deg); }
+}
+
+@keyframes ring-rotate-2 {
+  0% { transform: rotateX(30deg) rotateY(-50deg) rotateZ(360deg); }
+  100% { transform: rotateX(30deg) rotateY(-50deg) rotateZ(0deg); }
+}
+
+@keyframes ring-rotate-3 {
+  0% { transform: rotateX(80deg) rotateY(10deg) rotateZ(0deg); }
+  100% { transform: rotateX(80deg) rotateY(10deg) rotateZ(360deg); }
+}
+
+.glow-particle {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background-color: var(--primary);
+  border-radius: 50%;
+  filter: blur(0.5px);
+  box-shadow: 0 0 10px var(--primary), 0 0 20px var(--secondary);
+  animation: particle-drift 15s infinite linear;
+  pointer-events: none;
+}
+
+@keyframes particle-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.5);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  85% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(var(--x, 80px), var(--y, -150px), var(--z, 100px)) scale(1.5);
+    opacity: 0;
+  }
+}
+
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(35px) scale(0.97);
+  transition: opacity 1.0s cubic-bezier(0.15, 0.85, 0.15, 1), transform 1.0s cubic-bezier(0.15, 0.85, 0.15, 1);
+}
+
+.reveal-on-scroll.active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Horizontal scroll indicators/tweaks */
+.horizontal-scroll-row::-webkit-scrollbar {
+  display: flex;
+  height: 6px;
+}
+.horizontal-scroll-row::-webkit-scrollbar-thumb {
+  background: rgba(0, 242, 254, 0.15);
+  border-radius: 10px;
+}
+.horizontal-scroll-row::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 242, 254, 0.3);
+}
+
+

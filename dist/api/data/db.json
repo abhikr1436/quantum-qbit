@@ -98,7 +98,7 @@
       "description": "Conduct a comprehensive SEO audit of the company website to identify issues and opportunities for improvement.",
       "type": "seo",
       "assignee": "Mark",
-      "status": "ceo_approval",
+      "status": "completed",
       "draftContent": {
         "summary": "Conducted a comprehensive SEO audit of the company website. Identified key issues including slow page load times, missing meta descriptions, broken links, and lack of mobile optimization. Provided recommendations for improving site structure, on-page SEO, and technical aspects.",
         "details": "Performed crawl using Screaming Frog. Found 150 pages with missing meta descriptions, 45 broken links, average page load time of 4.2 seconds (recommend under 3s). Mobile usability issues identified on 20 pages. Suggested implementing responsive design, compressing images, and fixing redirect chains. Drafted XML sitemap updates and a robots.txt file to block low-value pages. Recommended adding schema markup for local business and breadcrumbs."
@@ -109,10 +109,16 @@
           "reviewText": "The draft is comprehensive and covers key SEO aspects including technical issues, on-page elements, and recommendations. The details are specific and actionable. Well done.",
           "decision": "approved",
           "timestamp": "2026-05-28T17:19:05.234Z"
+        },
+        {
+          "agent": "Sophia",
+          "reviewText": "Excellent work, Mark. This audit covers all critical areas. Let's prioritize fixing the meta descriptions and broken links first. Please coordinate with Engineering on page load speed improvements. Approved for implementation.",
+          "decision": "approved",
+          "timestamp": "2026-05-28T17:26:22.607Z"
         }
       ],
       "createdAt": "2026-05-28T17:18:52.937Z",
-      "updatedAt": "2026-05-28T17:19:05.234Z"
+      "updatedAt": "2026-05-28T17:26:22.608Z"
     },
     {
       "id": "task-li2y9zv4y",
@@ -120,7 +126,7 @@
       "description": "Perform keyword research to identify high-value keywords for content creation and optimization.",
       "type": "seo",
       "assignee": "Mark",
-      "status": "ceo_approval",
+      "status": "completed",
       "draftContent": {
         "summary": "Identified 15 high-value keywords for content creation and optimization using competitor analysis and search volume data.",
         "details": "Using tools like Ahrefs and Google Keyword Planner, extracted keywords from top competitors (Sites A, B, C). Filtered for search volume > 500/mo and keyword difficulty < 50. Final list includes: 'organic coffee beans', 'best coffee for espresso', 'roasted coffee near me', 'coffee bean subscriptions', 'single origin coffee benefits', 'how to brew pour-over coffee', 'coffee grinder reviews 2024', 'Colombian coffee brands', 'fair trade coffee guide', 'coffee roasting levels', 'cold brew concentrate recipe', 'coffee tasting notes', 'coffee and health benefits', 'decaf coffee process', 'coffee storage tips'."
@@ -131,10 +137,16 @@
           "reviewText": "Good job, Mark! The keyword research is thorough, using reputable tools and clear criteria. The list of 15 high-value keywords is well-targeted for content creation and optimization. No edits needed.",
           "decision": "approved",
           "timestamp": "2026-05-28T17:19:07.038Z"
+        },
+        {
+          "agent": "Sophia",
+          "reviewText": "Market research team has done an excellent job identifying high-value keywords with a clear methodology. The focus on search volume and difficulty ensures we target achievable opportunities. Well done, Mark. Let's proceed with content creation.",
+          "decision": "approved",
+          "timestamp": "2026-05-28T17:26:24.545Z"
         }
       ],
       "createdAt": "2026-05-28T17:18:52.937Z",
-      "updatedAt": "2026-05-28T17:19:07.038Z"
+      "updatedAt": "2026-05-28T17:26:24.545Z"
     },
     {
       "id": "task-jelvff9bm",
@@ -142,14 +154,27 @@
       "description": "Update meta tags, headings, alt texts, and content for target keywords based on audit findings.",
       "type": "seo",
       "assignee": "Mark",
-      "status": "manager_review",
+      "status": "completed",
       "draftContent": {
         "summary": "Updated meta tags, headings, alt texts, and content to align with target keywords identified in the SEO audit.",
         "details": "Meta tags: Updated title tags to include primary keyword within 60 characters; revised meta descriptions to 160 characters with secondary keywords. Headings: Reordered h1-h3 hierarchy, inserting target keywords in h1 and h2 tags. Alt texts: Added descriptive alt attributes to all images incorporating relevant keywords. Content: Refreshed body text to maintain keyword density of 1-2% while improving readability; added internal links using anchor text with keywords."
       },
-      "reviews": [],
+      "reviews": [
+        {
+          "agent": "Alex",
+          "reviewText": "Draft task clearly aligns with SEO audit findings and provides actionable details on updating meta tags, headings, alt texts, and content. The summary and details are well-structured and specific. Good work, Mark.",
+          "decision": "approved",
+          "timestamp": "2026-05-28T17:26:20.962Z"
+        },
+        {
+          "agent": "Sophia",
+          "reviewText": "Excellent work, Mark. The SEO updates are thorough and align well with our audit insights. Approved.",
+          "decision": "approved",
+          "timestamp": "2026-05-28T17:26:26.069Z"
+        }
+      ],
       "createdAt": "2026-05-28T17:18:52.937Z",
-      "updatedAt": "2026-05-28T17:19:03.608Z"
+      "updatedAt": "2026-05-28T17:26:26.069Z"
     }
   ],
   "chatLogs": [
@@ -271,6 +296,55 @@
       "text": "Draft for \"Keyword Research\" is approved by me. @Sophia, please review and give the final sign-off! Notes: Good job, Mark! The keyword research is thorough, using reputable tools and clear criteria. The list of 15 high-value keywords is well-targeted for content creation and optimization. No edits needed.",
       "timestamp": "2026-05-28T17:19:07.038Z",
       "taskId": "task-li2y9zv4y"
+    },
+    {
+      "id": "msg-17799891809620.7910770812609453",
+      "sender": "Alex",
+      "text": "Draft for \"Optimize On-Page SEO\" is approved by me. @Sophia, please review and give the final sign-off! Notes: Draft task clearly aligns with SEO audit findings and provides actionable details on updating meta tags, headings, alt texts, and content. The summary and details are well-structured and specific. Good work, Mark.",
+      "timestamp": "2026-05-28T17:26:20.962Z",
+      "taskId": "task-jelvff9bm"
+    },
+    {
+      "id": "msg-17799891826070.44473273280246683",
+      "sender": "Sophia",
+      "text": "Approved! Excellent job @Mark. @Deployer, please push this update live. Executive Notes: Excellent work, Mark. This audit covers all critical areas. Let's prioritize fixing the meta descriptions and broken links first. Please coordinate with Engineering on page load speed improvements. Approved for implementation.",
+      "timestamp": "2026-05-28T17:26:22.607Z",
+      "taskId": "task-k2ueym5k0"
+    },
+    {
+      "id": "msg-17799891826080.45038619201782115",
+      "sender": "Deployer",
+      "text": "Deployment successful for \"SEO Audit\"! Changes are staged. Log: Simulated feature deployment completed for layout update: \"SEO Audit\".",
+      "timestamp": "2026-05-28T17:26:22.608Z",
+      "taskId": "task-k2ueym5k0"
+    },
+    {
+      "id": "msg-17799891845450.6232694663017768",
+      "sender": "Sophia",
+      "text": "Approved! Excellent job @Mark. @Deployer, please push this update live. Executive Notes: Market research team has done an excellent job identifying high-value keywords with a clear methodology. The focus on search volume and difficulty ensures we target achievable opportunities. Well done, Mark. Let's proceed with content creation.",
+      "timestamp": "2026-05-28T17:26:24.545Z",
+      "taskId": "task-li2y9zv4y"
+    },
+    {
+      "id": "msg-17799891845450.644856801940279",
+      "sender": "Deployer",
+      "text": "Deployment successful for \"Keyword Research\"! Changes are staged. Log: Simulated feature deployment completed for layout update: \"Keyword Research\".",
+      "timestamp": "2026-05-28T17:26:24.545Z",
+      "taskId": "task-li2y9zv4y"
+    },
+    {
+      "id": "msg-17799891860690.3627431521193625",
+      "sender": "Sophia",
+      "text": "Approved! Excellent job @Mark. @Deployer, please push this update live. Executive Notes: Excellent work, Mark. The SEO updates are thorough and align well with our audit insights. Approved.",
+      "timestamp": "2026-05-28T17:26:26.069Z",
+      "taskId": "task-jelvff9bm"
+    },
+    {
+      "id": "msg-17799891860690.7024871173102183",
+      "sender": "Deployer",
+      "text": "Deployment successful for \"Optimize On-Page SEO\"! Changes are staged. Log: Simulated feature deployment completed for layout update: \"Optimize On-Page SEO\".",
+      "timestamp": "2026-05-28T17:26:26.069Z",
+      "taskId": "task-jelvff9bm"
     }
   ],
   "publishedTopics": [
