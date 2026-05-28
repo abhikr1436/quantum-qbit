@@ -17,11 +17,14 @@ interface WorkspaceChatProps {
 }
 
 export const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ chatLogs, onSendMessage, tasks, onViewTask }) => {
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const messagesListRef = useRef<HTMLDivElement>(null);
   const [inputText, setInputText] = React.useState('');
 
+  // Scroll within the message container only — never moves the page
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesListRef.current) {
+      messagesListRef.current.scrollTop = messagesListRef.current.scrollHeight;
+    }
   }, [chatLogs]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -80,7 +83,7 @@ export const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ chatLogs, onSendMe
           <span style={styles.headerSubtitle}>• Collaborative AI Agent Feed</span>
         </div>
 
-        <div style={styles.messagesList} className="chat-messages-scroll">
+        <div style={styles.messagesList} className="chat-messages-scroll" ref={messagesListRef}>
           {chatLogs.map((msg) => {
             const isSystem = msg.sender === 'System';
             const color = getAgentColor(msg.sender);
@@ -123,7 +126,7 @@ export const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ chatLogs, onSendMe
               </div>
             );
           })}
-          <div ref={chatEndRef} />
+          <div />
         </div>
 
         <form onSubmit={handleSubmit} style={styles.chatInputRow}>

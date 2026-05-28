@@ -15,12 +15,12 @@ interface BoardroomProps {
 }
 
 export const Boardroom: React.FC<BoardroomProps> = ({ onSendDirective, isProcessing, agents, systemLogs = [] }) => {
-  const logEndRef = useRef<HTMLDivElement>(null);
+  const logBodyRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to latest log when new ones arrive
+  // Scroll within the log container only — never moves the page
   useEffect(() => {
-    if (logEndRef.current) {
-      logEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (logBodyRef.current) {
+      logBodyRef.current.scrollTop = logBodyRef.current.scrollHeight;
     }
   }, [systemLogs]);
   const [directiveText, setDirectiveText] = useState('');
@@ -155,7 +155,7 @@ export const Boardroom: React.FC<BoardroomProps> = ({ onSendDirective, isProcess
           <span style={styles.logCount}>{systemLogs.length} entries</span>
           <span style={{ marginLeft: 'auto', fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)' }}>Auto-updating every 6s</span>
         </div>
-        <div style={styles.logBody}>
+        <div style={styles.logBody} ref={logBodyRef}>
           {systemLogs.length === 0 ? (
             <div style={styles.logEmpty}>
               <Terminal size={20} style={{ opacity: 0.3 }} />
@@ -187,7 +187,6 @@ export const Boardroom: React.FC<BoardroomProps> = ({ onSendDirective, isProcess
               );
             })
           )}
-          <div ref={logEndRef} />
         </div>
       </div>
 
