@@ -18,3 +18,9 @@ CREATE TABLE IF NOT EXISTS blogs (
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS settings (
+    `key` VARCHAR(100) PRIMARY KEY,
+    `value` TEXT NOT NULL
+);
+
+

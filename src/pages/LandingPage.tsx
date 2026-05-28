@@ -162,9 +162,7 @@ export const LandingPage: React.FC = () => {
     if (isMobile) {
       const op = Math.max(0, 1 - scrollY * 0.0035);
       return {
-        left: '50%',
-        top: '32%',
-        transform: `translate(-50%, -50%) scale(${Math.max(0.4, 0.85 - scrollY * 0.001)})`,
+        transform: `translate3d(50vw, 32vh, 0) translate(-50%, -50%) scale(${Math.max(0.4, 0.85 - scrollY * 0.001)})`,
         opacity: op,
         pointerEvents: 'none' as const
       };
@@ -202,13 +200,12 @@ export const LandingPage: React.FC = () => {
     const op = scrollY > 2600 ? Math.max(0, 1 - (scrollY - 2600) * 0.003) : 1;
 
     return {
-      left: `${left}%`,
-      top: `${top}%`,
-      transform: `translate(-50%, -50%) scale(${scale})`,
+      transform: `translate3d(${left}vw, ${top}vh, 0) translate(-50%, -50%) scale(${scale})`,
       opacity: op,
       pointerEvents: 'none' as const
     };
   };
+
 
   // Generate glowing floating particles surrounding the Qbit core
   const particles = Array.from({ length: 12 }).map((_, i) => {
@@ -245,10 +242,12 @@ export const LandingPage: React.FC = () => {
         className="qbit-3d-canvas-container"
         style={{
           position: 'fixed',
+          left: 0,
+          top: 0,
           width: isMobile ? '280px' : '450px',
           height: isMobile ? '280px' : '450px',
           zIndex: 10,
-          transition: 'left 0.75s cubic-bezier(0.16, 1, 0.3, 1), top 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease-out',
+          transition: 'transform 0.75s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease-out',
           ...getQbitPosition()
         }}
       >

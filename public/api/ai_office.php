@@ -19,28 +19,93 @@ if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
 session_start();
 header('Content-Type: application/json');
 
+require_once __DIR__ . '/db_config.php';
+
 $dbFile = __DIR__ . '/data/db.json';
 $liveUpdatesFile = __DIR__ . '/data/live_updates.json';
 $keysFile = __DIR__ . '/data/keys.json';
 
-// Helper to load keys.json (ignored by Git for security)
+// Helper to load keys.json (with database persistence)
 function getAIKeys($keysFile) {
-    if (!file_exists(dirname($keysFile))) {
-        mkdir(dirname($keysFile), 0755, true);
+    $keys = [
+        'deepseekKey' => '',
+        'githubToken' => ''
+    ];
+    
+    // 1. Try to load from database
+    $pdo = getDBConnection();
+    if ($pdo) {
+        try {
+            $pdo->exec("CREATE TABLE IF NOT EXISTS settings (
+                `key` VARCHAR(100) PRIMARY KEY,
+                `value` TEXT NOT NULL
+            )");
+            
+            $stmt = $pdo->prepare("SELECT `key`, `value` FROM settings WHERE `key` IN ('deepseekKey', 'githubToken')");
+            $stmt->execute();
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $dbKeys = [];
+            foreach ($rows as $row) {
+                $dbKeys[$row['key']] = $row['value'];
+            }
+            
+            if (!empty($dbKeys['deepseekKey']) || !empty($dbKeys['githubToken'])) {
+                $keys['deepseekKey'] = isset($dbKeys['deepseekKey']) ? $dbKeys['deepseekKey'] : '';
+                $keys['githubToken'] = isset($dbKeys['githubToken']) ? $dbKeys['githubToken'] : '';
+                
+                // Keep local keys.json in sync if it's missing
+                if (!file_exists($keysFile)) {
+                    if (!file_exists(dirname($keysFile))) {
+                        mkdir(dirname($keysFile), 0755, true);
+                    }
+                    file_put_contents($keysFile, json_encode($keys, JSON_PRETTY_PRINT));
+                }
+                return $keys;
+            }
+        } catch (Exception $e) {
+            // Fall back to file
+        }
     }
-    if (!file_exists($keysFile)) {
-        return [
-            'deepseekKey' => '',
-            'githubToken' => ''
-        ];
+    
+    // 2. Fallback to keys.json file
+    if (file_exists($keysFile)) {
+        $content = file_get_contents($keysFile);
+        $data = json_decode($content, true);
+        if (is_array($data)) {
+            $keys['deepseekKey'] = isset($data['deepseekKey']) ? $data['deepseekKey'] : '';
+            $keys['githubToken'] = isset($data['githubToken']) ? $data['githubToken'] : '';
+        }
     }
-    $content = file_get_contents($keysFile);
-    $data = json_decode($content, true);
-    return is_array($data) ? $data : ['deepseekKey' => '', 'githubToken' => ''];
+    
+    return $keys;
 }
 
-// Helper to save keys.json
+// Helper to save keys.json (with database persistence)
 function saveAIKeys($keysFile, $data) {
+    // 1. Save to database if connected
+    $pdo = getDBConnection();
+    if ($pdo) {
+        try {
+            $pdo->exec("CREATE TABLE IF NOT EXISTS settings (
+                `key` VARCHAR(100) PRIMARY KEY,
+                `value` TEXT NOT NULL
+            )");
+            
+            $dsKey = isset($data['deepseekKey']) ? $data['deepseekKey'] : '';
+            $ghToken = isset($data['githubToken']) ? $data['githubToken'] : '';
+            
+            $stmt = $pdo->prepare("INSERT INTO settings (`key`, `value`) VALUES ('deepseekKey', :val) ON DUPLICATE KEY UPDATE `value` = :val");
+            $stmt->execute(['val' => $dsKey]);
+            
+            $stmt = $pdo->prepare("INSERT INTO settings (`key`, `value`) VALUES ('githubToken', :val) ON DUPLICATE KEY UPDATE `value` = :val");
+            $stmt->execute(['val' => $ghToken]);
+        } catch (Exception $e) {
+            // Proceed to write file
+        }
+    }
+
+    // 2. Write to local file
     if (!file_exists(dirname($keysFile))) {
         mkdir(dirname($keysFile), 0755, true);
     }

@@ -13,6 +13,13 @@ export const ThreeDQbit: React.FC<ThreeDQbitProps> = ({ scrollY, mousePos }) => 
   const timeRef = useRef(0);
   const historyRef = useRef<{ x: number; y: number; z: number }[]>([]);
 
+  const stateRef = useRef({ scrollY, mousePos });
+
+  // Update mutable ref whenever props change, without triggering effect stutters
+  useEffect(() => {
+    stateRef.current = { scrollY, mousePos };
+  }, [scrollY, mousePos]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -51,9 +58,13 @@ export const ThreeDQbit: React.FC<ThreeDQbitProps> = ({ scrollY, mousePos }) => 
       timeRef.current += 0.015;
       const t = timeRef.current;
 
+      // Retrieve latest scroll and mouse states from ref
+      const currentScrollY = stateRef.current.scrollY;
+      const currentMousePos = stateRef.current.mousePos;
+
       // target rotations: continuous slow rotation + mouse tilt + scroll influence
-      const targetRx = mousePos.y * -0.6 + (scrollY * 0.0008) + 0.3 + Math.sin(t * 0.1) * 0.08;
-      const targetRy = mousePos.x * 0.6 + (scrollY * 0.0015) + t * 0.12;
+      const targetRx = currentMousePos.y * -0.6 + (currentScrollY * 0.0008) + 0.3 + Math.sin(t * 0.1) * 0.08;
+      const targetRy = currentMousePos.x * 0.6 + (currentScrollY * 0.0015) + t * 0.12;
       
       // Lerp easing for ultra smooth response
       rotationRef.current.rx += (targetRx - rotationRef.current.rx) * 0.06;
@@ -322,7 +333,7 @@ export const ThreeDQbit: React.FC<ThreeDQbitProps> = ({ scrollY, mousePos }) => 
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', resizeCanvas);
     };
-  }, [scrollY, mousePos]);
+  }, []);
 
   return (
     <canvas 
