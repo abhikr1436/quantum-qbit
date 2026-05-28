@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Cpu, Image as ImageIcon, FileText, Calculator, ShieldCheck, Zap, Lock, BookOpen } from 'lucide-react';
 import { navigate } from '../utils/router';
-import qbitCoreImg from '../assets/qbit_core.png';
+import { ThreeDQbit } from '../components/ThreeDQbit';
 
 interface BlogPost {
   id: string;
@@ -142,12 +142,73 @@ export const LandingPage: React.FC = () => {
     }
   ];
 
-  // Dynamically calculate Qbit core transform values
-  const rotateX = mousePos.y * -35 + (scrollY * 0.08);
-  const rotateY = mousePos.x * 35 + (scrollY * 0.12);
-  const scale = Math.max(0.6, 1 - scrollY * 0.0008);
-  const translateY = scrollY * 0.15; // Parallax drift
+  // Parallax drift & opacity for the hero backdrop/vortex
+  const translateY = scrollY * 0.15;
   const opacity = Math.max(0, 1 - scrollY * 0.0022);
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Compute position along the scroll glide-path
+  const getQbitPosition = () => {
+    if (isMobile) {
+      const op = Math.max(0, 1 - scrollY * 0.0035);
+      return {
+        left: '50%',
+        top: '32%',
+        transform: `translate(-50%, -50%) scale(${Math.max(0.4, 0.85 - scrollY * 0.001)})`,
+        opacity: op,
+        pointerEvents: 'none' as const
+      };
+    }
+
+    const maxScroll = 2200;
+    const p = Math.min(scrollY / maxScroll, 1);
+
+    let left = 75; // in vw
+    let top = 48;  // in vh
+    let scale = 1.0;
+
+    if (p < 0.22) {
+      const t = p / 0.22;
+      left = 75 + (83 - 75) * t;
+      top = 48 + (60 - 48) * t;
+      scale = 1.0 - 0.2 * t;
+    } else if (p < 0.55) {
+      const t = (p - 0.22) / 0.33;
+      left = 83 + (18 - 83) * t;
+      top = 60 + (45 - 60) * t;
+      scale = 0.8 - 0.15 * t;
+    } else if (p < 0.82) {
+      const t = (p - 0.55) / 0.27;
+      left = 18 + (82 - 18) * t;
+      top = 45 + (55 - 45) * t;
+      scale = 0.65 + 0.2 * t;
+    } else {
+      const t = (p - 0.82) / 0.18;
+      left = 82 + (50 - 82) * t;
+      top = 55 + (72 - 55) * t;
+      scale = 0.85 - 0.3 * t;
+    }
+
+    const op = scrollY > 2600 ? Math.max(0, 1 - (scrollY - 2600) * 0.003) : 1;
+
+    return {
+      left: `${left}%`,
+      top: `${top}%`,
+      transform: `translate(-50%, -50%) scale(${scale})`,
+      opacity: op,
+      pointerEvents: 'none' as const
+    };
+  };
 
   // Generate glowing floating particles surrounding the Qbit core
   const particles = Array.from({ length: 12 }).map((_, i) => {
@@ -178,6 +239,22 @@ export const LandingPage: React.FC = () => {
       <div className="cyber-grid-container">
         <div className="cyber-grid" />
       </div>
+
+      {/* Real-time 3D Bloch Sphere Qbit centerpiece */}
+      <div 
+        className="qbit-3d-canvas-container"
+        style={{
+          position: 'fixed',
+          width: isMobile ? '280px' : '450px',
+          height: isMobile ? '280px' : '450px',
+          zIndex: 10,
+          transition: 'left 0.75s cubic-bezier(0.16, 1, 0.3, 1), top 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease-out',
+          ...getQbitPosition()
+        }}
+      >
+        <ThreeDQbit scrollY={scrollY} mousePos={mousePos} />
+      </div>
+
 
       {/* Hero / Centerpiece Section */}
       <section 
@@ -227,22 +304,9 @@ export const LandingPage: React.FC = () => {
               
               {/* Floating Glowing Particles */}
               {particles}
-
-              {/* Floating & Rotating 3D Qbit Core */}
-              <div 
-                className="qbit-core-wrapper"
-                style={{
-                  transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`,
-                }}
-              >
-                <img 
-                  src={qbitCoreImg} 
-                  alt="Quantum Core" 
-                  className="qbit-core-img"
-                />
-              </div>
             </div>
           </div>
+
           
         </div>
       </section>
