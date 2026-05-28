@@ -3,6 +3,7 @@ import {
   Key, LogOut, FileText, Settings, Plus, Edit, Trash2, 
   Check, AlertCircle, Trash, Eye, EyeOff, Save, X, Tag, Database
 } from 'lucide-react';
+import { AiOfficeTab } from '../components/ai-office/AiOfficeTab';
 
 interface BlogPost {
   id: string;
@@ -41,7 +42,7 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
   const [isLocalMode, setIsLocalMode] = useState<boolean>(false); // Fallback for local Vite dev server
   
   // Dashboard Tabs
-  const [activeTab, setActiveTab] = useState<'posts' | 'categories' | 'settings'>('posts');
+  const [activeTab, setActiveTab] = useState<'posts' | 'categories' | 'settings' | 'office'>('posts');
   
   // Blogs state
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -804,6 +805,12 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
           >
             <Settings size={16} /> Admin Settings
           </button>
+          <button 
+            onClick={() => setActiveTab('office')}
+            className={`admin-tab-item ${activeTab === 'office' ? 'active' : ''}`}
+          >
+            <Database size={16} /> AI Virtual Office
+          </button>
         </div>
 
         {/* TAB 1: MANAGE POSTS */}
@@ -1244,6 +1251,12 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
                 )}
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'office' && (
+          <div style={styles.tabContent}>
+            <AiOfficeTab />
           </div>
         )}
       </div>

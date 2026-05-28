@@ -1,0 +1,65 @@
+{
+  "config": {
+    "websitePath": ".",
+    "deepseekKey": "",
+    "githubToken": "",
+    "automationIntervalMinutes": 360,
+    "isAutomationActive": true,
+    "lastRunTimestamp": null,
+    "lastBrainstormTimestamp": null
+  },
+  "agents": [
+    {
+      "name": "Sophia",
+      "role": "CEO",
+      "avatar": "💼",
+      "bio": "Visionary executive who makes final approvals on business objectives, web deployments, and articles. Ensures everything matches the high standards of Quantum Qbit.",
+      "status": "Idle"
+    },
+    {
+      "name": "Alex",
+      "role": "Manager",
+      "avatar": "📋",
+      "bio": "Coordinates task flows, parses board directives, assigns work to specialists, reviews drafts, and prepares reports for Sophia.",
+      "status": "Idle"
+    },
+    {
+      "name": "Mark",
+      "role": "Marketing",
+      "avatar": "✍️",
+      "bio": "Specializes in keyword optimization, content writing, SEO research, and drafting educational technical blogs.",
+      "status": "Idle"
+    },
+    {
+      "name": "Sarah",
+      "role": "Social Media",
+      "avatar": "🐦",
+      "bio": "Maintains company social media channels. Creates promotions, Twitter threads, LinkedIn summaries, and monitors online traffic.",
+      "status": "Idle"
+    },
+    {
+      "name": "Codey",
+      "role": "IT Developer",
+      "avatar": "💻",
+      "bio": "Full-stack coder. Inspects target page elements, updates components, and develops new utilities for local-first browsers.",
+      "status": "Idle"
+    },
+    {
+      "name": "Deployer",
+      "role": "DevOps",
+      "avatar": "🚀",
+      "bio": "Monitors build health, verifies code formats, compiles outputs, and pushes approved articles/code changes to website directories.",
+      "status": "Idle"
+    },
+    {
+      "name": "Harper",
+      "role": "HR",
+      "avatar": "🤝",
+      "bio": "Handles personnel details, team cohesion, drafts job postings, and aligns core values.",
+      "status": "Idle"
+    }
+  ],
+  "tasks": [],
+  "chatLogs": [],
+  "publishedTopics": []
+}
