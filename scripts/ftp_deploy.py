@@ -28,9 +28,21 @@ def upload_dir_ftp(ftp, local_path, verbose=True):
     """Upload all files from local_path to current FTP directory"""
     success = 0
     failed = 0
+    protected_files = ['db.json', 'keys.json', 'config.json', 'live_updates.json']
     for item in sorted(os.listdir(local_path)):
         lp = os.path.join(local_path, item)
         if os.path.isfile(lp):
+            if item in protected_files:
+                exists = False
+                try:
+                    ftp.size(item)
+                    exists = True
+                except:
+                    pass
+                if exists:
+                    print(f'  ➖ skipping protected file: {item} (already exists on server)')
+                    success += 1
+                    continue
             try:
                 with open(lp, 'rb') as f:
                     ftp.storbinary(f'STOR {item}', f)
@@ -79,11 +91,23 @@ def upload_dir_sftp(sftp, local_path, remote_path, verbose=True):
     """Upload all files from local_path to remote_path in SFTP"""
     success = 0
     failed = 0
+    protected_files = ['db.json', 'keys.json', 'config.json', 'live_updates.json']
     for item in sorted(os.listdir(local_path)):
         lp = os.path.join(local_path, item)
         rp = f"{remote_path}/{item}" if remote_path not in ('.', '') else item
         
         if os.path.isfile(lp):
+            if item in protected_files:
+                exists = False
+                try:
+                    sftp.stat(rp)
+                    exists = True
+                except:
+                    pass
+                if exists:
+                    print(f'  ➖ skipping protected file: {item} (already exists on server)')
+                    success += 1
+                    continue
             try:
                 sftp.put(lp, rp)
                 if verbose:
