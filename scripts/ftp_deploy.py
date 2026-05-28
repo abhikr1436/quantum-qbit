@@ -28,17 +28,33 @@ def upload_dir_ftp(ftp, local_path, verbose=True):
     """Upload all files from local_path to current FTP directory"""
     success = 0
     failed = 0
-    protected_files = ['db.json', 'keys.json', 'config.json', 'live_updates.json']
+    
+    is_github_actions = os.environ.get('GITHUB_ACTIONS') == 'true'
+    protected_files = ['keys.json', 'config.json', 'live_updates.json']
+    if not is_github_actions:
+        protected_files.append('db.json')
+        
+    # Get listing once to check for file existence reliably
+    remote_files = []
+    try:
+        remote_files = ftp.nlst()
+    except:
+        pass
+
     for item in sorted(os.listdir(local_path)):
         lp = os.path.join(local_path, item)
         if os.path.isfile(lp):
             if item in protected_files:
                 exists = False
-                try:
-                    ftp.size(item)
+                if item in remote_files or f"./{item}" in remote_files:
                     exists = True
-                except:
-                    pass
+                else:
+                    # Fallback to size check
+                    try:
+                        ftp.size(item)
+                        exists = True
+                    except:
+                        pass
                 if exists:
                     print(f'  ➖ skipping protected file: {item} (already exists on server)')
                     success += 1
@@ -91,7 +107,18 @@ def upload_dir_sftp(sftp, local_path, remote_path, verbose=True):
     """Upload all files from local_path to remote_path in SFTP"""
     success = 0
     failed = 0
-    protected_files = ['db.json', 'keys.json', 'config.json', 'live_updates.json']
+    
+    is_github_actions = os.environ.get('GITHUB_ACTIONS') == 'true'
+    protected_files = ['keys.json', 'config.json', 'live_updates.json']
+    if not is_github_actions:
+        protected_files.append('db.json')
+
+    remote_files = []
+    try:
+        remote_files = sftp.listdir(remote_path or '.')
+    except:
+        pass
+
     for item in sorted(os.listdir(local_path)):
         lp = os.path.join(local_path, item)
         rp = f"{remote_path}/{item}" if remote_path not in ('.', '') else item
@@ -99,11 +126,14 @@ def upload_dir_sftp(sftp, local_path, remote_path, verbose=True):
         if os.path.isfile(lp):
             if item in protected_files:
                 exists = False
-                try:
-                    sftp.stat(rp)
+                if item in remote_files or f"./{item}" in remote_files:
                     exists = True
-                except:
-                    pass
+                else:
+                    try:
+                        sftp.stat(rp)
+                        exists = True
+                    except:
+                        pass
                 if exists:
                     print(f'  ➖ skipping protected file: {item} (already exists on server)')
                     success += 1
