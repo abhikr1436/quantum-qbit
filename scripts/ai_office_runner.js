@@ -476,22 +476,24 @@ async function executeAgentWork(db, task, openai) {
     let prompt = '';
     if (task.type === 'blog') {
       prompt = `You are ${assignee}, the Marketing specialist for quantumqbit.in — a privacy-first browser utilities website popular in India.
-Your task is to write a VIRAL, clickbait-style, high-quality blog post on this trending topic:
+Your task is to write a highly informative, news-driven, and timely blog post specifically on this topic:
 Title hint: "${task.title}"
-Research context: "${task.description}"
+Research context & background: "${task.description}"
 
 IMPORTANT RULES:
-1. The TITLE must be a CLICKBAIT-STYLE headline (use numbers, shocking words, urgency, e.g. "Alert:", "Shocking:", etc.)
-2. The content must be ORIGINAL, IN-DEPTH, and NOT generic.
-3. The content should be optimized for INDIAN readers (salaries in INR, Indian context, Aadhaar/DigiLocker, etc.)
-4. Content length: minimum 600 words with proper HTML structure. Use h2, h3, p, ul, li, strong, blockquote. Do NOT write markdown code fences.
-5. Add a catchy EXCERPT (2-3 sentences) that compels readers to click.
-6. Pick the MOST RELEVANT category: "privacy-security" | "computer-science" | "creative-tech" | "general-utilities".
+1. The article must focus specifically and deeply on the selected news event, announcement, or trend. Avoid writing generic listicles (e.g. "5 things", "5 ways", "5 trends") or timeless generic facts. Write about what is happening right now in the world or in India.
+2. The TITLE must be highly engaging, professional, and specific to the event/topic (do NOT prefix with generic clickbait words like "Alert:", "Shocking:", "Warning:", etc. unless it is a contextually critical warning).
+3. The content must be ORIGINAL, IN-DEPTH, and provide practical steps or analyses for the reader.
+4. The content should be optimized for your audience, connecting to real-world contexts (e.g. Indian government portals, salaries, CS topics, privacy security events).
+5. Content length: minimum 600 words with proper HTML structure. Use h2, h3, p, ul, li, strong, blockquote. Do NOT write markdown code fences (no raw markdown or code blocks).
+6. Naturally weave in how quantumqbit.in's browser utilities (like offline PDF compressor, image cropper, base calculators) solve a specific problem related to this topic.
+7. Add a catchy EXCERPT (2-3 sentences) that summarizes the news and compels the reader to read the full article.
+8. Pick the MOST RELEVANT category: "privacy-security" | "computer-science" | "creative-tech" | "general-utilities".
 
 Respond with a JSON object with EXACTLY these keys:
 {
-  "title": "Clickbait-style title",
-  "excerpt": "A compelling 2-3 sentence teaser",
+  "title": "Engaging news/guide title",
+  "excerpt": "A compelling 2-3 sentence teaser summarizing the timely topic",
   "content": "Full blog post in HTML structure (NO markdown fences, raw HTML)",
   "category_id": "privacy-security" | "computer-science" | "creative-tech" | "general-utilities",
   "imageGlow": "CSS RGBA glow color e.g. 'rgba(0, 242, 254, 0.15)'"
@@ -824,12 +826,14 @@ ${existingTitles.slice(-20).join('\n')}
 
 === STRICT RULES ===
 1. The new topic MUST be 100% different from the already-published list above.
-2. The title MUST be a viral, clickbait-style headline targeting Indian or Global audiences depending on the chosen trend (e.g. "Last 3 Days to Apply for [JOB]", "Why Everyone in India Is Talking About [TREND]", "7 Things About [TOPIC] That Will Shock You", "The Real Reason Everyone Is Searching For [GLOBAL_TREND]").
-3. Connect the topic to quantumqbit.in tools (e.g., how to compress a PDF resume for a Sarkari job application, how a base converter helps computer students, or how offline image cropping helps globally).
+2. Select exactly ONE specific trending topic or news item from the LIVE RESEARCH DATA above. Do NOT write generic "5 things", "5 trends", or listicle aggregations.
+3. The topic must reflect a real-world event, news, or a specific guide that is highly relevant right now (e.g., a specific job application deadline, a new privacy leak news event, a newly released system/tool, or a specific trending query).
+4. The title must be highly engaging, professional, and specific to the event/topic (do NOT prefix with generic clickbait words like "Alert:", "Shocking:", "Warning:", etc. unless it is a contextually critical warning). Examples: "How to Apply for the New Mahila Police Bharti 2026: Official Link and Requirements", "Google's New Aadhaar Masking Update: How to Download Your Masked Aadhaar Offline", "Why [TRENDING_TOPIC] Is Trending Globally Today: Complete Analysis".
+5. Connect the topic naturally to quantumqbit.in utility tools (e.g., how to compress files for a specific job upload, convert numbers for a CS topic, or crop images offline for a specific portal).
 
 Respond ONLY with a JSON object:
 {
-  "title": "Viral clickbait blog title",
+  "title": "Viral news/guide blog title",
   "category": "Government jobs" | "Private sector jobs" | "Technology & Privacy" | "India guides",
   "description": "Writer brief detailing: (1) target hook, (2) specific trending data details, (3) which quantumqbit.in tool to feature, (4) 3 target SEO keywords."
 }`;
