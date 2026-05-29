@@ -54,9 +54,11 @@ function getAIKeys($keysFile) {
             $dbDeepseek = isset($dbKeys['deepseekKey']) ? $dbKeys['deepseekKey'] : '';
             $dbGithub   = isset($dbKeys['githubToken']) ? $dbKeys['githubToken'] : '';
             
-            // Invalidate the old expired default token if present in DB
-            $oldToken = 'github_pat_11CDXLFFY0pho80NyhL9B1_iHMxw9AzNmQ7khVYw2BOT3z2Bid83NJwI2E6BUHpvuNBZ7RVHFTJxV0SIB';
-            if ($dbGithub === $oldToken) {
+
+            
+            // Invalidate stored tokens if they don't match the new token prefix
+            $newTokenPrefix = 'github_pat_11CDXLFFY0Hn6';
+            if (!empty($dbGithub) && strpos($dbGithub, $newTokenPrefix) !== 0) {
                 $dbGithub = '';
             }
             
@@ -79,9 +81,9 @@ function getAIKeys($keysFile) {
             $fileDeepseek = isset($data['deepseekKey']) ? $data['deepseekKey'] : '';
             $fileGithub   = isset($data['githubToken'])  ? $data['githubToken']  : '';
             
-            // Invalidate the old expired default token if present in file
-            $oldToken = 'github_pat_11CDXLFFY0pho80NyhL9B1_iHMxw9AzNmQ7khVYw2BOT3z2Bid83NJwI2E6BUHpvuNBZ7RVHFTJxV0SIB';
-            if ($fileGithub === $oldToken) {
+            // Invalidate stored tokens if they don't match the new token prefix
+            $newTokenPrefix = 'github_pat_11CDXLFFY0Hn6';
+            if (!empty($fileGithub) && strpos($fileGithub, $newTokenPrefix) !== 0) {
                 $fileGithub = '';
             }
             
