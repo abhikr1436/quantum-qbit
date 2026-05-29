@@ -379,6 +379,50 @@ switch ($action) {
         if (!empty($ghToken) && strlen($ghToken) > 10) {
             $db['config']['githubToken'] = substr($ghToken, 0, 5) . '...' . substr($ghToken, -4);
         }
+        // Check for article publication timeout
+        if (isset($db['config']['isAutomationActive']) && $db['config']['isAutomationActive']) {
+            $lastRun = isset($db['config']['lastRunTimestamp']) ? $db['config']['lastRunTimestamp'] : null;
+            if ($lastRun) {
+                $lastTime = strtotime($lastRun);
+                $currentTime = time();
+                $diffMinutes = ($currentTime - $lastTime) / 60;
+                
+                // If it's been more than 75 minutes (60 min interval + 15 min grace period)
+                if ($diffMinutes > 75) {
+                    // Check if we already logged this error recently to prevent duplicate logging
+                    $alreadyLogged = false;
+                    if (isset($db['systemLogs']) && is_array($db['systemLogs'])) {
+                        // Look at the last 5 logs
+                        $recentLogs = array_slice($db['systemLogs'], -5);
+                        foreach ($recentLogs as $log) {
+                            if (strpos($log['message'], 'Article publication timeout') !== false) {
+                                // If the logged error was created within the last 30 minutes, don't duplicate it
+                                if ((time() - strtotime($log['timestamp'])) < 1800) {
+                                    $alreadyLogged = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (!$alreadyLogged) {
+                        if (!isset($db['systemLogs'])) {
+                            $db['systemLogs'] = [];
+                        }
+                        $db['systemLogs'][] = [
+                            'timestamp' => date(DATE_ATOM),
+                            'agent' => 'System',
+                            'message' => 'System Error: Article publication timeout. No new article has been published or verified in the last 75 minutes. The cloud background scheduler may be stalled.'
+                        ];
+                        if (count($db['systemLogs']) > 150) {
+                            $db['systemLogs'] = array_slice($db['systemLogs'], -150);
+                        }
+                        saveAIDB($dbFile, $db);
+                    }
+                }
+            }
+        }
+
         echo json_encode($db);
         break;
         

@@ -12,6 +12,8 @@ interface OfficeConfig {
   deepseekKey: string;
   githubToken?: string;
   isAutomationActive: boolean;
+  automationIntervalMinutes?: number;
+  lastRunTimestamp?: string | null;
 }
 
 interface Agent {
@@ -85,6 +87,10 @@ export const AiOfficeTab: React.FC = () => {
   const [boardroomProcessing, setBoardroomProcessing] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
+  // Timer States
+  const [timeLeft, setTimeLeft] = useState<string>('--:--');
+  const [timerColor, setTimerColor] = useState<string>('rgba(255,255,255,0.6)');
+
   // Fetch full dashboard state from PHP backend
   const fetchDashboardData = async (showLoading = false) => {
     if (showLoading) setLoading(true);
@@ -116,6 +122,61 @@ export const AiOfficeTab: React.FC = () => {
     }, 6000);
     return () => clearInterval(interval);
   }, []);
+
+  // Countdown Timer logic based on lastRunTimestamp and automationIntervalMinutes
+  useEffect(() => {
+    const updateTimer = () => {
+      if (!config) {
+        setTimeLeft('--:--');
+        setTimerColor('rgba(255,255,255,0.6)');
+        return;
+      }
+      
+      if (!config.isAutomationActive) {
+        setTimeLeft('Disabled');
+        setTimerColor('rgba(255,255,255,0.4)');
+        return;
+      }
+      
+      const lastRun = config.lastRunTimestamp;
+      if (!lastRun) {
+        setTimeLeft('Awaiting Run');
+        setTimerColor('var(--primary, #00f2fe)');
+        return;
+      }
+      
+      const intervalMinutes = config.automationIntervalMinutes || 60;
+      const lastRunTime = new Date(lastRun).getTime();
+      const nextRunTime = lastRunTime + intervalMinutes * 60 * 1000;
+      const now = Date.now();
+      
+      const diffMs = nextRunTime - now;
+      if (diffMs <= 0) {
+        const overdueMinutes = Math.abs(diffMs) / 60000;
+        if (overdueMinutes > 15) {
+          setTimeLeft('Overdue / Stalled');
+          setTimerColor('#ef4444'); // Red alert
+        } else {
+          setTimeLeft('Running...');
+          setTimerColor('#10b981'); // Green active
+        }
+      } else {
+        const minutes = Math.floor(diffMs / 60000);
+        const seconds = Math.floor((diffMs % 60000) / 1000);
+        setTimeLeft(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+        
+        if (minutes < 5) {
+          setTimerColor('#f59e0b'); // Amber for final 5 mins
+        } else {
+          setTimerColor('rgba(255,255,255,0.8)');
+        }
+      }
+    };
+    
+    updateTimer();
+    const timerInterval = setInterval(updateTimer, 1000);
+    return () => clearInterval(timerInterval);
+  }, [config]);
 
   // Update Settings
   const handleUpdateConfig = async (newConfig: Partial<OfficeConfig>) => {
@@ -329,6 +390,21 @@ export const AiOfficeTab: React.FC = () => {
                 <span style={{ color: 'rgba(255,255,255,0.6)' }}>Ready for Board directives</span>
               )}
             </span>
+          </div>
+
+          <div style={{ 
+            fontSize: '0.85rem', 
+            color: timerColor, 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            padding: '4px 10px', 
+            borderRadius: '6px', 
+            background: 'rgba(255,255,255,0.03)',
+            border: `1px solid ${timerColor === 'rgba(255,255,255,0.8)' || timerColor === 'rgba(255,255,255,0.6)' ? 'rgba(255,255,255,0.08)' : timerColor + '30'}`
+          }}>
+            <RefreshCw size={12} className={timeLeft === 'Running...' ? 'spin' : ''} style={{ color: timerColor }} />
+            <span>Next Article: <strong>{timeLeft}</strong></span>
           </div>
 
           <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: '6px' }}>

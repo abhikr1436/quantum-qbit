@@ -741,6 +741,7 @@ function executeDeployment(db, task) {
       fs.writeFileSync(blogsJsonPath, JSON.stringify(currentBlogs, null, 2), 'utf8');
       updateSitemap(slug);
 
+      db.config.lastRunTimestamp = new Date().toISOString();
       deployLog = `Published blog post "${newPostTitle}" with slug "${slug}".`;
     } catch (err) {
       console.error("Failed to write blogs.json:", err.message);
@@ -748,6 +749,7 @@ function executeDeployment(db, task) {
       deployFailed = true;
     }
   } else {
+    db.config.lastRunTimestamp = new Date().toISOString();
     deployLog = `Simulated feature deployment completed for layout update: "${task.title}".`;
   }
 
