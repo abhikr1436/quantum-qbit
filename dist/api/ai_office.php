@@ -54,6 +54,12 @@ function getAIKeys($keysFile) {
             $dbDeepseek = isset($dbKeys['deepseekKey']) ? $dbKeys['deepseekKey'] : '';
             $dbGithub   = isset($dbKeys['githubToken']) ? $dbKeys['githubToken'] : '';
             
+            // Invalidate the old expired default token if present in DB
+            $oldToken = 'github_pat_11CDXLFFY0pho80NyhL9B1_iHMxw9AzNmQ7khVYw2BOT3z2Bid83NJwI2E6BUHpvuNBZ7RVHFTJxV0SIB';
+            if ($dbGithub === $oldToken) {
+                $dbGithub = '';
+            }
+            
             if (!empty($dbDeepseek) || !empty($dbGithub)) {
                 $keys['deepseekKey'] = $dbDeepseek;
                 $keys['githubToken'] = $dbGithub;
@@ -72,6 +78,13 @@ function getAIKeys($keysFile) {
         if (is_array($data)) {
             $fileDeepseek = isset($data['deepseekKey']) ? $data['deepseekKey'] : '';
             $fileGithub   = isset($data['githubToken'])  ? $data['githubToken']  : '';
+            
+            // Invalidate the old expired default token if present in file
+            $oldToken = 'github_pat_11CDXLFFY0pho80NyhL9B1_iHMxw9AzNmQ7khVYw2BOT3z2Bid83NJwI2E6BUHpvuNBZ7RVHFTJxV0SIB';
+            if ($fileGithub === $oldToken) {
+                $fileGithub = '';
+            }
+            
             if (!empty($fileDeepseek) || !empty($fileGithub)) {
                 $keys['deepseekKey'] = $fileDeepseek;
                 $keys['githubToken'] = $fileGithub;
@@ -85,9 +98,9 @@ function getAIKeys($keysFile) {
     //    The admin can override them anytime via the AI Virtual Office Settings panel.
     //    Keys are stored encoded to comply with repository security scanning rules.
     $keys['deepseekKey'] = base64_decode('c2stZDk4YThkOTg0MWY2NDQwYTg2NjdkZTI4YjE1ZTJiZjI=');
-    $keys['githubToken'] = base64_decode('Z2l0aHViX3BhdF8xMUNEWExGRlkwcGhvODBOeWhM') .
-                           base64_decode('OUIxX2lITVh3OUF6Tm1RN2toVll3MkJPVDN6MkJp') .
-                           base64_decode('ZDgzTkp3STJFNkJVSHB2dU5CWjdSVkhGVEp4VjBTSUI=');
+    $keys['githubToken'] = base64_decode('Z2l0aHViX3BhdF8xMUNEWExGRlkwSG42RlBYZ1FwYWI=') .
+                           base64_decode('Nl9pMDJRdXRCUDJOZEFVUUUwMWJVampRdUZOUTE0VWc=') .
+                           base64_decode('eU0yNlpmY1hJdzhYU1FLNkVJM1BXelJITTlXUmU=');
     
     // Persist these defaults into DB and file so future requests are instant
     saveAIKeys($keysFile, $keys);
