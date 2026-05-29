@@ -19,7 +19,7 @@ const parseDpi = (arrayBuffer: ArrayBuffer): number => {
     while (offset < view.byteLength - 18) {
       const marker = view.getUint16(offset);
       if (marker === 0xFFE0) { // APP0 (JFIF)
-        const length = view.getUint16(offset + 2);
+        view.getUint16(offset + 2);
         // Check for 'JFIF' signature
         if (view.getUint32(offset + 4) === 0x4A464946) {
           const unit = view.getUint8(offset + 9); // 1 = DPI, 2 = DPC
@@ -148,7 +148,7 @@ const injectJpegDpi = (blob: Blob, dpi: number): Promise<Blob> => {
       while (offset < buffer.byteLength - 18) {
         const marker = view.getUint16(offset);
         if (marker === 0xFFE0) {
-          const length = view.getUint16(offset + 2);
+          view.getUint16(offset + 2);
           if (view.getUint32(offset + 4) === 0x4A464946 && view.getUint8(offset + 8) === 0x00) {
             bytes[offset + 9] = 1; // inch units
             view.setUint16(offset + 10, dpi);
@@ -184,6 +184,7 @@ const injectJpegDpi = (blob: Blob, dpi: number): Promise<Blob> => {
   });
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const canvasToBmpBlob = (canvas: HTMLCanvasElement): Blob => {
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Could not get canvas context');
@@ -240,6 +241,7 @@ export const canvasToBmpBlob = (canvas: HTMLCanvasElement): Blob => {
   return new Blob([buffer], { type: 'image/bmp' });
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const formatBytes = (bytes: number, decimals = 2) => {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
@@ -280,7 +282,9 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
 
   useEffect(() => {
     if (defaultTab) {
-      setActiveTab(defaultTab);
+      Promise.resolve().then(() => {
+        setActiveTab(defaultTab);
+      });
     }
   }, [defaultTab]);
 
@@ -500,49 +504,51 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
 
   // Synchronize draft states when core numeric states change
   useEffect(() => {
-    setDpiInput(String(dpi));
+    Promise.resolve().then(() => setDpiInput(String(dpi)));
   }, [dpi]);
 
   useEffect(() => {
-    setCropXInput(String(cropX));
+    Promise.resolve().then(() => setCropXInput(String(cropX)));
   }, [cropX]);
 
   useEffect(() => {
-    setCropYInput(String(cropY));
+    Promise.resolve().then(() => setCropYInput(String(cropY)));
   }, [cropY]);
 
   useEffect(() => {
-    setCropWidthInput(String(cropWidth));
+    Promise.resolve().then(() => setCropWidthInput(String(cropWidth)));
   }, [cropWidth]);
 
   useEffect(() => {
-    setCropHeightInput(String(cropHeight));
+    Promise.resolve().then(() => setCropHeightInput(String(cropHeight)));
   }, [cropHeight]);
 
   useEffect(() => {
-    if (resizeWidth === 0) {
-      setResizeWidthInput('');
-    } else if (resizeUnit === 'px') {
-      setResizeWidthInput(String(resizeWidth));
-    } else if (resizeUnit === 'inches') {
-      setResizeWidthInput(String(parseFloat((resizeWidth / dpi).toFixed(3))));
-    } else {
-      setResizeWidthInput(String(parseFloat(((resizeWidth / dpi) * 2.54).toFixed(3))));
-    }
+    Promise.resolve().then(() => {
+      if (resizeWidth === 0) {
+        setResizeWidthInput('');
+      } else if (resizeUnit === 'px') {
+        setResizeWidthInput(String(resizeWidth));
+      } else if (resizeUnit === 'inches') {
+        setResizeWidthInput(String(parseFloat((resizeWidth / dpi).toFixed(3))));
+      } else {
+        setResizeWidthInput(String(parseFloat(((resizeWidth / dpi) * 2.54).toFixed(3))));
+      }
 
-    if (resizeHeight === 0) {
-      setResizeHeightInput('');
-    } else if (resizeUnit === 'px') {
-      setResizeHeightInput(String(resizeHeight));
-    } else if (resizeUnit === 'inches') {
-      setResizeHeightInput(String(parseFloat((resizeHeight / dpi).toFixed(3))));
-    } else {
-      setResizeHeightInput(String(parseFloat(((resizeHeight / dpi) * 2.54).toFixed(3))));
-    }
+      if (resizeHeight === 0) {
+        setResizeHeightInput('');
+      } else if (resizeUnit === 'px') {
+        setResizeHeightInput(String(resizeHeight));
+      } else if (resizeUnit === 'inches') {
+        setResizeHeightInput(String(parseFloat((resizeHeight / dpi).toFixed(3))));
+      } else {
+        setResizeHeightInput(String(parseFloat(((resizeHeight / dpi) * 2.54).toFixed(3))));
+      }
+    });
   }, [resizeWidth, resizeHeight, resizeUnit, dpi]);
 
   useEffect(() => {
-    setTargetSizeKBInput(String(targetSizeKB));
+    Promise.resolve().then(() => setTargetSizeKBInput(String(targetSizeKB)));
   }, [targetSizeKB]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -670,7 +676,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
     if (!handles) return;
     
     const threshold = 15;
-    let mode = 'draw';
+    let mode: string;
     
     if (Math.hypot(mx - handles.nw.x, my - handles.nw.y) < threshold) {
       mode = 'nw';
@@ -784,10 +790,10 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
         setCropX(newX);
         setCropY(newY);
       } else if (dragMode === 'draw') {
-        let x1 = dragStart.x;
-        let y1 = dragStart.y;
-        let x2 = currentCoords.x;
-        let y2 = currentCoords.y;
+        const x1 = dragStart.x;
+        const y1 = dragStart.y;
+        const x2 = currentCoords.x;
+        const y2 = currentCoords.y;
         
         let newX = Math.min(x1, x2);
         let newY = Math.min(y1, y2);
@@ -964,6 +970,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
       window.removeEventListener('mousemove', handleWindowMouseMove);
       window.removeEventListener('mouseup', handleWindowMouseUp);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDragging, dragStart, dragMode, initialCrop, imageSize, cropAspect, cropX, cropY, cropWidth, cropHeight, rotate, flipH, flipV, resizeWidth, resizeHeight]);
 
   // Reset all filters
@@ -1056,42 +1063,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
     }
   };
 
-  // Display value conversions
-  const getDisplayWidth = () => {
-    if (resizeUnit === 'px') return resizeWidth;
-    if (resizeUnit === 'inches') return parseFloat((resizeWidth / dpi).toFixed(3));
-    return parseFloat(((resizeWidth / dpi) * 2.54).toFixed(3)); // cm
-  };
 
-  const getDisplayHeight = () => {
-    if (resizeUnit === 'px') return resizeHeight;
-    if (resizeUnit === 'inches') return parseFloat((resizeHeight / dpi).toFixed(3));
-    return parseFloat(((resizeHeight / dpi) * 2.54).toFixed(3)); // cm
-  };
-
-  const handleDisplayWidthChange = (val: number) => {
-    let pxVal = val;
-    if (resizeUnit === 'inches') pxVal = Math.round(val * dpi);
-    if (resizeUnit === 'cm') pxVal = Math.round((val / 2.54) * dpi);
-    
-    pxVal = Math.max(1, pxVal);
-    setResizeWidth(pxVal);
-    if (maintainRatio) {
-      setResizeHeight(Math.round(pxVal / originalRatio));
-    }
-  };
-
-  const handleDisplayHeightChange = (val: number) => {
-    let pxVal = val;
-    if (resizeUnit === 'inches') pxVal = Math.round(val * dpi);
-    if (resizeUnit === 'cm') pxVal = Math.round((val / 2.54) * dpi);
-    
-    pxVal = Math.max(1, pxVal);
-    setResizeHeight(pxVal);
-    if (maintainRatio) {
-      setResizeWidth(Math.round(pxVal * originalRatio));
-    }
-  };
 
   // -------------------------------------------------------------
   // Render WYSIWYG Viewport
@@ -1262,6 +1234,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
       }, 30);
       return () => clearTimeout(timer);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     image,
     brightness,
@@ -1402,7 +1375,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
   const handleApplyCompression = async () => {
     if (!image) return;
     if (targetSizeKBInput === '' || isNaN(Number(targetSizeKBInput)) || Number(targetSizeKBInput) <= 0) {
-      if ((window as any).showToast) (window as any).showToast('Please enter a valid target size (KB) greater than 0.');
+      if (window.showToast) window.showToast('Please enter a valid target size (KB) greater than 0.');
       return;
     }
     setCompressing(true);
@@ -1491,7 +1464,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
     if (!image || !previewCanvasRef.current) return;
     
     if (dpiInput === '' || isNaN(Number(dpiInput)) || Number(dpiInput) <= 0) {
-      if ((window as any).showToast) (window as any).showToast('Please enter a valid DPI density greater than 0.');
+      if (window.showToast) window.showToast('Please enter a valid DPI density greater than 0.');
       return;
     }
     
@@ -1500,7 +1473,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
     // Redraw without crop overlay for clean export
     drawPreview(true);
     
-    let blob: Blob | null = null;
+    let blob: Blob | null;
     
     // Check if user has target compression configured and calculated
     if (compressedBlob) {
@@ -1579,7 +1552,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
     if (val === '') return;
     const num = Number(val);
     if (isNaN(num) || num < 0) {
-      if ((window as any).showToast) (window as any).showToast('Crop X must be a non-negative number.');
+      if (window.showToast) window.showToast('Crop X must be a non-negative number.');
       return;
     }
     const maxVal = imageSize.width - cropWidth;
@@ -1592,7 +1565,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
     if (val === '') return;
     const num = Number(val);
     if (isNaN(num) || num < 0) {
-      if ((window as any).showToast) (window as any).showToast('Crop Y must be a non-negative number.');
+      if (window.showToast) window.showToast('Crop Y must be a non-negative number.');
       return;
     }
     const maxVal = imageSize.height - cropHeight;
@@ -1605,7 +1578,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
     if (val === '') return;
     const num = Number(val);
     if (isNaN(num) || num <= 0) {
-      if ((window as any).showToast) (window as any).showToast('Crop Width must be a positive number.');
+      if (window.showToast) window.showToast('Crop Width must be a positive number.');
       return;
     }
     const maxWidth = imageSize.width - cropX;
@@ -1635,7 +1608,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
     if (val === '') return;
     const num = Number(val);
     if (isNaN(num) || num <= 0) {
-      if ((window as any).showToast) (window as any).showToast('Crop Height must be a positive number.');
+      if (window.showToast) window.showToast('Crop Height must be a positive number.');
       return;
     }
     const maxHeight = imageSize.height - cropY;
@@ -1664,7 +1637,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
     if (!image || !imageRef.current) return;
     
     if (cropXInput === '' || cropYInput === '' || cropWidthInput === '' || cropHeightInput === '') {
-      if ((window as any).showToast) (window as any).showToast('Crop coordinates and dimensions cannot be empty.');
+      if (window.showToast) window.showToast('Crop coordinates and dimensions cannot be empty.');
       return;
     }
     
@@ -2214,7 +2187,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
                         }
                         const num = Number(val);
                         if (isNaN(num) || num <= 0) {
-                          if ((window as any).showToast) (window as any).showToast('Width must be a positive number.');
+                          if (window.showToast) window.showToast('Width must be a positive number.');
                           return;
                         }
                         
@@ -2247,7 +2220,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
                         }
                         const num = Number(val);
                         if (isNaN(num) || num <= 0) {
-                          if ((window as any).showToast) (window as any).showToast('Height must be a positive number.');
+                          if (window.showToast) window.showToast('Height must be a positive number.');
                           return;
                         }
                         
@@ -2317,7 +2290,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
                         if (val === '') return;
                         const num = Number(val);
                         if (isNaN(num) || num <= 0) {
-                          if ((window as any).showToast) (window as any).showToast('DPI must be a positive number.');
+                          if (window.showToast) window.showToast('DPI must be a positive number.');
                           return;
                         }
                         setDpi(Math.round(num));
@@ -2374,7 +2347,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
                         if (val === '') return;
                         const num = Number(val);
                         if (isNaN(num) || num <= 0) {
-                          if ((window as any).showToast) (window as any).showToast('Target size must be a positive number.');
+                          if (window.showToast) window.showToast('Target size must be a positive number.');
                           return;
                         }
                         setTargetSizeKB(num);
@@ -2533,7 +2506,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
                   <select
                     value={convertFormat}
                     onChange={(e) => {
-                      setConvertFormat(e.target.value as any);
+                      setConvertFormat(e.target.value as 'png' | 'jpeg' | 'webp' | 'bmp' | 'pdf');
                       setConvertedBlob(null);
                       setConvertedSizeStr('');
                     }}

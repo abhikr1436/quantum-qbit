@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Zap, Sliders, Cpu, Heart, CheckCircle2 } from 'lucide-react';
+import { Shield, Zap, Sliders, Cpu, CheckCircle2 } from 'lucide-react';
 
 export const AboutUs: React.FC = () => {
   const values = [

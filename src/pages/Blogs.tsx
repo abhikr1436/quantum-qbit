@@ -62,7 +62,7 @@ export const Blogs: React.FC<BlogsProps> = ({
         } else {
           loadFallbackCategories();
         }
-      } catch (err) {
+      } catch {
         loadFallbackCategories();
       }
     };
@@ -92,7 +92,7 @@ export const Blogs: React.FC<BlogsProps> = ({
         } else {
           loadFallbackBlogs();
         }
-      } catch (err) {
+      } catch {
         loadFallbackBlogs();
       } finally {
         setIsLoading(false);

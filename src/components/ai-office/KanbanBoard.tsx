@@ -1,6 +1,24 @@
 import React, { useState } from 'react';
 import { Calendar, User, FileText, CheckCircle, RefreshCw, X, ArrowRight } from 'lucide-react';
 
+interface TaskReview {
+  agent: string;
+  decision: 'approved' | 'rejected';
+  reviewText: string;
+  timestamp: string;
+}
+
+interface DraftContent {
+  category_id?: string;
+  title?: string;
+  excerpt?: string;
+  content?: string;
+  imageGlow?: string;
+  platform?: string;
+  postText?: string;
+  recommendations?: string;
+}
+
 interface Task {
   id: string;
   title: string;
@@ -8,8 +26,8 @@ interface Task {
   type: string;
   assignee: string;
   status: string;
-  draftContent: any;
-  reviews: any[];
+  draftContent: DraftContent | string | null;
+  reviews: TaskReview[];
   createdAt: string;
   updatedAt: string;
 }
@@ -36,7 +54,9 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     if (selectedTaskId) {
       const task = tasks.find(t => t.id === selectedTaskId);
       if (task) {
-        setActiveTask(task);
+        Promise.resolve().then(() => {
+          setActiveTask(task);
+        });
       }
     }
   }, [selectedTaskId, tasks]);
@@ -50,16 +70,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     return tasks.filter(t => t.status === status);
   };
 
-  const getTaskBadgeClass = (status: string) => {
-    switch (status) {
-      case 'todo': return 'badge-todo';
-      case 'inprogress': return 'badge-progress';
-      case 'manager_review': return 'badge-review';
-      case 'ceo_approval': return 'badge-approval';
-      case 'completed': return 'badge-completed';
-      default: return 'badge-todo';
-    }
-  };
+
 
   const getTaskBadgeLabel = (status: string) => {
     switch (status) {

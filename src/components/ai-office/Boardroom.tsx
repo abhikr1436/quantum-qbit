@@ -7,10 +7,17 @@ interface SystemLog {
   message: string;
 }
 
+interface Agent {
+  name: string;
+  role: string;
+  avatar: string;
+  status: string;
+}
+
 interface BoardroomProps {
   onSendDirective: (text: string) => Promise<void>;
   isProcessing: boolean;
-  agents: any[];
+  agents: Agent[];
   systemLogs?: SystemLog[];
 }
 
@@ -33,8 +40,8 @@ export const Boardroom: React.FC<BoardroomProps> = ({ onSendDirective, isProcess
     try {
       await onSendDirective(directiveText);
       setDirectiveText('');
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Failed to submit directive.');
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to submit directive.');
     }
   };
 

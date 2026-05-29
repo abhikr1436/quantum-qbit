@@ -6,7 +6,7 @@ export function updateSEO(
   title: string,
   description: string,
   path: string,
-  jsonLdSchema?: Record<string, any>
+  jsonLdSchema?: Record<string, unknown>
 ) {
   // 1. Title
   document.title = title;

@@ -34,8 +34,8 @@ export const AiSettings: React.FC<SettingsProps> = ({ config, onUpdateConfig }) 
       });
       setSaveStatus('Configurations updated successfully!');
       setTimeout(() => setSaveStatus(null), 3000);
-    } catch (err: any) {
-      setSaveStatus('Error saving configurations: ' + err.message);
+    } catch (err) {
+      setSaveStatus('Error saving configurations: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
       setIsSaving(false);
     }

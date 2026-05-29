@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FileText, Image as ImageIcon, Upload, Trash, ArrowUp, ArrowDown, Download, Check, Copy, Settings, RefreshCw, FileCode } from 'lucide-react';
+import { FileText, Image as ImageIcon, Upload, Trash, ArrowUp, ArrowDown, Download, Settings, FileCode } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import confetti from 'canvas-confetti';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -99,7 +99,9 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
   // Sync state if defaultTab changes (e.g. via deep link navigation)
   useEffect(() => {
     if (defaultTab) {
-      setActiveTab(defaultTab);
+      Promise.resolve().then(() => {
+        setActiveTab(defaultTab);
+      });
     }
   }, [defaultTab]);
 
@@ -262,8 +264,8 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
           const imgRatio = imgWidth / imgHeight;
           const pageRatio = availWidth / availHeight;
 
-          let drawWidth = availWidth;
-          let drawHeight = availHeight;
+          let drawWidth: number;
+          let drawHeight: number;
 
           if (imgRatio > pageRatio) {
             drawWidth = availWidth;
@@ -324,7 +326,7 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
   const handleCompressPdf = async () => {
     if (!compressFile) return;
     if (compressionType === 'target' && (targetSizeKB === '' || isNaN(Number(targetSizeKB)) || Number(targetSizeKB) <= 0)) {
-      if ((window as any).showToast) (window as any).showToast('Please enter a valid target size (KB) greater than 0.');
+      if (window.showToast) window.showToast('Please enter a valid target size (KB) greater than 0.');
       return;
     }
     setIsCompressing(true);
@@ -702,7 +704,7 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
     setOcrPagePercent(10);
     setOcrProgressText('Initializing OCR scanning engine...');
 
-    let worker: any = null;
+    let worker: Awaited<ReturnType<typeof createWorker>> | null = null;
     try {
       const arrayBuffer = await ocrFile.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -878,7 +880,7 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
                 <div className="form-group">
                   <label className="form-label">Page Margin</label>
                   <div style={styles.selectWrapper}>
-                    <select value={margin} onChange={(e) => setMargin(e.target.value as any)} style={styles.select}>
+                    <select value={margin} onChange={(e) => setMargin(e.target.value as 'none' | 'small' | 'normal')} style={styles.select}>
                       <option value="none">No Margins (0mm)</option>
                       <option value="small">Small Padding (5mm)</option>
                       <option value="normal">Standard Padding (12mm)</option>
@@ -888,7 +890,7 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
                 <div className="form-group">
                   <label className="form-label">Page Orientation</label>
                   <div style={styles.selectWrapper}>
-                    <select value={orientation} onChange={(e) => setOrientation(e.target.value as any)} style={styles.select}>
+                    <select value={orientation} onChange={(e) => setOrientation(e.target.value as 'auto' | 'portrait' | 'landscape')} style={styles.select}>
                       <option value="auto">Auto (Match Image Ratio)</option>
                       <option value="portrait">Always Portrait (A4)</option>
                       <option value="landscape">Always Landscape (A4)</option>
@@ -1026,7 +1028,7 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
                     <label className="form-label">Preset Compression Quality</label>
                     <select
                       value={compressionPreset}
-                      onChange={(e) => { setCompressionPreset(e.target.value as any); setCompressedBlob(null); }}
+                      onChange={(e) => { setCompressionPreset(e.target.value as 'low' | 'medium' | 'high'); setCompressedBlob(null); }}
                       style={styles.select}
                     >
                       <option value="low">Low Compression (High Quality Print)</option>
@@ -1049,7 +1051,7 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
                         }
                         const num = Number(val);
                         if (isNaN(num) || num <= 0) {
-                          if ((window as any).showToast) (window as any).showToast('Target size must be a positive number.');
+                          if (window.showToast) window.showToast('Target size must be a positive number.');
                           return;
                         }
                         setTargetSizeKB(num);

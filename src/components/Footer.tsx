@@ -1,12 +1,8 @@
 import React, { useState } from 'react';
-import { Cpu, Mail, Send } from 'lucide-react';
+import { Mail, Send } from 'lucide-react';
 import { navigate } from '../utils/router';
 
-interface FooterProps {
-  setCurrentPage: (page: string) => void;
-}
-
-export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
+export const Footer: React.FC = () => {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
@@ -19,9 +15,6 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
     }
   };
 
-  const handleNavClick = (pageId: string) => {
-    setCurrentPage(pageId);
-  };
 
   const handleDirectNavigate = (e: React.MouseEvent, path: string) => {
     e.preventDefault();

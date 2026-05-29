@@ -7,17 +7,28 @@ interface SeoIssue {
   desc: string;
 }
 
+interface SeoData {
+  score: number;
+  blogsCount: number;
+  issues: SeoIssue[];
+}
+
+interface RankItem {
+  keyword: string;
+  rank: string | number;
+}
+
 interface SeoDashboardProps {
-  onTriggerAudit: () => Promise<any>;
+  onTriggerAudit: () => Promise<SeoData>;
 }
 
 export const SeoDashboard: React.FC<SeoDashboardProps> = ({ onTriggerAudit }) => {
   const [loading, setLoading] = useState(false);
-  const [seoData, setSeoData] = useState<any>(null);
+  const [seoData, setSeoData] = useState<SeoData | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   
   // Keyword Rankings state
-  const [rankData, setRankData] = useState<any[]>([]);
+  const [rankData, setRankData] = useState<RankItem[]>([]);
   const [ranksLoading, setRanksLoading] = useState(false);
   const [rankError, setRankError] = useState<string | null>(null);
 
@@ -32,7 +43,7 @@ export const SeoDashboard: React.FC<SeoDashboardProps> = ({ onTriggerAudit }) =>
       } else {
         setRankError('Failed to retrieve organic keyword positions.');
       }
-    } catch (err: any) {
+    } catch {
       setRankError('Error connecting to rank checker API.');
     } finally {
       setRanksLoading(false);
@@ -47,16 +58,19 @@ export const SeoDashboard: React.FC<SeoDashboardProps> = ({ onTriggerAudit }) =>
       setSeoData(data);
       // Automatically refresh rankings on audit rescans
       fetchRanks();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to complete SEO audit.');
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to complete SEO audit.');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAudit();
-    fetchRanks();
+    Promise.resolve().then(() => {
+      fetchAudit();
+      fetchRanks();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const getScoreColor = (score: number) => {
@@ -193,7 +207,7 @@ export const SeoDashboard: React.FC<SeoDashboardProps> = ({ onTriggerAudit }) =>
                       </tr>
                     </thead>
                     <tbody>
-                      {rankData.map((r: any, idx: number) => {
+                      {rankData.map((r: RankItem, idx: number) => {
                         const rankNum = typeof r.rank === 'number' ? r.rank : parseInt(r.rank);
                         const isTopTen = !isNaN(rankNum) && rankNum <= 10;
                         const isTopFifty = !isNaN(rankNum) && rankNum <= 50;

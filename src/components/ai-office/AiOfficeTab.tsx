@@ -7,15 +7,76 @@ import { Boardroom } from './Boardroom';
 import { SeoDashboard } from './SeoDashboard';
 import { AiSettings } from './AiSettings';
 
+interface OfficeConfig {
+  websitePath: string;
+  deepseekKey: string;
+  githubToken?: string;
+  isAutomationActive: boolean;
+}
+
+interface Agent {
+  name: string;
+  role: string;
+  status: string;
+  avatar: string;
+  bio: string;
+  tasksCount?: number;
+}
+
+interface TaskReview {
+  agent: string;
+  decision: 'approved' | 'rejected';
+  reviewText: string;
+  timestamp: string;
+}
+
+interface DraftContent {
+  category_id?: string;
+  title?: string;
+  excerpt?: string;
+  content?: string;
+  imageGlow?: string;
+  platform?: string;
+  postText?: string;
+  recommendations?: string;
+}
+
+interface OfficeTask {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  assignee: string;
+  status: string;
+  draftContent: DraftContent | string | null;
+  reviews: TaskReview[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ChatMessage {
+  id: string;
+  sender: string;
+  text: string;
+  timestamp: string;
+  taskId?: string;
+}
+
+interface SystemLog {
+  timestamp: string;
+  agent: string;
+  message: string;
+}
+
 export const AiOfficeTab: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'org' | 'chat' | 'tasks' | 'boardroom' | 'seo' | 'settings'>('boardroom');
   
   // Dashboard States
-  const [config, setConfig] = useState<any>(null);
-  const [agents, setAgents] = useState<any[]>([]);
-  const [tasks, setTasks] = useState<any[]>([]);
-  const [chatLogs, setChatLogs] = useState<any[]>([]);
-  const [systemLogs, setSystemLogs] = useState<any[]>([]);
+  const [config, setConfig] = useState<OfficeConfig | null>(null);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [tasks, setTasks] = useState<OfficeTask[]>([]);
+  const [chatLogs, setChatLogs] = useState<ChatMessage[]>([]);
+  const [systemLogs, setSystemLogs] = useState<SystemLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -31,7 +92,7 @@ export const AiOfficeTab: React.FC = () => {
       const response = await fetch('/api/ai_office.php?action=dashboard');
       if (response.ok) {
         const data = await response.json();
-        setConfig(data.config || {});
+        setConfig(data.config || null);
         setAgents(data.agents || []);
         setTasks(data.tasks || []);
         setChatLogs(data.chatLogs || []);
@@ -40,7 +101,7 @@ export const AiOfficeTab: React.FC = () => {
       } else {
         setErrorMsg('Failed to read status data from AI Office backend.');
       }
-    } catch (err: any) {
+    } catch {
       setErrorMsg('Cannot connect to AI Office PHP backend API.');
     } finally {
       if (showLoading) setLoading(false);
@@ -49,7 +110,7 @@ export const AiOfficeTab: React.FC = () => {
 
   // Initial fetch + background syncing (every 6 seconds)
   useEffect(() => {
-    fetchDashboardData(true);
+    Promise.resolve().then(() => fetchDashboardData(true));
     const interval = setInterval(() => {
       fetchDashboardData(false);
     }, 6000);
@@ -57,7 +118,7 @@ export const AiOfficeTab: React.FC = () => {
   }, []);
 
   // Update Settings
-  const handleUpdateConfig = async (newConfig: any) => {
+  const handleUpdateConfig = async (newConfig: Partial<OfficeConfig>) => {
     try {
       const response = await fetch('/api/ai_office.php?action=save_config', {
         method: 'POST',
@@ -69,7 +130,7 @@ export const AiOfficeTab: React.FC = () => {
       } else {
         throw new Error('Failed to update config.');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       throw err;
     }
@@ -105,7 +166,7 @@ export const AiOfficeTab: React.FC = () => {
         throw new Error(errData.error || 'Failed to submit directive');
       }
       await fetchDashboardData(false);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       throw err;
     } finally {
@@ -333,7 +394,7 @@ export const AiOfficeTab: React.FC = () => {
 
             {activeTab === 'settings' && (
               <AiSettings 
-                config={config}
+                config={config || { websitePath: '', deepseekKey: '', isAutomationActive: false }}
                 onUpdateConfig={handleUpdateConfig}
               />
             )}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Calculator, Binary, RefreshCw, Hash, Copy, Check, Equal, LineChart, Trash2, Plus, Download } from 'lucide-react';
+import { Calculator, Binary, RefreshCw, Equal, LineChart, Download } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface MathCalculatorsProps {
@@ -11,7 +11,9 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
 
   useEffect(() => {
     if (defaultTab) {
-      setActiveTab(defaultTab);
+      Promise.resolve().then(() => {
+        setActiveTab(defaultTab);
+      });
     }
   }, [defaultTab]);
 
@@ -36,7 +38,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
   const calculateResult = (display = calcDisplay, mode = angleMode) => {
     try {
       // Sanitize expression: only allow numbers, math operators, math functions
-      let expression = display
+      const expression = display
         .replace(/π/g, 'Math.PI')
         .replace(/e/g, 'Math.E')
         .replace(/sin\(/g, 'Math.sin(')
@@ -92,15 +94,18 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
       } else {
         setCalcResult(String(res));
       }
-    } catch (e) {
+    } catch {
       setCalcResult('Error');
     }
   };
 
   useEffect(() => {
     if (calcDisplay) {
-      calculateResult(calcDisplay, angleMode);
+      Promise.resolve().then(() => {
+        calculateResult(calcDisplay, angleMode);
+      });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [angleMode]);
 
   const handleCalcKeyPress = (key: string) => {
@@ -140,7 +145,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
       switch (base) {
         case 10:
           if (/[^0-9]/.test(value)) {
-            if ((window as any).showToast) (window as any).showToast('Decimal input must contain only digits (0-9).');
+            if (window.showToast) window.showToast('Decimal input must contain only digits (0-9).');
             return;
           }
           decimal = parseInt(value, 10);
@@ -152,7 +157,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
           break;
         case 2:
           if (/[^0-1]/.test(value)) {
-            if ((window as any).showToast) (window as any).showToast('Binary input must contain only 0 and 1.');
+            if (window.showToast) window.showToast('Binary input must contain only 0 and 1.');
             return;
           }
           decimal = parseInt(value, 2);
@@ -163,7 +168,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
           break;
         case 16:
           if (/[^0-9a-fA-F]/.test(value)) {
-            if ((window as any).showToast) (window as any).showToast('Hexadecimal input must contain only 0-9 and A-F.');
+            if (window.showToast) window.showToast('Hexadecimal input must contain only 0-9 and A-F.');
             return;
           }
           decimal = parseInt(value, 16);
@@ -174,7 +179,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
           break;
         case 8:
           if (/[^0-7]/.test(value)) {
-            if ((window as any).showToast) (window as any).showToast('Octal input must contain only digits (0-7).');
+            if (window.showToast) window.showToast('Octal input must contain only digits (0-7).');
             return;
           }
           decimal = parseInt(value, 8);
@@ -184,7 +189,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
           setHexVal(isNaN(decimal) ? '' : decimal.toString(16).toUpperCase());
           break;
       }
-    } catch (e) {
+    } catch {
       // Fail silently for incomplete parsing
     }
   };
@@ -293,7 +298,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
     }
     const num = parseFloat(val);
     if (isNaN(num)) {
-      if ((window as any).showToast) (window as any).showToast('Please enter a valid numeric value.');
+      if (window.showToast) window.showToast('Please enter a valid numeric value.');
       return;
     }
     setConvertVal(val);
@@ -363,7 +368,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
 
   const solveLinear = () => {
     if (linearA === '' || linearB === '' || linearC === '' || linearD === '') {
-      if ((window as any).showToast) (window as any).showToast('Coefficients cannot be empty.');
+      if (window.showToast) window.showToast('Coefficients cannot be empty.');
       return;
     }
     const a = parseFloat(linearA);
@@ -372,7 +377,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
     const d = parseFloat(linearD);
 
     if (isNaN(a) || isNaN(b) || isNaN(c) || isNaN(d)) {
-      if ((window as any).showToast) (window as any).showToast('Please enter valid numeric coefficients.');
+      if (window.showToast) window.showToast('Please enter valid numeric coefficients.');
       return;
     }
 
@@ -404,7 +409,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
 
   const solveQuadratic = () => {
     if (quadA === '' || quadB === '' || quadC === '') {
-      if ((window as any).showToast) (window as any).showToast('Coefficients cannot be empty.');
+      if (window.showToast) window.showToast('Coefficients cannot be empty.');
       return;
     }
     const a = parseFloat(quadA);
@@ -412,12 +417,12 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
     const c = parseFloat(quadC);
 
     if (isNaN(a) || isNaN(b) || isNaN(c)) {
-      if ((window as any).showToast) (window as any).showToast('Please enter valid numeric coefficients.');
+      if (window.showToast) window.showToast('Please enter valid numeric coefficients.');
       return;
     }
 
     if (a === 0) {
-      if ((window as any).showToast) (window as any).showToast('Coefficient "a" cannot be 0 in a quadratic equation.');
+      if (window.showToast) window.showToast('Coefficient "a" cannot be 0 in a quadratic equation.');
       return;
     }
 
@@ -489,7 +494,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
 
   const solveSystem = () => {
     if (sysA1 === '' || sysB1 === '' || sysC1 === '' || sysA2 === '' || sysB2 === '' || sysC2 === '') {
-      if ((window as any).showToast) (window as any).showToast('Coefficients cannot be empty.');
+      if (window.showToast) window.showToast('Coefficients cannot be empty.');
       return;
     }
     const a1 = parseFloat(sysA1);
@@ -500,7 +505,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
     const c2 = parseFloat(sysC2);
 
     if (isNaN(a1) || isNaN(b1) || isNaN(c1) || isNaN(a2) || isNaN(b2) || isNaN(c2)) {
-      if ((window as any).showToast) (window as any).showToast('Please enter valid numeric coefficients.');
+      if (window.showToast) window.showToast('Please enter valid numeric coefficients.');
       return;
     }
 
@@ -547,7 +552,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
 
   const solveCustomEquation = () => {
     if (!customEq.trim()) {
-      if ((window as any).showToast) (window as any).showToast('Please enter an equation.');
+      if (window.showToast) window.showToast('Please enter an equation.');
       return;
     }
 
@@ -630,7 +635,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
       if (isNaN(testVal) && f(1) === testVal && f(-1) === testVal) {
         throw new Error("Invalid expression");
       }
-    } catch (err) {
+    } catch {
       setCustomResult({
         roots: [],
         type: 'invalid',
@@ -740,7 +745,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
         let right = rightVal;
         
         let fL = f(left);
-        let fR = f(right);
+        const fR = f(right);
         
         if (Math.abs(fL) < 1e-8) return left;
         if (Math.abs(fR) < 1e-8) return right;
@@ -752,7 +757,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
           if (Math.abs(fM) < 1e-10) return mid;
           if (fL * fM < 0) {
             right = mid;
-            fR = fM;
+            // fR = fM;
           } else {
             left = mid;
             fL = fM;
@@ -951,7 +956,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
     ctx.font = '10px monospace';
 
     const xRange = x_max - x_min;
-    let xStep = 1;
+    let xStep: number;
     if (xRange > 100) xStep = 20;
     else if (xRange > 50) xStep = 10;
     else if (xRange > 20) xStep = 5;
@@ -973,7 +978,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
     }
 
     const yRange = y_max - y_min;
-    let yStep = 1;
+    let yStep: number;
     if (yRange > 100) yStep = 20;
     else if (yRange > 50) yStep = 10;
     else if (yRange > 20) yStep = 5;
@@ -1030,7 +1035,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
 
       for (let px = 0; px <= width; px++) {
         const x = toMathX(px);
-        let y = 0;
+        let y: number;
 
         try {
           let expr = equationStr
@@ -1053,7 +1058,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
 
           const evalFunc = new Function('x', `try { return ${expr}; } catch(e) { return NaN; }`);
           y = evalFunc(x);
-        } catch (err) {
+        } catch {
           y = NaN;
         }
 
@@ -1207,6 +1212,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
       const timer = setTimeout(() => drawGraph(), 50);
       return () => clearTimeout(timer);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     activeTab,
     plotterMode,
@@ -1459,18 +1465,18 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
             
             {/* Category Selector Tabs */}
             <div style={styles.unitCategories}>
-              {[
+              {([
                 { id: 'length', label: 'Length' },
                 { id: 'mass', label: 'Mass / Weight' },
                 { id: 'temp', label: 'Temperature' }
-              ].map((cat) => (
+              ] as const).map((cat) => (
                 <button
                   key={cat.id}
                   style={{
                     ...styles.unitCatBtn,
                     ...(unitCategory === cat.id ? styles.activeUnitCatBtn : {})
                   }}
-                  onClick={() => handleUnitCategoryChange(cat.id as any)}
+                  onClick={() => handleUnitCategoryChange(cat.id)}
                 >
                   {cat.label}
                 </button>
@@ -1553,19 +1559,19 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
 
             {/* Solver Mode Selector */}
             <div style={styles.solverModes}>
-              {[
+              {([
                 { id: 'custom', label: 'Custom Equation' },
                 { id: 'linear', label: 'Linear' },
                 { id: 'quadratic', label: 'Quadratic' },
                 { id: 'system', label: 'System (2 Variables)' }
-              ].map((mode) => (
+              ] as const).map((mode) => (
                 <button
                   key={mode.id}
                   style={{
                     ...styles.solverModeBtn,
                     ...(solverMode === mode.id ? styles.activeSolverModeBtn : {})
                   }}
-                  onClick={() => setSolverMode(mode.id as any)}
+                  onClick={() => setSolverMode(mode.id)}
                 >
                   {mode.label}
                 </button>
@@ -1912,17 +1918,17 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
 
             {/* Plotter Mode Selector */}
             <div style={styles.plotterModes}>
-              {[
+              {([
                 { id: 'equation', label: 'Plot Equation' },
                 { id: 'data', label: 'Plot Coordinate Data' }
-              ].map((mode) => (
+              ] as const).map((mode) => (
                 <button
                   key={mode.id}
                   style={{
                     ...styles.plotterModeBtn,
                     ...(plotterMode === mode.id ? styles.activePlotterModeBtn : {})
                   }}
-                  onClick={() => setPlotterMode(mode.id as any)}
+                  onClick={() => setPlotterMode(mode.id)}
                 >
                   {mode.label}
                 </button>
@@ -2012,7 +2018,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
                           }
                           const num = parseFloat(val);
                           if (isNaN(num)) {
-                            if ((window as any).showToast) (window as any).showToast('Limit must be a valid number.');
+                            if (window.showToast) window.showToast('Limit must be a valid number.');
                             return;
                           }
                           setXMin(val);
@@ -2034,7 +2040,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
                           }
                           const num = parseFloat(val);
                           if (isNaN(num)) {
-                            if ((window as any).showToast) (window as any).showToast('Limit must be a valid number.');
+                            if (window.showToast) window.showToast('Limit must be a valid number.');
                             return;
                           }
                           setXMax(val);
@@ -2056,7 +2062,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
                           }
                           const num = parseFloat(val);
                           if (isNaN(num)) {
-                            if ((window as any).showToast) (window as any).showToast('Limit must be a valid number.');
+                            if (window.showToast) window.showToast('Limit must be a valid number.');
                             return;
                           }
                           setYMin(val);
@@ -2078,7 +2084,7 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
                           }
                           const num = parseFloat(val);
                           if (isNaN(num)) {
-                            if ((window as any).showToast) (window as any).showToast('Limit must be a valid number.');
+                            if (window.showToast) window.showToast('Limit must be a valid number.');
                             return;
                           }
                           setYMax(val);

@@ -87,11 +87,7 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
   const [settingsSuccess, setSettingsSuccess] = useState<string>('');
   const [settingsError, setSettingsError] = useState<string>('');
 
-  // Check login status and categories on load
-  useEffect(() => {
-    checkLoginStatus();
-    fetchCategories();
-  }, []);
+
 
   const checkLoginStatus = async () => {
     try {
@@ -115,7 +111,7 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
         // Not running on PHP server (e.g. local Vite dev server)
         checkLocalSession();
       }
-    } catch (e) {
+    } catch {
       checkLocalSession();
     }
   };
@@ -155,7 +151,7 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
       } else {
         fetchLocalCategories();
       }
-    } catch (e) {
+    } catch {
       fetchLocalCategories();
     }
   };
@@ -187,12 +183,21 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
       } else {
         fetchLocalBlogs();
       }
-    } catch (e) {
+    } catch {
       fetchLocalBlogs();
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Check login status and categories on load
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      checkLoginStatus();
+      fetchCategories();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Local storage blogs fallback
   const fetchLocalBlogs = () => {
@@ -317,9 +322,7 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
     } else {
       try {
         await fetch('/api/auth.php?action=logout');
-      } catch (e) {
-        console.error(e);
-      } finally {
+      } catch {
         sessionStorage.removeItem('admin_local_auth');
         setIsLoggedIn(false);
       }
@@ -380,7 +383,7 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
           const data = await response.json();
           setSettingsError(data.error || 'Failed to change passcode.');
         }
-      } catch (err) {
+      } catch {
         setSettingsError('Network error connecting to API.');
       }
     }
@@ -405,7 +408,7 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
           const data = await response.json();
           alert(data.error || 'Failed to delete post.');
         }
-      } catch (e) {
+      } catch {
         alert('Network error. Deletion failed.');
       }
     }
@@ -416,7 +419,7 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
     setEditorError('');
     if (post) {
       setEditingPostId(post.id);
-      let contentStr = '';
+      let contentStr: string;
       if (Array.isArray(post.content)) {
         contentStr = post.content.map(para => `<p>${para}</p>`).join('\n');
       } else {
@@ -549,7 +552,7 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
           const data = await response.json();
           setEditorError(data.error || 'Failed to save blog post.');
         }
-      } catch (err) {
+      } catch {
         setEditorError('Network error while saving post.');
       } finally {
         setIsSaving(false);
@@ -599,7 +602,7 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
           const data = await response.json();
           setCategoryError(data.error || 'Failed to add category.');
         }
-      } catch (err) {
+      } catch {
         setCategoryError('Network error adding category.');
       } finally {
         setIsSavingCategory(false);
@@ -642,7 +645,7 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
           const data = await response.json();
           setCategoryError(data.error || 'Failed to delete category.');
         }
-      } catch (err) {
+      } catch {
         setCategoryError('Network error deleting category.');
       }
     }
@@ -688,7 +691,7 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
         const data = await response.json();
         setDbSaveError(data.error || 'Server error saving configuration.');
       }
-    } catch (err) {
+    } catch {
       setDbSaveError('Network error while saving configuration.');
     } finally {
       setIsTestingDb(false);

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Image, FileText, Calculator, ArrowLeft, Sliders, Hash, Percent } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, Image, FileText, Calculator, ArrowLeft } from 'lucide-react';
 const ImageEditor = React.lazy(() => import('./tools/ImageEditor').then(m => ({ default: m.ImageEditor })));
 const PdfEditor = React.lazy(() => import('./tools/PdfEditor').then(m => ({ default: m.PdfEditor })));
 const MathCalculators = React.lazy(() => import('./tools/MathCalculators').then(m => ({ default: m.MathCalculators })));
@@ -41,13 +41,12 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, def
     }
   ];
 
-  // Reset search and filters when navigating back to directory
-  useEffect(() => {
-    if (selectedTool === 'none') {
-      setSearchQuery('');
-      setActiveCategory('all');
-    }
-  }, [selectedTool]);
+  const handleBackToDirectory = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setSelectedTool('none');
+    setSearchQuery('');
+    setActiveCategory('all');
+  };
 
   const filteredTools = toolsList.filter((tool) => {
     const matchesCategory = activeCategory === 'all' || tool.category === activeCategory;
@@ -62,7 +61,7 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, def
     return (
       <div style={styles.toolContainer}>
         <div style={styles.backBar}>
-          <a href="/tools" onClick={(e) => { e.preventDefault(); setSelectedTool('none'); }} style={{ textDecoration: 'none' }}>
+          <a href="/tools" onClick={handleBackToDirectory} style={{ textDecoration: 'none' }}>
             <span style={styles.backBtn}>
               <ArrowLeft size={16} /> Back to Tools Directory
             </span>
@@ -71,7 +70,7 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, def
         <React.Suspense fallback={
           <div style={styles.toolLoading}>Initialising Image Studio...</div>
         }>
-          <ImageEditor defaultTab={defaultTab as any} />
+          <ImageEditor defaultTab={defaultTab as 'adjust' | 'crop' | 'resize' | 'dpi' | 'compress' | 'bg-remove' | 'convert' | undefined} />
         </React.Suspense>
       </div>
     );
@@ -81,7 +80,7 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, def
     return (
       <div style={styles.toolContainer}>
         <div style={styles.backBar}>
-          <a href="/tools" onClick={(e) => { e.preventDefault(); setSelectedTool('none'); }} style={{ textDecoration: 'none' }}>
+          <a href="/tools" onClick={handleBackToDirectory} style={{ textDecoration: 'none' }}>
             <span style={styles.backBtn}>
               <ArrowLeft size={16} /> Back to Tools Directory
             </span>
@@ -90,7 +89,7 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, def
         <React.Suspense fallback={
           <div style={styles.toolLoading}>Initialising PDF Workshop...</div>
         }>
-          <PdfEditor defaultTab={defaultTab as any} />
+          <PdfEditor defaultTab={defaultTab as 'imgToPdf' | 'compress' | 'officeToPdf' | 'pdfToWord' | undefined} />
         </React.Suspense>
       </div>
     );
@@ -100,7 +99,7 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, def
     return (
       <div style={styles.toolContainer}>
         <div style={styles.backBar}>
-          <a href="/tools" onClick={(e) => { e.preventDefault(); setSelectedTool('none'); }} style={{ textDecoration: 'none' }}>
+          <a href="/tools" onClick={handleBackToDirectory} style={{ textDecoration: 'none' }}>
             <span style={styles.backBtn}>
               <ArrowLeft size={16} /> Back to Tools Directory
             </span>
@@ -109,7 +108,7 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, def
         <React.Suspense fallback={
           <div style={styles.toolLoading}>Initialising Math Workbench...</div>
         }>
-          <MathCalculators defaultTab={defaultTab as any} />
+          <MathCalculators defaultTab={defaultTab as 'scientific' | 'base' | 'unit' | 'solver' | 'plotter' | undefined} />
         </React.Suspense>
       </div>
     );

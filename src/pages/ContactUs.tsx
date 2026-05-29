@@ -59,7 +59,7 @@ export const ContactUs: React.FC = () => {
       } else {
         setFormError(data.error || 'Failed to dispatch message. Please try again.');
       }
-    } catch (err) {
+    } catch {
       setFormError('A network error occurred. Please check your connection and try again.');
     } finally {
       setSending(false);

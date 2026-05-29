@@ -9,9 +9,20 @@ interface Agent {
   status: string;
 }
 
+interface TaskReview {
+  agent: string;
+}
+
+interface Task {
+  title: string;
+  assignee: string;
+  status: string;
+  reviews: TaskReview[];
+}
+
 interface OrgChartProps {
   agents: Agent[];
-  tasks: any[];
+  tasks: Task[];
 }
 
 export const OrgChart: React.FC<OrgChartProps> = ({ agents, tasks }) => {
@@ -114,11 +125,11 @@ export const OrgChart: React.FC<OrgChartProps> = ({ agents, tasks }) => {
                 <CheckCircle size={14} style={{ color: 'var(--primary, #00f2fe)' }} /> History
               </h4>
               <div style={styles.historyList}>
-                {tasks.filter(t => t.assignee === selectedAgent.name || t.reviews.some((r: any) => r.agent === selectedAgent.name)).length === 0 ? (
+                {tasks.filter(t => t.assignee === selectedAgent.name || t.reviews.some((r) => r.agent === selectedAgent.name)).length === 0 ? (
                   <div style={styles.noHistory}>No audit operations logged yet for this agent.</div>
                 ) : (
                   tasks
-                    .filter(t => t.assignee === selectedAgent.name || t.reviews.some((r: any) => r.agent === selectedAgent.name))
+                    .filter(t => t.assignee === selectedAgent.name || t.reviews.some((r) => r.agent === selectedAgent.name))
                     .slice(0, 3)
                     .map((t, idx) => (
                       <div key={idx} style={styles.historyItem}>

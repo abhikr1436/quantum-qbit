@@ -5,6 +5,12 @@ import Sidebar from './components/Sidebar';
 import { usePath, navigate } from './utils/router';
 import { updateSEO } from './utils/seo';
 
+declare global {
+  interface Window {
+    showToast?: (message: string, type?: 'success' | 'error') => void;
+  }
+}
+
 // Static import for LandingPage to ensure immediate rendering of homepage
 import LandingPage from './pages/LandingPage';
 
@@ -35,8 +41,8 @@ function App() {
   }, [theme]);
 
   useEffect(() => {
-    let timer: any;
-    (window as any).showToast = (message: string, type: 'success' | 'error' = 'error') => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    window.showToast = (message: string, type: 'success' | 'error' = 'error') => {
       setToast({ message, type });
       clearTimeout(timer);
       timer = setTimeout(() => {
@@ -94,7 +100,7 @@ function App() {
   // Route parser
   let page = 'landing';
   let tool = 'none';
-  let toolTab: any = undefined;
+  let toolTab: string | undefined = undefined;
   let blogPostId: string | undefined = undefined;
 
   if (path.startsWith('/tools')) {
@@ -385,7 +391,7 @@ function App() {
         </main>
       </div>
 
-      <Footer setCurrentPage={handleSetCurrentPage} />
+      <Footer />
 
       {toast && (
         <div className="toast-animation">

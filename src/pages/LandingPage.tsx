@@ -29,7 +29,7 @@ export const LandingPage: React.FC = () => {
         } else {
           loadFallbackBlogs();
         }
-      } catch (err) {
+      } catch {
         loadFallbackBlogs();
       }
     };
@@ -171,9 +171,9 @@ export const LandingPage: React.FC = () => {
     const maxScroll = 2200;
     const p = Math.min(scrollY / maxScroll, 1);
 
-    let left = 75; // in vw
-    let top = 48;  // in vh
-    let scale = 1.0;
+    let left: number;
+    let top: number;
+    let scale: number;
 
     if (p < 0.22) {
       const t = p / 0.22;
@@ -209,8 +209,11 @@ export const LandingPage: React.FC = () => {
 
   // Generate glowing floating particles surrounding the Qbit core
   const particles = Array.from({ length: 12 }).map((_, i) => {
-    const x = Math.sin(i) * 120 + (Math.random() * 20 - 10);
-    const y = Math.cos(i) * 120 - 60 + (Math.random() * 20 - 10);
+    // Pure deterministic pseudo-random offsets using Math.sin/cos on the index
+    const randomOffset1 = Math.sin(i * 12.9898) * 10;
+    const randomOffset2 = Math.cos(i * 78.233) * 10;
+    const x = Math.sin(i) * 120 + randomOffset1;
+    const y = Math.cos(i) * 120 - 60 + randomOffset2;
     const z = Math.sin(i * 2) * 50;
     const delay = i * 0.8;
     return (

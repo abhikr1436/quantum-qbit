@@ -9,10 +9,15 @@ interface ChatMessage {
   taskId?: string;
 }
 
+interface Task {
+  id: string;
+  title: string;
+}
+
 interface WorkspaceChatProps {
   chatLogs: ChatMessage[];
   onSendMessage: (text: string) => Promise<void>;
-  tasks: any[];
+  tasks: Task[];
   onViewTask: (id: string) => void;
 }
 
@@ -69,7 +74,7 @@ export const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ chatLogs, onSendMe
     try {
       const date = new Date(isoString);
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } catch (e) {
+    } catch {
       return '';
     }
   };

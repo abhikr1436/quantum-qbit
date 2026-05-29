@@ -55,7 +55,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         } else {
           loadFallback();
         }
-      } catch (err) {
+      } catch {
         loadFallback();
       }
     };
