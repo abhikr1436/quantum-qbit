@@ -304,6 +304,63 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 }
 
 switch ($action) {
+    case 'diagnostics':
+        $keys = getAIKeys($keysFile);
+        $pdo = getDBConnection();
+        $dbStatus = getDBStatus();
+        
+        $dbKeys = ['deepseekKey' => 'Not set', 'githubToken' => 'Not set'];
+        if ($pdo) {
+            try {
+                $stmt = $pdo->prepare("SELECT `key`, `value` FROM settings WHERE `key` IN ('deepseekKey', 'githubToken')");
+                $stmt->execute();
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                foreach ($rows as $row) {
+                    $dbKeys[$row['key']] = $row['value'];
+                }
+            } catch (Exception $e) {
+                $dbKeys['error'] = $e->getMessage();
+            }
+        }
+        
+        $fileKeys = ['deepseekKey' => 'Not set', 'githubToken' => 'Not set'];
+        if (file_exists($keysFile)) {
+            $content = file_get_contents($keysFile);
+            $data = json_decode($content, true);
+            if (is_array($data)) {
+                $fileKeys = $data;
+            }
+        }
+        
+        $mask = function($k) {
+            if (empty($k)) return 'Empty';
+            if ($k === 'Not set') return 'Not set';
+            if (strlen($k) <= 10) return 'Too short: ' . $k;
+            return substr($k, 0, 5) . '...' . substr($k, -4) . ' (length: ' . strlen($k) . ')';
+        };
+        
+        echo json_encode([
+            'database_status' => $dbStatus['status'],
+            'database_message' => isset($dbStatus['message']) ? $dbStatus['message'] : '',
+            'data_dir' => getQuantumDataDir(),
+            'data_dir_writable' => is_writable(getQuantumDataDir()),
+            'keys_file_exists' => file_exists($keysFile),
+            'keys_file_writable' => file_exists($keysFile) ? is_writable($keysFile) : is_writable(dirname($keysFile)),
+            'resolved_keys' => [
+                'deepseekKey' => $mask($keys['deepseekKey']),
+                'githubToken' => $mask($keys['githubToken'])
+            ],
+            'db_keys' => [
+                'deepseekKey' => $mask(isset($dbKeys['deepseekKey']) ? $dbKeys['deepseekKey'] : ''),
+                'githubToken' => $mask(isset($dbKeys['githubToken']) ? $dbKeys['githubToken'] : '')
+            ],
+            'file_keys' => [
+                'deepseekKey' => $mask(isset($fileKeys['deepseekKey']) ? $fileKeys['deepseekKey'] : ''),
+                'githubToken' => $mask(isset($fileKeys['githubToken']) ? $fileKeys['githubToken'] : '')
+            ]
+        ]);
+        break;
+
     case 'dashboard':
         $db = getAIDB($dbFile);
         $keys = getAIKeys($keysFile);
