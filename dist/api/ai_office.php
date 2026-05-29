@@ -365,6 +365,20 @@ switch ($action) {
         $db = getAIDB($dbFile);
         $keys = getAIKeys($keysFile);
         
+        // Dynamic fallback: if lastRunTimestamp is not set, use the latest blog post's creation time
+        if (empty($db['config']['lastRunTimestamp'])) {
+            $blogsJson = __DIR__ . '/data/blogs.json';
+            if (file_exists($blogsJson)) {
+                $blogsData = json_decode(file_get_contents($blogsJson), true);
+                if (is_array($blogsData) && count($blogsData) > 0) {
+                    $latestBlog = $blogsData[0];
+                    if (isset($latestBlog['created_at'])) {
+                        $db['config']['lastRunTimestamp'] = date(DATE_ATOM, strtotime($latestBlog['created_at']));
+                    }
+                }
+            }
+        }
+        
         // Initialize config keys to empty
         $db['config']['deepseekKey'] = '';
         $db['config']['githubToken'] = '';
