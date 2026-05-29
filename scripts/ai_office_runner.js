@@ -673,6 +673,32 @@ Respond with a JSON object:
   }
 }
 
+function updateSitemap(slug) {
+  const sitemapPath = path.join(process.cwd(), 'public', 'sitemap.xml');
+  if (!fs.existsSync(sitemapPath)) {
+    console.log(`Sitemap not found at: ${sitemapPath}`);
+    return;
+  }
+  try {
+    let sitemap = fs.readFileSync(sitemapPath, 'utf8');
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Check if slug is already in sitemap
+    const locUrl = `https://quantumqbit.in/blogs/${slug}`;
+    if (sitemap.includes(locUrl)) {
+      console.log(`Sitemap already contains URL: ${locUrl}`);
+      return;
+    }
+    
+    const newUrlNode = `  <url>\n    <loc>${locUrl}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n</urlset>`;
+    sitemap = sitemap.replace('</urlset>', newUrlNode);
+    fs.writeFileSync(sitemapPath, sitemap, 'utf8');
+    console.log(`Sitemap successfully updated with URL: ${locUrl}`);
+  } catch (err) {
+    console.error("Failed to update sitemap:", err.message);
+  }
+}
+
 function executeDeployment(db, task) {
   setAgentStatus(db, 'Deployer', `Deploying changes for ${task.title}`);
   let deployLog = 'Deployed successfully.';
@@ -713,6 +739,7 @@ function executeDeployment(db, task) {
 
       currentBlogs.unshift(newBlogPost);
       fs.writeFileSync(blogsJsonPath, JSON.stringify(currentBlogs, null, 2), 'utf8');
+      updateSitemap(slug);
 
       deployLog = `Published blog post "${newPostTitle}" with slug "${slug}".`;
     } catch (err) {
@@ -745,9 +772,10 @@ function getCategoryNameFromId(id) {
 // Brainstorming
 async function handleAutoBrainstorm(db, openai) {
   const lastBrainstorm = db.config.lastBrainstormTimestamp;
-  const fourHours = 1000 * 60 * 60 * 4;
+  const intervalMinutes = db.config.automationIntervalMinutes || 60;
+  const cooldownMs = 1000 * 60 * Math.max(5, intervalMinutes - 10); // 10 minutes grace period, minimum 5 minutes
 
-  if (lastBrainstorm && (Date.now() - new Date(lastBrainstorm).getTime() < fourHours)) {
+  if (lastBrainstorm && (Date.now() - new Date(lastBrainstorm).getTime() < cooldownMs)) {
     console.log("Brainstorm cooldown active, skipping brainstorming cycle.");
     return false; // Cooldown
   }
@@ -762,8 +790,9 @@ async function handleAutoBrainstorm(db, openai) {
   console.log("Marketing agent Mark is gathering live trending data to brainstorm...");
   setAgentStatus(db, 'Mark', 'Researching trending topics...');
   
-  const [trendsIndia, xTrends, govtJobs] = await Promise.all([
+  const [trendsIndia, trendsGlobal, xTrends, govtJobs] = await Promise.all([
     fetchGoogleTrends('IN'),
+    fetchGoogleTrends('US'),
     fetchXTrends(),
     fetchGovtJobUpdates()
   ]);
@@ -779,6 +808,9 @@ We provide offline-first browser utilities (PDF compressor, image cropper/resize
 GOOGLE TRENDS (INDIA):
 ${trendsIndia.slice(0,8).join('\n')}
 
+GOOGLE TRENDS (GLOBAL / US):
+${trendsGlobal.slice(0,8).join('\n')}
+
 X/TWITTER HASHTAGS (INDIA):
 ${xTrends.slice(0,8).join('\n')}
 
@@ -790,8 +822,8 @@ ${existingTitles.slice(-20).join('\n')}
 
 === STRICT RULES ===
 1. The new topic MUST be 100% different from the already-published list above.
-2. The title MUST be a viral, clickbait-style headline targeting Indian audiences (e.g. "Last 3 Days to Apply for [JOB]", "Why Everyone in India Is Talking About [TREND]", "7 Things About [TOPIC] That Will Shock You").
-3. Connect the topic to quantumqbit.in tools (e.g., how to compress a PDF resume for a Sarkari job application, or how base converters help computer students).
+2. The title MUST be a viral, clickbait-style headline targeting Indian or Global audiences depending on the chosen trend (e.g. "Last 3 Days to Apply for [JOB]", "Why Everyone in India Is Talking About [TREND]", "7 Things About [TOPIC] That Will Shock You", "The Real Reason Everyone Is Searching For [GLOBAL_TREND]").
+3. Connect the topic to quantumqbit.in tools (e.g., how to compress a PDF resume for a Sarkari job application, how a base converter helps computer students, or how offline image cropping helps globally).
 
 Respond ONLY with a JSON object:
 {

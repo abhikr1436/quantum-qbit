@@ -3,7 +3,7 @@
     "websitePath": ".",
     "deepseekKey": "",
     "githubToken": "",
-    "automationIntervalMinutes": 360,
+    "automationIntervalMinutes": 60,
     "isAutomationActive": true,
     "lastRunTimestamp": null,
     "lastBrainstormTimestamp": "2026-05-28T23:01:33.645Z"

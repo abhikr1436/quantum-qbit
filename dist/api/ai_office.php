@@ -151,7 +151,7 @@ function getAIDB($dbFile) {
                 'websitePath' => '.',
                 'deepseekKey' => '',
                 'githubToken' => '',
-                'automationIntervalMinutes' => 360,
+                'automationIntervalMinutes' => 60,
                 'isAutomationActive' => true,
                 'lastRunTimestamp' => null,
                 'lastBrainstormTimestamp' => null
@@ -209,6 +209,43 @@ function queueLiveUpdate($liveUpdatesFile, $updateType, $payload) {
     }
     
     file_put_contents($liveUpdatesFile, json_encode($updates, JSON_PRETTY_PRINT));
+}
+
+// Helper to dispatch GitHub Actions runner cycle
+function dispatchGitHubWorkflow($token) {
+    if (empty($token)) {
+        return ['success' => false, 'error' => 'GitHub Personal Access Token (PAT) not configured in settings.'];
+    }
+    
+    $url = 'https://api.github.com/repos/abhikr1436/quantum-qbit/actions/workflows/ai_office_scheduler.yml/dispatches';
+    $ch = curl_init();
+    $payload = json_encode(['ref' => 'master']);
+    
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        "Authorization: Bearer $token",
+        "Accept: application/vnd.github+json",
+        "User-Agent: php-curl-quantum-office",
+        "X-GitHub-Api-Version: 2022-11-28",
+        "Content-Type: application/json"
+    ]);
+    
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    if ($httpCode === 204) {
+        return ['success' => true];
+    } else {
+        return [
+            'success' => false,
+            'error' => "GitHub API returned HTTP $httpCode",
+            'details' => json_decode($response, true)
+        ];
+    }
 }
 
 // Extract request action
@@ -360,6 +397,12 @@ switch ($action) {
         
         // Queue directive update
         queueLiveUpdate($liveUpdatesFile, 'directive', $directive);
+        
+        // Trigger background Action loop immediately
+        $keys = getAIKeys($keysFile);
+        $token = isset($keys['githubToken']) ? $keys['githubToken'] : '';
+        dispatchGitHubWorkflow($token);
+        
         echo json_encode(['success' => true]);
         break;
         
@@ -460,8 +503,10 @@ switch ($action) {
         $landingPage = __DIR__ . '/../../src/pages/LandingPage.tsx';
         $blogsPage = __DIR__ . '/../../src/pages/Blogs.tsx';
         $blogsJson = __DIR__ . '/data/blogs.json';
+        $indexPhp = __DIR__ . '/../index.php';
+        $indexHtml = __DIR__ . '/../index.html';
         
-        $score = 92;
+        $score = 95;
         $issues = [];
         $blogsCount = 0;
         
@@ -478,20 +523,39 @@ switch ($action) {
                 'type' => 'Content Volume',
                 'desc' => "Only {$blogsCount} blog posts detected in JSON database. Search bots crawl websites more frequently when they have 5+ indexable guides."
             ];
-            $score -= 6;
+            $score -= 5;
         }
-        
-        // Scan LandingPage.tsx for meta tags / alt attributes
-        if (file_exists($landingPage)) {
-            $content = file_get_contents($landingPage);
-            if (strpos($content, 'updateSEO') === false) {
+
+        // Validate index.php dynamic routing presence
+        if (file_exists($indexPhp)) {
+            $phpContent = file_get_contents($indexPhp);
+            if (strpos($phpContent, '$title =') === false || strpos($phpContent, '$description =') === false) {
                 $issues[] = [
                     'severity' => 'high',
                     'type' => 'Dynamic Titles',
-                    'desc' => 'Landing page has no explicit page title updating script or active SEO hooks.'
+                    'desc' => 'Dynamic SEO headers are not configured properly in index.php router.'
                 ];
                 $score -= 10;
             }
+        } else {
+            $issues[] = [
+                'severity' => 'medium',
+                'type' => 'Routing Configuration',
+                'desc' => 'Production entrypoint index.php was not detected in parent directory.'
+            ];
+            $score -= 5;
+        }
+        
+        // Scan LandingPage.tsx if dev, or index.html if production
+        $scannedFile = null;
+        if (file_exists($landingPage)) {
+            $scannedFile = $landingPage;
+        } elseif (file_exists($indexHtml)) {
+            $scannedFile = $indexHtml;
+        }
+        
+        if ($scannedFile) {
+            $content = file_get_contents($scannedFile);
             if (preg_match_all('/<img[^>]+>/i', $content, $matches)) {
                 $missingAlt = 0;
                 foreach ($matches[0] as $img) {
@@ -503,16 +567,32 @@ switch ($action) {
                     $issues[] = [
                         'severity' => 'medium',
                         'type' => 'Alt Attributes',
-                        'desc' => "{$missingAlt} image elements identified in LandingPage layout without explicit descriptive alt tags."
+                        'desc' => "{$missingAlt} image elements identified in templates without explicit descriptive alt tags."
                     ];
                     $score -= 5;
                 }
+            }
+            if (strpos($content, 'google-site-verification') === false) {
+                $issues[] = [
+                    'severity' => 'medium',
+                    'type' => 'Site Verification',
+                    'desc' => 'Google Site Verification meta tag was not detected. Ensure your search console is connected.'
+                ];
+                $score -= 5;
+            }
+            if (strpos($content, 'google-adsense-account') === false) {
+                $issues[] = [
+                    'severity' => 'low',
+                    'type' => 'Monetization',
+                    'desc' => 'AdSense verification account code was not detected on landing layout.'
+                ];
+                $score -= 2;
             }
         } else {
             $issues[] = [
                 'severity' => 'high',
                 'type' => 'Crawler Error',
-                'desc' => 'LandingPage.tsx file could not be opened for indexing scanning.'
+                'desc' => 'HTML templates (index.html or LandingPage.tsx) could not be opened for indexing scanning.'
             ];
             $score -= 15;
         }
@@ -529,42 +609,15 @@ switch ($action) {
     case 'trigger_cycle':
         $keys = getAIKeys($keysFile);
         $token = isset($keys['githubToken']) ? $keys['githubToken'] : '';
+        $res = dispatchGitHubWorkflow($token);
         
-        if (empty($token)) {
-            http_response_code(400);
-            echo json_encode(['error' => 'GitHub Personal Access Token (PAT) not configured in settings.']);
-            exit;
-        }
-        
-        // Dispatch GitHub Actions run
-        $url = 'https://api.github.com/repos/abhikr1436/quantum-qbit/actions/workflows/ai_office_scheduler.yml/dispatches';
-        $ch = curl_init();
-        
-        $payload = json_encode(['ref' => 'master']);
-        
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            "Authorization: Bearer $token",
-            "Accept: application/vnd.github+json",
-            "User-Agent: php-curl-quantum-office",
-            "X-GitHub-Api-Version: 2022-11-28",
-            "Content-Type: application/json"
-        ]);
-        
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        
-        if ($httpCode === 204) {
+        if ($res['success']) {
             echo json_encode(['success' => true, 'message' => 'GitHub Action loop workflow triggered successfully in the cloud!']);
         } else {
-            http_response_code(502);
+            http_response_code(isset($res['details']) ? 502 : 400);
             echo json_encode([
-                'error' => "GitHub API returned HTTP $httpCode",
-                'details' => json_decode($response, true)
+                'error' => $res['error'],
+                'details' => isset($res['details']) ? $res['details'] : null
             ]);
         }
         break;

@@ -30,6 +30,41 @@ interface BlogsProps {
   setPostId?: (id: string | null) => void;
 }
 
+declare global {
+  interface Window {
+    adsbygoogle?: unknown[];
+  }
+}
+
+const AdSenseUnit: React.FC<{ slot: string; format?: string; responsive?: string; style?: React.CSSProperties }> = ({
+  slot,
+  format = 'auto',
+  responsive = 'true',
+  style = { display: 'block' }
+}) => {
+  useEffect(() => {
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch {
+      // Ignore adsbygoogle errors
+    }
+  }, []);
+
+  return (
+    <div style={{ margin: '24px 0', textAlign: 'center', width: '100%' }}>
+      <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px', marginBottom: '6px', textTransform: 'uppercase' }}>Advertisement</div>
+      <ins
+        className="adsbygoogle"
+        style={style}
+        data-ad-client="ca-pub-6096598752695949"
+        data-ad-slot={slot}
+        data-ad-format={format}
+        data-full-width-responsive={responsive}
+      />
+    </div>
+  );
+};
+
 export const Blogs: React.FC<BlogsProps> = ({
   selectedCategory = 'all',
   setSelectedCategory,
@@ -248,6 +283,10 @@ export const Blogs: React.FC<BlogsProps> = ({
                 />
               )}
             </div>
+            
+            <div style={{ marginTop: '40px', borderTop: '1px solid var(--border-glass)', paddingTop: '20px' }}>
+              <AdSenseUnit slot="5938271046" />
+            </div>
           </article>
         </div>
 
@@ -259,6 +298,7 @@ export const Blogs: React.FC<BlogsProps> = ({
               Try our offline-first local image studio and PDF compressor apps directly in your browser.
             </p>
           </div>
+          <AdSenseUnit slot="8372619405" />
         </aside>
       </div>
     );
