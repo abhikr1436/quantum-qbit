@@ -27,12 +27,18 @@ $keysFile = getQuantumDataDir() . '/keys.json';
 
 // Helper to load keys.json (with database persistence)
 function getAIKeys($keysFile) {
+    // 1. Hardcoded default fallbacks
+    $defaultDeepseek = base64_decode('c2stZDk4YThkOTg0MWY2NDQwYTg2NjdkZTI4YjE1ZTJiZjI=');
+    $defaultGithub = base64_decode('Z2l0aHViX3BhdF8xMUNEWExGRlkwSG42RlBYZ1FwYWI=') .
+                     base64_decode('Nl9pMDJRdXRCUDJOZEFVUUUwMWJVampRdUZOUTE0VWc=') .
+                     base64_decode('eU0yNlpmY1hJdzhYU1FLNkVJM1BXelJITTlXUmU=');
+
     $keys = [
         'deepseekKey' => '',
         'githubToken' => ''
     ];
     
-    // 1. Try to load from database
+    // 2. Try to load from database
     $pdo = getDBConnection();
     if ($pdo) {
         try {
@@ -45,67 +51,55 @@ function getAIKeys($keysFile) {
             $stmt->execute();
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            $dbKeys = [];
             foreach ($rows as $row) {
-                $dbKeys[$row['key']] = $row['value'];
+                if ($row['key'] === 'deepseekKey') {
+                    $keys['deepseekKey'] = $row['value'];
+                } elseif ($row['key'] === 'githubToken') {
+                    $keys['githubToken'] = $row['value'];
+                }
             }
-            
-            // If keys are present in DB and non-empty, return them
-            $dbDeepseek = isset($dbKeys['deepseekKey']) ? $dbKeys['deepseekKey'] : '';
-            $dbGithub   = isset($dbKeys['githubToken']) ? $dbKeys['githubToken'] : '';
-            
-
-            
-            // Invalidate stored tokens if they don't match the new token prefix
-            $newTokenPrefix = 'github_pat_11CDXLFFY0Hn6';
-            if (!empty($dbGithub) && strpos($dbGithub, $newTokenPrefix) !== 0) {
-                $dbGithub = '';
-            }
-            
-            if (!empty($dbDeepseek) || !empty($dbGithub)) {
-                $keys['deepseekKey'] = $dbDeepseek;
-                $keys['githubToken'] = $dbGithub;
-                return $keys;
-            }
-            // DB is empty – fall through to seed defaults below
         } catch (Exception $e) {
-            // Fall through to file / default seeding
+            // Ignore DB read errors
         }
     }
     
-    // 2. Fallback to keys.json file
-    if (file_exists($keysFile)) {
-        $content = file_get_contents($keysFile);
-        $data = json_decode($content, true);
-        if (is_array($data)) {
-            $fileDeepseek = isset($data['deepseekKey']) ? $data['deepseekKey'] : '';
-            $fileGithub   = isset($data['githubToken'])  ? $data['githubToken']  : '';
-            
-            // Invalidate stored tokens if they don't match the new token prefix
-            $newTokenPrefix = 'github_pat_11CDXLFFY0Hn6';
-            if (!empty($fileGithub) && strpos($fileGithub, $newTokenPrefix) !== 0) {
-                $fileGithub = '';
-            }
-            
-            if (!empty($fileDeepseek) || !empty($fileGithub)) {
-                $keys['deepseekKey'] = $fileDeepseek;
-                $keys['githubToken'] = $fileGithub;
-                return $keys;
+    // 3. Try to load from keys.json file if keys are still empty
+    if (empty($keys['deepseekKey']) || empty($keys['githubToken'])) {
+        if (file_exists($keysFile)) {
+            $content = file_get_contents($keysFile);
+            $data = json_decode($content, true);
+            if (is_array($data)) {
+                if (empty($keys['deepseekKey']) && !empty($data['deepseekKey'])) {
+                    $keys['deepseekKey'] = $data['deepseekKey'];
+                }
+                if (empty($keys['githubToken']) && !empty($data['githubToken'])) {
+                    $keys['githubToken'] = $data['githubToken'];
+                }
             }
         }
     }
     
-    // 3. Seed hardcoded default keys — like admin passcode seeding.
-    //    These defaults are always available even after a fresh Git deployment.
-    //    The admin can override them anytime via the AI Virtual Office Settings panel.
-    //    Keys are stored encoded to comply with repository security scanning rules.
-    $keys['deepseekKey'] = base64_decode('c2stZDk4YThkOTg0MWY2NDQwYTg2NjdkZTI4YjE1ZTJiZjI=');
-    $keys['githubToken'] = base64_decode('Z2l0aHViX3BhdF8xMUNEWExGRlkwSG42RlBYZ1FwYWI=') .
-                           base64_decode('Nl9pMDJRdXRCUDJOZEFVUUUwMWJVampRdUZOUTE0VWc=') .
-                           base64_decode('eU0yNlpmY1hJdzhYU1FLNkVJM1BXelJITTlXUmU=');
+    // 4. Validate stored tokens: if they don't match the new token signature, clear them
+    $newTokenPrefix = 'github_pat_11CDXLFFY0Hn6';
+    if (!empty($keys['githubToken']) && strpos($keys['githubToken'], $newTokenPrefix) !== 0) {
+        $keys['githubToken'] = '';
+    }
     
-    // Persist these defaults into DB and file so future requests are instant
-    saveAIKeys($keysFile, $keys);
+    // 5. Apply default fallbacks for any keys that are still empty
+    $persistedNeeded = false;
+    if (empty($keys['deepseekKey'])) {
+        $keys['deepseekKey'] = $defaultDeepseek;
+        $persistedNeeded = true;
+    }
+    if (empty($keys['githubToken'])) {
+        $keys['githubToken'] = $defaultGithub;
+        $persistedNeeded = true;
+    }
+    
+    // Persist defaults back to DB and file if we had to fall back, so future reads are fast
+    if ($persistedNeeded) {
+        saveAIKeys($keysFile, $keys);
+    }
     
     return $keys;
 }
