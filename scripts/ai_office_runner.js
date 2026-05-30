@@ -117,14 +117,30 @@ async function syncLiveUpdates(db) {
     const updates = await response.json();
     let mergedCount = 0;
 
-    // 1. Merge Config Overrides
+    // 1. Merge Config Overrides (includes lastBrainstormTimestamp reset and campaignMode)
     if (updates.configOverrides && Object.keys(updates.configOverrides).length > 0) {
       console.log("Merging config updates from live site:", updates.configOverrides);
       db.config = { ...db.config, ...updates.configOverrides };
       mergedCount++;
     }
 
-    // 2. Merge Manual Chat Messages
+    // 2. Merge Pending Tasks (tasks queued directly from the UI dashboard buttons)
+    // These REPLACE the current task list so the runner works on exactly what was requested
+    if (updates.pendingTasks && updates.pendingTasks.length > 0) {
+      console.log(`Merging ${updates.pendingTasks.length} pending task(s) from dashboard trigger...`);
+      // Only add tasks that aren't already in db.tasks
+      for (const task of updates.pendingTasks) {
+        if (!db.tasks.some(t => t.id === task.id)) {
+          // Clear any stale incomplete tasks first, keep only completed ones
+          db.tasks = db.tasks.filter(t => t.status === 'completed');
+          db.tasks.push(task);
+          console.log(`Queued task from dashboard: "${task.title}" [${task.id}]`);
+        }
+      }
+      mergedCount++;
+    }
+
+    // 3. Merge Manual Chat Messages
     if (updates.chatLogs && updates.chatLogs.length > 0) {
       console.log(`Merging ${updates.chatLogs.length} manual chat messages...`);
       updates.chatLogs.forEach(msg => {
@@ -135,7 +151,7 @@ async function syncLiveUpdates(db) {
       mergedCount++;
     }
 
-    // 3. Merge Directives
+    // 4. Merge Directives
     if (updates.directives && updates.directives.length > 0) {
       console.log(`Merging ${updates.directives.length} boardroom directives...`);
       for (const directive of updates.directives) {
@@ -145,7 +161,7 @@ async function syncLiveUpdates(db) {
       mergedCount++;
     }
 
-    // 4. Merge Task Status Overrides
+    // 5. Merge Task Status Overrides
     if (updates.taskOverrides && updates.taskOverrides.length > 0) {
       console.log(`Merging ${updates.taskOverrides.length} task overrides...`);
       updates.taskOverrides.forEach(override => {
@@ -490,13 +506,75 @@ async function executeAgentWork(db, task, openai) {
   try {
     let prompt = '';
     if (task.type === 'blog') {
+
+      // For trends campaigns: fetch live data and inject it into the prompt
+      let liveResearchContext = task.description;
+      const isTrendsCampaign = task.title.includes('Trending Article') || task.title.includes('Research and Publish');
+      const isJobsCampaign = task.title.includes('Job Vacancy') || task.title.includes('Job') || task.description.includes('sarkariresult');
+
+      if (isTrendsCampaign) {
+        setAgentStatus(db, 'System', 'Active', '🌐 Mark is fetching live Google Trends (India) to find the highest-volume topic...');
+        writeDB(db);
+
+        const [trendsIndia, trendsGlobal, govtJobs] = await Promise.all([
+          fetchGoogleTrends('IN'),
+          fetchGoogleTrends('US'),
+          fetchGovtJobUpdates()
+        ]);
+
+        const existingTitles = getExistingBlogTitles();
+
+        if (trendsIndia.length > 0) {
+          setAgentStatus(db, 'System', 'Active', `📊 Fetched ${trendsIndia.length} trending topics from India:`);
+          trendsIndia.slice(0, 5).forEach((t, i) => {
+            setAgentStatus(db, 'Mark', 'Researching', `  #${i+1}: ${t}`);
+          });
+          if (govtJobs.length > 0) {
+            setAgentStatus(db, 'System', 'Active', `📋 Latest Govt Jobs: ${govtJobs[0]}`);
+          }
+          writeDB(db);
+        }
+
+        liveResearchContext = `
+TASK: Pick the SINGLE topic with the highest search volume from the data below, that has NOT been published before, and write a detailed article about ONLY that topic.
+
+GOOGLE TRENDS - INDIA (highest volume first):
+${trendsIndia.slice(0, 8).join('\n')}
+
+GOOGLE TRENDS - GLOBAL:
+${trendsGlobal.slice(0, 5).join('\n')}
+
+LATEST GOVT JOB NOTIFICATIONS:
+${govtJobs.slice(0, 5).join('\n')}
+
+ALREADY PUBLISHED (DO NOT REPEAT):
+${existingTitles.slice(-15).join('\n')}
+
+Select the #1 highest-volume topic. State which topic you chose and its search volume in the opening.`;
+
+        setAgentStatus(db, 'System', 'Active', '🤖 Mark is picking the top-volume topic and drafting the article now...');
+        writeDB(db);
+      }
+
+      if (isJobsCampaign && !isTrendsCampaign) {
+        setAgentStatus(db, 'System', 'Active', '🏛️ Mark is fetching latest government job vacancies...');
+        writeDB(db);
+
+        const govtJobs = await fetchGovtJobUpdates();
+        if (govtJobs.length > 0) {
+          setAgentStatus(db, 'System', 'Active', `📋 Found ${govtJobs.length} job listings. Top: "${govtJobs[0]}"`);
+          writeDB(db);
+          liveResearchContext = task.description + `\n\nLATEST JOB LISTINGS FETCHED LIVE:\n${govtJobs.slice(0, 8).join('\n')}\n\nPick the SINGLE most recent/active listing from above and write the full structured article for it.`;
+        }
+      }
+
       prompt = `You are ${assignee}, the Marketing specialist for quantumqbit.in — a privacy-first browser utilities website popular in India.
-Your task is to write a highly informative, news-driven, and timely blog post specifically on this topic:
+Your task is to write a highly informative, news-driven, and timely blog post.
 Title hint: "${task.title}"
-Research context & background: "${task.description}"
+Research context & background: "${liveResearchContext}"
 
 IMPORTANT RULES:
-1. The article must focus specifically and deeply on the selected news event, announcement, or trend. Avoid writing generic listicles (e.g. "5 things", "5 ways", "5 trends") or timeless generic facts. Write about what is happening right now in the world or in India.
+1. The article must focus specifically and deeply on ONE selected news event, announcement, or trend. Avoid writing generic listicles (e.g. "5 things", "5 ways", "5 trends") or timeless generic facts. Write about what is happening right now in the world or in India.
 2. The TITLE must be highly engaging, professional, and specific to the event/topic (do NOT prefix with generic clickbait words like "Alert:", "Shocking:", "Warning:", etc. unless it is a contextually critical warning).
 3. The content must be ORIGINAL, IN-DEPTH, and provide practical steps or analyses for the reader.
 4. The content should be optimized for your audience, connecting to real-world contexts (e.g. Indian government portals, salaries, CS topics, privacy security events).
@@ -1100,11 +1178,24 @@ async function main() {
 
   const openai = getDeepseekClient(db.config);
 
-  // Log queued task details so the UI terminal shows what topic was picked
+  // Log what mode we're in and what task was loaded
   const pendingTasks = (db.tasks || []).filter(t => t.status !== 'completed');
-  if (pendingTasks.length > 0) {
+  const campaignMode = db.config.campaignMode;
+
+  if (pendingTasks.length > 0 && campaignMode) {
+    // UI-triggered run
     const t = pendingTasks[0];
-    setAgentStatus(db, 'System', 'Active', `Campaign task loaded: "${t.title}" — assigned to ${t.assignee} [status: ${t.status}]`);
+    const modeLabel = campaignMode === 'trends' ? '📈 TRENDS CAMPAIGN' : '💼 JOB VACANCY CAMPAIGN';
+    setAgentStatus(db, 'System', 'Active', `${modeLabel} — Dashboard triggered. Task: "${t.title}" assigned to ${t.assignee}.`);
+    // Clear campaignMode flag so hourly runs don't repeat this label
+    db.config.campaignMode = null;
+  } else if (pendingTasks.length > 0) {
+    // Resuming existing pipeline (e.g. hourly cron picking up where last run left off)
+    const t = pendingTasks[0];
+    setAgentStatus(db, 'System', 'Active', `Resuming pipeline: "${t.title}" [status: ${t.status}] — assigned to ${t.assignee}.`);
+  } else {
+    // Autonomous hourly brainstorm mode
+    setAgentStatus(db, 'System', 'Active', 'Running autonomous hourly brainstorm — checking live trends for new article topic...');
   }
 
   if (!openai) {

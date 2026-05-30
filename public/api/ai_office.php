@@ -198,7 +198,7 @@ function queueLiveUpdate($liveUpdatesFile, $updateType, $payload) {
         mkdir(dirname($liveUpdatesFile), 0755, true);
     }
     
-    $updates = ['directives' => [], 'chatLogs' => [], 'taskOverrides' => [], 'configOverrides' => []];
+    $updates = ['directives' => [], 'chatLogs' => [], 'taskOverrides' => [], 'configOverrides' => [], 'pendingTasks' => []];
     if (file_exists($liveUpdatesFile)) {
         $content = file_get_contents($liveUpdatesFile);
         $parsed = json_decode($content, true);
@@ -215,6 +215,9 @@ function queueLiveUpdate($liveUpdatesFile, $updateType, $payload) {
         $updates['taskOverrides'][] = $payload;
     } elseif ($updateType === 'config') {
         $updates['configOverrides'] = array_merge($updates['configOverrides'], $payload);
+    } elseif ($updateType === 'pendingTask') {
+        // Replace any existing pendingTasks with only the latest one
+        $updates['pendingTasks'] = [$payload];
     }
     
     file_put_contents($liveUpdatesFile, json_encode($updates, JSON_PRETTY_PRINT));
@@ -689,17 +692,18 @@ switch ($action) {
         
     case 'trigger_trends':
         $db = getAIDB($dbFile);
+        // Clear all old tasks and logs so the runner starts fresh
         $db['tasks'] = [];
         $db['systemLogs'] = [[
             'timestamp' => date(DATE_ATOM),
             'agent' => 'System',
-            'message' => 'System initialized. Triggering Google Trends content campaign...'
+            'message' => '=== Trends campaign triggered from dashboard. Runner will pick this up shortly... ==='
         ]];
         
         $newTask = [
             'id' => 'task-' . time() . '-' . rand(100, 999),
             'title' => 'Research and Publish Trending Article',
-            'description' => 'Research trending topics on Google Trends (IN) with high search volume, write a detailed guide, connect it to quantumqbit.in tools, and publish it.',
+            'description' => 'Fetch live Google Trends data for India (IN). Pick the single topic with the HIGHEST search volume that has not been published before. Write a detailed, specific article about ONLY that topic. Publish it.',
             'type' => 'blog',
             'assignee' => 'Mark',
             'status' => 'todo',
@@ -719,6 +723,14 @@ switch ($action) {
         }
         saveAIDB($dbFile, $db);
         
+        // Queue the task AND reset brainstorm cooldown in live_updates.json
+        // so the runner picks up this task directly instead of trying its own brainstorm
+        queueLiveUpdate($liveUpdatesFile, 'pendingTask', $newTask);
+        queueLiveUpdate($liveUpdatesFile, 'config', [
+            'lastBrainstormTimestamp' => null,
+            'campaignMode' => 'trends'
+        ]);
+        
         // Dispatch Action
         $keys = getAIKeys($keysFile);
         $token = isset($keys['githubToken']) ? $keys['githubToken'] : '';
@@ -737,17 +749,18 @@ switch ($action) {
 
     case 'trigger_jobs':
         $db = getAIDB($dbFile);
+        // Clear all old tasks and logs so the runner starts fresh
         $db['tasks'] = [];
         $db['systemLogs'] = [[
             'timestamp' => date(DATE_ATOM),
             'agent' => 'System',
-            'message' => 'System initialized. Checking latest job vacancies...'
+            'message' => '=== Job vacancy campaign triggered from dashboard. Runner will pick this up shortly... ==='
         ]];
         
         $newTask = [
             'id' => 'task-' . time() . '-' . rand(100, 999),
             'title' => 'Check & Post Latest Job Vacancy',
-            'description' => 'Check recent government or private job updates, format details in a structured table inspired by Sarkari Result, and post it.',
+            'description' => 'Fetch the latest government or private sector job vacancy from sarkariresult.com or similar portals. Pick the SINGLE most recent/active vacancy. Write a complete, structured article with all job details in a job-details-table (important dates, application fees, age limit, vacancy totals, eligibility, useful links). Publish it.',
             'type' => 'blog',
             'assignee' => 'Mark',
             'status' => 'todo',
@@ -766,6 +779,13 @@ switch ($action) {
             else $ag['status'] = 'Idle';
         }
         saveAIDB($dbFile, $db);
+        
+        // Queue the task AND reset brainstorm cooldown in live_updates.json
+        queueLiveUpdate($liveUpdatesFile, 'pendingTask', $newTask);
+        queueLiveUpdate($liveUpdatesFile, 'config', [
+            'lastBrainstormTimestamp' => null,
+            'campaignMode' => 'jobs'
+        ]);
         
         // Dispatch Action
         $keys = getAIKeys($keysFile);
