@@ -14,14 +14,60 @@ interface Agent {
   status: string;
 }
 
+interface DraftContent {
+  category_id?: string;
+  title?: string;
+  excerpt?: string;
+  content?: string;
+  imageGlow?: string;
+  platform?: string;
+  postText?: string;
+  recommendations?: string;
+}
+
+interface TaskReview {
+  agent: string;
+  decision: 'approved' | 'rejected';
+  reviewText: string;
+  timestamp: string;
+}
+
+interface OfficeTask {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  assignee: string;
+  status: string;
+  draftContent: DraftContent | string | null;
+  reviews: TaskReview[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface BoardroomProps {
   onSendDirective: (text: string) => Promise<void>;
   isProcessing: boolean;
   agents: Agent[];
   systemLogs?: SystemLog[];
+  tasks?: OfficeTask[];
+  timeLeft?: string;
+  timerColor?: string;
+  runLoopLoading?: boolean;
+  onTriggerAgentLoop?: () => Promise<void>;
 }
 
-export const Boardroom: React.FC<BoardroomProps> = ({ onSendDirective, isProcessing, agents, systemLogs = [] }) => {
+export const Boardroom: React.FC<BoardroomProps> = ({ 
+  onSendDirective, 
+  isProcessing, 
+  agents, 
+  systemLogs = [],
+  tasks = [],
+  timeLeft = '--:--',
+  timerColor = 'rgba(255,255,255,0.6)',
+  runLoopLoading = false,
+  onTriggerAgentLoop
+}) => {
   const logBodyRef = useRef<HTMLDivElement>(null);
 
   // Scroll within the log container only — never moves the page
@@ -63,6 +109,168 @@ export const Boardroom: React.FC<BoardroomProps> = ({ onSendDirective, isProcess
       text: "Draft a remote job description for a Frontend Developer experienced in WebAssembly and React Canvas rendering to build local-first browser utilities."
     }
   ];
+
+  const getSearchVolume = (desc: string) => {
+    const match = desc.match(/(\d+[,.]?\d*[KM]\+?\s*(?:searches|volume)?)/i) || 
+                  desc.match(/volume:?\s*(\d+[,.]?\d*[KM]\+?)/i);
+    if (match) {
+      return match[1].replace(/searches/i, '').replace(/volume:?/i, '').trim();
+    }
+    const genericMatch = desc.match(/(\d+\s*[KM]\+)/i);
+    if (genericMatch) return genericMatch[1];
+    return '100K+';
+  };
+
+  const renderActiveCampaign = () => {
+    if (!tasks || tasks.length === 0) return null;
+
+    const activeTask = [...tasks].reverse().find(t => t.status !== 'completed') || 
+                       [...tasks].reverse().find(t => t.status === 'completed');
+
+    if (!activeTask) return null;
+
+    const isTaskCompleted = activeTask.status === 'completed';
+    const searchVolume = getSearchVolume(activeTask.description || '');
+    
+    let campaignTopic = activeTask.title;
+    if (activeTask.description) {
+      const briefMatch = activeTask.description.match(/(?:context|details|about|for|alert|recruitment|issue):\s*([^.]+)/i) ||
+                         activeTask.description.match(/(?:hook|topic):\s*([^.]+)/i);
+      if (briefMatch) {
+        campaignTopic = briefMatch[1].trim();
+      } else if (activeTask.title.includes(':')) {
+        campaignTopic = activeTask.title.split(':')[0].trim();
+      }
+    }
+
+    const statusOrder = ['todo', 'inprogress', 'manager_review', 'ceo_approval', 'completed'];
+    const currentIndex = statusOrder.indexOf(activeTask.status);
+
+    const steps = [
+      { label: 'Queued', desc: 'Topic researched & queued', icon: '📝' },
+      { label: 'Drafting', desc: `${activeTask.assignee} writing article`, icon: '✍️' },
+      { label: 'Reviewing', desc: 'Alex auditing keywords & SEO', icon: '🔍' },
+      { label: 'Approving', desc: 'Sophia evaluating final draft', icon: '👑' },
+      { label: 'Published', desc: 'Deployer pushing updates live', icon: '🚀' },
+    ];
+
+    const isStalled = timeLeft === 'Overdue / Stalled';
+
+    return (
+      <div style={styles.campaignCard}>
+        <div style={styles.campaignHeader}>
+          <div style={styles.campaignTitle}>
+            <Sparkles size={18} style={{ color: isTaskCompleted ? '#10b981' : 'var(--primary, #00f2fe)' }} />
+            <span>
+              {isTaskCompleted ? 'Latest Deployed Campaign (Published)' : 'Active Campaign: Work In Progress'}
+            </span>
+          </div>
+          {isStalled && !isTaskCompleted && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              color: '#ef4444',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              background: 'rgba(239, 68, 68, 0.1)',
+              padding: '4px 10px',
+              borderRadius: '6px',
+              border: '1px solid rgba(239, 68, 68, 0.2)'
+            }}>
+              <AlertCircle size={14} />
+              <span>Campaign Stalled / Delayed</span>
+            </div>
+          )}
+        </div>
+
+        <div style={styles.campaignMetaGrid}>
+          <div style={styles.metaItem}>
+            <span style={styles.metaLabel}>Trending Topic Context</span>
+            <span style={styles.metaValue}>{campaignTopic}</span>
+          </div>
+          <div style={styles.metaItem}>
+            <span style={styles.metaLabel}>Estimated Search Volume</span>
+            <span style={{ ...styles.metaValue, color: 'var(--primary, #00f2fe)', fontWeight: 600 }}>
+              📈 {searchVolume} searches
+            </span>
+          </div>
+          <div style={styles.metaItem}>
+            <span style={styles.metaLabel}>Assigned Specialist</span>
+            <span style={styles.metaValue}>
+              {activeTask.assignee === 'Mark' ? '✍️ Mark (Marketing)' : 
+               activeTask.assignee === 'Sarah' ? '🐦 Sarah (Social Media)' : 
+               activeTask.assignee === 'Codey' ? '💻 Codey (IT Dev)' : `👤 ${activeTask.assignee}`}
+            </span>
+          </div>
+          <div style={styles.metaItem}>
+            <span style={styles.metaLabel}>Article Target Title</span>
+            <span style={{ ...styles.metaValue, fontStyle: 'italic' }}>"{activeTask.title}"</span>
+          </div>
+        </div>
+
+        <div style={styles.progressContainer}>
+          <div style={styles.stepsRow}>
+            {steps.map((step, idx) => {
+              const isCompleted = idx < currentIndex || isTaskCompleted;
+              const isActive = idx === currentIndex && !isTaskCompleted;
+              
+              let stepStyle = styles.stepDotPending;
+              if (isCompleted) stepStyle = styles.stepDotCompleted;
+              else if (isActive) stepStyle = styles.stepDotActive;
+
+              return (
+                <React.Fragment key={idx}>
+                  <div style={styles.stepBubble}>
+                    <div style={{
+                      ...styles.stepDot,
+                      ...stepStyle
+                    }}>
+                      <span>{step.icon}</span>
+                    </div>
+                    <div style={{
+                      ...styles.stepLabel,
+                      color: isActive ? 'var(--primary, #00f2fe)' : isCompleted ? '#10b981' : 'rgba(255,255,255,0.4)',
+                      fontWeight: isActive ? 600 : 400
+                    }}>
+                      {step.label}
+                    </div>
+                    <div style={styles.stepDesc}>
+                      {step.desc}
+                    </div>
+                  </div>
+
+                  {idx < steps.length - 1 && (
+                    <div style={{
+                      ...styles.connectingLine,
+                      background: (idx < currentIndex || isTaskCompleted) ? '#10b981' : 'rgba(255,255,255,0.1)'
+                    }} />
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
+        </div>
+
+        {isStalled && !isTaskCompleted && onTriggerAgentLoop && (
+          <div style={styles.stalledContainer}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <AlertCircle size={16} style={{ color: '#ef4444' }} />
+              <span>The background agent cycle appears delayed or stalled. You can force-restart the loop execution right now.</span>
+            </div>
+            <button
+              onClick={onTriggerAgentLoop}
+              disabled={runLoopLoading}
+              style={styles.restartBtn}
+            >
+              <RefreshCw size={12} className={runLoopLoading ? 'spin' : ''} />
+              {runLoopLoading ? 'Restarting...' : 'Restart Loop & Force Step'}
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="animate-fade-in" style={styles.container}>
@@ -153,6 +361,9 @@ export const Boardroom: React.FC<BoardroomProps> = ({ onSendDirective, isProcess
         </div>
 
       </div>
+
+      {/* Active Campaign Info Panel */}
+      {renderActiveCampaign()}
 
       {/* Real-Time Agent Subprocess Log Terminal */}
       <div style={styles.logPanel} className="glass-card">
@@ -432,5 +643,147 @@ const styles = {
     color: 'rgba(255,255,255,0.75)',
     lineHeight: '1.4',
     wordBreak: 'break-word' as const,
+  },
+  campaignCard: {
+    padding: '24px',
+    background: 'rgba(255, 255, 255, 0.02)',
+    border: '1px solid rgba(0, 242, 254, 0.15)',
+    boxShadow: '0 8px 32px 0 rgba(0, 242, 254, 0.03)',
+    borderRadius: '12px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '20px',
+  },
+  campaignHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottom: '1px solid rgba(255,255,255,0.08)',
+    paddingBottom: '12px',
+  },
+  campaignTitle: {
+    fontSize: '1.15rem',
+    fontWeight: 600,
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontFamily: 'var(--font-heading)',
+  },
+  campaignMetaGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '16px',
+    background: 'rgba(0,0,0,0.15)',
+    padding: '16px',
+    borderRadius: '8px',
+    border: '1px solid rgba(255,255,255,0.04)',
+  },
+  metaItem: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '4px',
+  },
+  metaLabel: {
+    fontSize: '0.75rem',
+    color: 'rgba(255,255,255,0.4)',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
+  },
+  metaValue: {
+    fontSize: '0.9rem',
+    color: '#fff',
+    fontWeight: 500,
+  },
+  progressContainer: {
+    padding: '10px 0',
+    overflowX: 'auto' as const,
+  },
+  stepsRow: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    minWidth: '600px',
+    position: 'relative' as const,
+    padding: '0 20px',
+  },
+  stepBubble: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    width: '120px',
+    textAlign: 'center' as const,
+    zIndex: 2,
+  },
+  stepDot: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.3s ease',
+    border: '2px solid transparent',
+  },
+  stepDotPending: {
+    background: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(255,255,255,0.1)',
+    color: 'rgba(255,255,255,0.3)',
+  },
+  stepDotActive: {
+    background: 'rgba(0, 242, 254, 0.1)',
+    borderColor: 'var(--primary, #00f2fe)',
+    boxShadow: '0 0 15px rgba(0, 242, 254, 0.3)',
+    color: 'var(--primary, #00f2fe)',
+  },
+  stepDotCompleted: {
+    background: 'rgba(16, 185, 129, 0.1)',
+    borderColor: '#10b981',
+    boxShadow: '0 0 10px rgba(16, 185, 129, 0.2)',
+    color: '#10b981',
+  },
+  stepLabel: {
+    fontSize: '0.82rem',
+    marginTop: '8px',
+  },
+  stepDesc: {
+    fontSize: '0.68rem',
+    color: 'rgba(255,255,255,0.4)',
+    marginTop: '4px',
+    lineHeight: '1.3',
+  },
+  connectingLine: {
+    height: '2px',
+    flex: 1,
+    marginTop: '20px',
+    marginRight: '-10px',
+    marginLeft: '-10px',
+    minWidth: '30px',
+    transition: 'background 0.3s ease',
+  },
+  stalledContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    background: 'rgba(239, 68, 68, 0.08)',
+    border: '1px solid rgba(239, 68, 68, 0.25)',
+    padding: '12px 20px',
+    borderRadius: '8px',
+    fontSize: '0.85rem',
+    color: '#fecaca',
+  },
+  restartBtn: {
+    background: '#ef4444',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    padding: '6px 14px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '0.8rem',
+    transition: 'background 0.2s',
   }
 };

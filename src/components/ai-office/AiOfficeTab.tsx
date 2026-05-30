@@ -757,6 +757,65 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
     return tasks.filter(t => t.status !== 'completed').length;
   };
 
+  const getEnrichedAgents = (): Agent[] => {
+    const activeTask = [...tasks].reverse().find(t => t.status !== 'completed');
+    
+    return agents.map(agent => {
+      let status = agent.status;
+      
+      if (status === 'Idle') {
+        if (activeTask) {
+          if (activeTask.status === 'todo') {
+            if (agent.name === 'Alex') status = 'Assigning directive briefing';
+            else if (agent.name === 'Mark') status = 'Analyzing trends & keywords';
+            else if (agent.name === 'Sophia') status = 'Monitoring team operations';
+            else if (agent.name === 'Sarah') status = 'Monitoring site traffic';
+            else if (agent.name === 'Codey') status = 'Auditing HTML tag hierarchy';
+            else if (agent.name === 'Deployer') status = 'Checking build config';
+            else if (agent.name === 'Harper') status = 'Aligning department roles';
+          } else if (activeTask.status === 'inprogress') {
+            if (agent.name === 'Mark' && activeTask.assignee === 'Mark') status = 'Drafting article content';
+            else if (agent.name === 'Sarah' && activeTask.assignee === 'Sarah') status = 'Creating social blurbs';
+            else if (agent.name === 'Codey' && activeTask.assignee === 'Codey') status = 'Building feature script';
+            else if (agent.name === 'Alex') status = 'Monitoring draft progress';
+            else if (agent.name === 'Sophia') status = 'Reviewing campaign focus';
+            else if (agent.name === 'Sarah') status = 'Scheduling post calendars';
+            else if (agent.name === 'Codey') status = 'Optimizing tool code elements';
+            else if (agent.name === 'Deployer') status = 'Checking compiler constraints';
+            else if (agent.name === 'Harper') status = 'Reviewing department logs';
+          } else if (activeTask.status === 'manager_review') {
+            if (agent.name === 'Alex') status = 'Auditing submission draft';
+            else if (agent.name === 'Mark') status = 'Awaiting manager review';
+            else if (agent.name === 'Sophia') status = 'Waiting for escalations';
+            else if (agent.name === 'Sarah') status = 'Preparing social media assets';
+            else if (agent.name === 'Codey') status = 'Verifying local style bindings';
+            else if (agent.name === 'Deployer') status = 'Preparing package manifest';
+            else if (agent.name === 'Harper') status = 'Updating personnel file records';
+          } else if (activeTask.status === 'ceo_approval') {
+            if (agent.name === 'Sophia') status = 'Evaluating final draft sign-off';
+            else if (agent.name === 'Alex') status = 'Awaiting CEO approval';
+            else if (agent.name === 'Mark') status = 'Awaiting publication release';
+            else if (agent.name === 'Deployer') status = 'Staging web release files';
+            else if (agent.name === 'Sarah') status = 'Finalizing social media banners';
+            else if (agent.name === 'Codey') status = 'Running page performance check';
+            else if (agent.name === 'Harper') status = 'Updating staff timesheets';
+          }
+        } else {
+          if (agent.name === 'Sophia') status = 'Analyzing global visitor metrics';
+          else if (agent.name === 'Alex') status = 'Formulating next task directive';
+          else if (agent.name === 'Mark') status = 'Monitoring live Google trends';
+          else if (agent.name === 'Sarah') status = 'Engaging with social communities';
+          else if (agent.name === 'Codey') status = 'Refactoring browser tool styles';
+          else if (agent.name === 'Deployer') status = 'Maintaining server infrastructure';
+          else if (agent.name === 'Harper') status = 'Organizing team sync sessions';
+        }
+      }
+      return { ...agent, status };
+    });
+  };
+
+  const enrichedAgents = getEnrichedAgents();
+
   return (
     <div style={styles.dashboardLayout}>
       {/* Sidebar navigation */}
@@ -869,6 +928,30 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
           }}>
             <RefreshCw size={12} className={timeLeft === 'Running...' ? 'spin' : ''} style={{ color: timerColor }} />
             <span>Next Article: <strong>{timeLeft}</strong></span>
+            {timeLeft === 'Overdue / Stalled' && (
+              <button 
+                onClick={handleTriggerAgentLoop}
+                disabled={runLoopLoading}
+                style={{
+                  background: '#ef4444',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '2px 8px',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  marginLeft: '8px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  transition: 'background 0.2s'
+                }}
+              >
+                <RefreshCw size={10} className={runLoopLoading ? 'spin' : ''} />
+                Restart Loop
+              </button>
+            )}
           </div>
 
           <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -895,8 +978,13 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
               <Boardroom 
                 onSendDirective={handleSendDirective}
                 isProcessing={boardroomProcessing}
-                agents={agents}
+                agents={enrichedAgents}
                 systemLogs={systemLogs}
+                tasks={tasks}
+                timeLeft={timeLeft}
+                timerColor={timerColor}
+                runLoopLoading={runLoopLoading}
+                onTriggerAgentLoop={handleTriggerAgentLoop}
               />
             )}
             
@@ -921,7 +1009,7 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
 
             {activeTab === 'org' && (
               <OrgChart 
-                agents={agents}
+                agents={enrichedAgents}
                 tasks={tasks}
               />
             )}

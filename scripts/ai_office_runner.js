@@ -971,7 +971,7 @@ async function main() {
   }
   
   // 2. Run sequential cycles to process task pipeline
-  let maxCycles = 5;
+  let maxCycles = 1;
   let cycle = 0;
   let progress = true;
 
