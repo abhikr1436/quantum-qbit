@@ -25,13 +25,13 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
   const [statusMessage, setStatusMessage] = useState('System Ready');
   const [statusColor, setStatusColor] = useState('rgba(255,255,255,0.7)');
 
-  const terminalEndRef = useRef<HTMLDivElement>(null);
+  const terminalBodyRef = useRef<HTMLDivElement>(null);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Auto-scroll terminal
+  // Auto-scroll terminal container without force scrolling the window
   useEffect(() => {
-    if (terminalEndRef.current) {
-      terminalEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (terminalBodyRef.current) {
+      terminalBodyRef.current.scrollTop = terminalBodyRef.current.scrollHeight;
     }
   }, [logs]);
 
@@ -465,7 +465,7 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
           </div>
         </div>
 
-        <div style={styles.terminalBody}>
+        <div ref={terminalBodyRef} style={styles.terminalBody}>
           {logs.length === 0 ? (
             <div style={styles.terminalEmpty}>
               <span style={{ color: 'rgba(255,255,255,0.2)' }}>Console terminal is empty. Click one of the action buttons above to trigger execution.</span>
@@ -493,7 +493,6 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
               <span style={styles.terminalCursor}></span>
             </div>
           )}
-          <div ref={terminalEndRef} />
         </div>
       </div>
     </div>
