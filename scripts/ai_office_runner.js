@@ -502,6 +502,13 @@ IMPORTANT RULES:
 6. Naturally weave in how quantumqbit.in's browser utilities (like offline PDF compressor, image cropper, base calculators) solve a specific problem related to this topic.
 7. Add a catchy EXCERPT (2-3 sentences) that summarizes the news and compels the reader to read the full article.
 8. Pick the MOST RELEVANT category: "privacy-security" | "computer-science" | "creative-tech" | "general-utilities".
+9. If this is a job update, exam notification, or hiring announcement (e.g. category is "Government jobs" or "Private sector jobs" or if the title contains terms like "recruitment", "exam", "bharti", "job", "vacancy"):
+   - You MUST format the core details of the job (Important Dates, Application Fees, Age Limit, Vacancy Details, and Useful Links) in a clean, highly structured HTML table with the class "job-details-table".
+   - Place "Important Dates" (e.g. Application Begin, Last Date, Correction, Exam Date) in one column (td), and "Application Fee" (e.g. General, OBC, SC, ST fees, and payment modes) in the adjacent column (td) in the same row.
+   - Use other rows or nested structures for "Age Limit as on [Date]" and "Vacancy Details / Eligibility".
+   - Use CSS classes like "highlight-red" for dates, "highlight-green" for fees, and "highlight-cyan" for vacancy totals.
+   - Format the "Useful Important Links" section as a sub-table or clear links within the table (e.g. Download Notification, Apply Online) that point to placeholders or relevant URLs.
+   - Keep the design clean, tabular, and highly structured, similar to sarkariresult.com but in modern dark cyber theme (using our CSS class job-details-table).
 
 Respond with a JSON object with EXACTLY these keys:
 {
@@ -743,7 +750,7 @@ function executeDeployment(db, task) {
         excerpt: draft.excerpt || task.description,
         content: draft.content || `<p>${task.description}</p>`,
         author: 'Quantum AI Writer',
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) + ' ' + new Date().toTimeString().split(' ')[0],
         readTime: draft.content ? `${Math.max(1, Math.ceil(draft.content.split(' ').length / 200))} min read` : '3 min read',
         category: getCategoryNameFromId(draft.category_id),
         category_id: draft.category_id || 'privacy-security',
@@ -895,6 +902,99 @@ Respond ONLY with a JSON object:
 }
 
 function getMockDraftContent(task) {
+  const isJob = task.title.toLowerCase().includes('job') || 
+                task.title.toLowerCase().includes('recruitment') || 
+                task.title.toLowerCase().includes('vacancy') || 
+                task.title.toLowerCase().includes('exam') || 
+                task.title.toLowerCase().includes('bharti') || 
+                task.title.toLowerCase().includes('upsssc') ||
+                (task.description && (
+                  task.description.toLowerCase().includes('job') ||
+                  task.description.toLowerCase().includes('recruitment') ||
+                  task.description.toLowerCase().includes('exam')
+                ));
+                
+  if (isJob) {
+    return {
+      title: task.title,
+      excerpt: `Latest recruitment notification for ${task.title}. Apply online, check eligibility, age limit, selection criteria, important dates and fees.`,
+      content: `<h2>${task.title} Notification</h2>
+<p>Here are the complete notification details, important dates, and eligibility criteria for ${task.title}. Candidates can apply online through the official portal before the deadline. Make sure to prepare your documents and compress photo/signature files to correct upload size using browser-only local compression tools before submitting the form.</p>
+<table class="job-details-table">
+  <tr>
+    <td colspan="2" class="table-header-main">
+      <h2>Uttar Pradesh Subordinate Service Selection Commission (UPSSSC)</h2>
+      <h3>UPSSSC Lower PCS (Graduate Level) Recruitment 2026</h3>
+      <div class="highlight-cyan" style="text-align: center;">Advt No. 07-Exam/2026 : Short Details of Notification</div>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <div class="highlight-cyan" style="text-align: center; font-size: 1.1rem; margin-bottom: 8px;">Important Dates</div>
+      <ul>
+        <li>Application Begin : <span class="highlight-green">29/05/2026</span></li>
+        <li>Last Date for Apply Online : <span class="highlight-red">18/06/2026</span></li>
+        <li>Last Date Pay Exam Fee : <span class="highlight-red">18/06/2026</span></li>
+        <li>Correction Last Date : <span class="highlight-cyan">25/06/2026</span></li>
+        <li>Exam Date : <span class="highlight-cyan">As Per Schedule</span></li>
+      </ul>
+    </td>
+    <td>
+      <div class="highlight-cyan" style="text-align: center; font-size: 1.1rem; margin-bottom: 8px;">Application Fee</div>
+      <ul>
+        <li>General / OBC / EWS : <span class="highlight-green">25/-</span></li>
+        <li>SC / ST : <span class="highlight-green">25/-</span></li>
+        <li>PH (Divyang) : <span class="highlight-green">25/-</span></li>
+        <li>Payment Mode : Online Debit/Credit Card, Net Banking</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <div class="highlight-cyan" style="text-align: center; font-size: 1.1rem; margin-bottom: 8px;">Age Limit as on 01/07/2026</div>
+      <ul>
+        <li>Minimum Age : <strong>18 Years</strong></li>
+        <li>Maximum Age : <strong>40 Years</strong></li>
+        <li>Age Relaxation Extra as per UPSSSC Lower PCS Recruitment Rules.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <div class="highlight-cyan" style="text-align: center; font-size: 1.1rem; margin-bottom: 8px;">Vacancy Details &amp; Eligibility (Total : 2285 Posts)</div>
+      <ul>
+        <li><strong>Post Name:</strong> Combined Lower Subordinate (Lower PCS)</li>
+        <li><strong>Total Post:</strong> 2285</li>
+        <li><strong>Eligibility:</strong> Bachelor Degree in Any Stream from Any Recognized University. For Executive Officer, Graduation with 'O' Level is required.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <div class="highlight-cyan" style="text-align: center; font-size: 1.1rem; margin-bottom: 8px;">Some Useful Important Links</div>
+      <table style="width: 100%; border: none; margin: 0; background: transparent;">
+        <tr style="background: transparent;">
+          <td style="border: none; padding: 6px;"><strong>Apply Online:</strong></td>
+          <td style="border: none; padding: 6px;"><a href="https://upsssc.gov.in" target="_blank">Click Here</a></td>
+        </tr>
+        <tr style="background: transparent;">
+          <td style="border: none; padding: 6px;"><strong>Download Notification:</strong></td>
+          <td style="border: none; padding: 6px;"><a href="#" target="_blank">Click Here</a></td>
+        </tr>
+        <tr style="background: transparent;">
+          <td style="border: none; padding: 6px;"><strong>Official Website:</strong></td>
+          <td style="border: none; padding: 6px;"><a href="https://upsssc.gov.in" target="_blank">UPSSSC Official Portal</a></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<p>Note: Remember to use local tools on quantumqbit.in to resize, crop and compress your photos and signatures. Since all processing happens in your browser locally, your personal and sensitive documents never reach third-party servers.</p>`,
+      category_id: "general-utilities",
+      imageGlow: "rgba(157, 78, 221, 0.15)"
+    };
+  }
+
   return {
     title: task.title,
     excerpt: "In a digital-first era, client-side browser calculations protect user private data.",

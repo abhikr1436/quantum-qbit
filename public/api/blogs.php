@@ -47,7 +47,7 @@ function getFallbackBlogs($blogsFile) {
                 'title' => 'Why Browser-Only Tools Are the Future of Web Utility Apps',
                 'excerpt' => 'In an era of rising security concerns, running calculations, converting PDFs, and editing photos locally protects user data from server hazards.',
                 'author' => 'Quantum Engineering Team',
-                'date' => 'May 18, 2026',
+                'date' => 'May 18, 2026 12:00:00',
                 'readTime' => '4 min read',
                 'category' => 'Privacy & Security',
                 'category_id' => 'privacy-security',
@@ -64,7 +64,7 @@ function getFallbackBlogs($blogsFile) {
                 'title' => 'The Logic Behind Real-Time Cross-Input Number Base Conversions',
                 'excerpt' => 'Understanding how computers translate binary, octal, decimal, and hexadecimal representations under the hood to optimize data structures.',
                 'author' => 'Dr. Clara Chen',
-                'date' => 'May 10, 2026',
+                'date' => 'May 10, 2026 12:00:00',
                 'readTime' => '5 min read',
                 'category' => 'Computer Science',
                 'category_id' => 'computer-science',
@@ -81,7 +81,7 @@ function getFallbackBlogs($blogsFile) {
                 'title' => 'Image Formats Decoded: Choosing Between JPG, PNG, and WEBP',
                 'excerpt' => 'A deep dive into compression algorithms and when to use each format to achieve visual clarity while keeping load times minimal.',
                 'author' => 'Marcus Vance',
-                'date' => 'May 02, 2026',
+                'date' => 'May 02, 2026 12:00:00',
                 'readTime' => '3 min read',
                 'category' => 'Creative Tech',
                 'category_id' => 'creative-tech',
@@ -142,7 +142,7 @@ if ($method === 'GET') {
                 SELECT b.id, b.title, b.excerpt, b.content, b.author, b.date, b.read_time AS readTime, b.category_id, c.name AS category, b.image_glow AS imageGlow, b.created_at, b.updated_at
                 FROM blogs b
                 LEFT JOIN categories c ON b.category_id = c.id
-                ORDER BY COALESCE(b.updated_at, b.created_at) DESC, STR_TO_DATE(b.date, '%b %d, %Y') DESC, b.id DESC
+                ORDER BY COALESCE(b.updated_at, b.created_at) DESC, COALESCE(STR_TO_DATE(b.date, '%b %d, %Y %H:%i:%s'), STR_TO_DATE(b.date, '%b %d, %Y')) DESC, b.id DESC
             ");
             $posts = $stmt->fetchAll();
             
@@ -192,7 +192,7 @@ if ($method === 'GET') {
                         SELECT b.id, b.title, b.excerpt, b.content, b.author, b.date, b.read_time AS readTime, b.category_id, c.name AS category, b.image_glow AS imageGlow, b.created_at, b.updated_at
                         FROM blogs b
                         LEFT JOIN categories c ON b.category_id = c.id
-                        ORDER BY COALESCE(b.updated_at, b.created_at) DESC, STR_TO_DATE(b.date, '%b %d, %Y') DESC, b.id DESC
+                        ORDER BY COALESCE(b.updated_at, b.created_at) DESC, COALESCE(STR_TO_DATE(b.date, '%b %d, %Y %H:%i:%s'), STR_TO_DATE(b.date, '%b %d, %Y')) DESC, b.id DESC
                     ");
                     $posts = $stmt->fetchAll();
                 }
@@ -248,7 +248,7 @@ if ($method === 'GET') {
                     SELECT b.id, b.title, b.excerpt, b.content, b.author, b.date, b.read_time AS readTime, b.category_id, c.name AS category, b.image_glow AS imageGlow, b.created_at, b.updated_at
                     FROM blogs b
                     LEFT JOIN categories c ON b.category_id = c.id
-                    ORDER BY COALESCE(b.updated_at, b.created_at) DESC, STR_TO_DATE(b.date, '%b %d, %Y') DESC, b.id DESC
+                    ORDER BY COALESCE(b.updated_at, b.created_at) DESC, COALESCE(STR_TO_DATE(b.date, '%b %d, %Y %H:%i:%s'), STR_TO_DATE(b.date, '%b %d, %Y')) DESC, b.id DESC
                 ");
                 $posts = $stmt->fetchAll();
             }
@@ -353,7 +353,7 @@ if ($method === 'POST') {
             }
             
             $readTime = calculateReadTimeHtml($content);
-            $date = date('M d, Y');
+            $date = date('M d, Y H:i:s');
             
             $stmt = $pdo->prepare("
                 INSERT INTO blogs (id, title, excerpt, content, author, date, read_time, category_id, image_glow) 
@@ -402,7 +402,7 @@ if ($method === 'POST') {
             'excerpt' => $excerpt,
             'content' => $content, // Saved directly as string HTML
             'author' => $author,
-            'date' => date('M d, Y'),
+            'date' => date('M d, Y H:i:s'),
             'readTime' => $readTime,
             'category' => $categoryName,
             'category_id' => $categoryId,
@@ -464,7 +464,7 @@ if ($method === 'PUT') {
                 'excerpt' => $excerpt,
                 'content' => $content,
                 'author' => $author,
-                'date' => date('M d, Y'),
+                'date' => date('M d, Y H:i:s'),
                 'read_time' => $readTime,
                 'category_id' => $categoryId,
                 'image_glow' => $imageGlow
@@ -503,7 +503,7 @@ if ($method === 'PUT') {
         $blogs[$foundIndex]['category_id'] = $categoryId;
         $blogs[$foundIndex]['imageGlow'] = $imageGlow;
         $blogs[$foundIndex]['readTime'] = $readTime;
-        $blogs[$foundIndex]['date'] = date('M d, Y');
+        $blogs[$foundIndex]['date'] = date('M d, Y H:i:s');
         $blogs[$foundIndex]['updated_at'] = date('Y-m-d H:i:s');
         
         if (saveFallbackBlogs($blogsFile, $blogs)) {
@@ -529,6 +529,21 @@ if ($method === 'DELETE') {
         try {
             $stmt = $pdo->prepare("DELETE FROM blogs WHERE id = :id");
             $stmt->execute(['id' => $id]);
+            
+            // ALSO DELETE FROM FALLBACK JSON SO IT DOES NOT SYNC BACK!
+            $blogs = getFallbackBlogs($blogsFile);
+            $foundIndex = -1;
+            foreach ($blogs as $index => $post) {
+                if ($post['id'] === $id) {
+                    $foundIndex = $index;
+                    break;
+                }
+            }
+            if ($foundIndex !== -1) {
+                array_splice($blogs, $foundIndex, 1);
+                saveFallbackBlogs($blogsFile, $blogs);
+            }
+            
             echo json_encode(['success' => true]);
         } catch (PDOException $e) {
             http_response_code(500);

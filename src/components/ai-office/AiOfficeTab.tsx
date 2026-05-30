@@ -179,7 +179,7 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
       excerpt: draft?.excerpt || "A new technical article published on the site.",
       content: draft?.content || `<p>This is the content for the blog post.</p>`,
       author: 'Quantum AI Writer (Simulated)',
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) + ' ' + new Date().toTimeString().split(' ')[0],
       readTime: "4 min read",
       category: 'Privacy & Security',
       category_id: draft?.category_id || 'privacy-security',
@@ -251,13 +251,105 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
       () => {
         let draft: DraftContent | string | null = 'Draft completed.';
         if (task.type === 'blog') {
-          draft = {
-            title: task.title,
-            excerpt: "How local browser processing safeguards user data and improves speeds.",
-            content: `<h2>Local Processing on Quantum Qbit</h2><p>In this article we discuss local first processing. This is a simulated local post generated during local dev testing mode.</p>`,
-            category_id: "privacy-security",
-            imageGlow: "rgba(0, 242, 254, 0.1)"
-          };
+          const isJob = task.title.toLowerCase().includes('job') || 
+                        task.title.toLowerCase().includes('recruitment') || 
+                        task.title.toLowerCase().includes('vacancy') || 
+                        task.title.toLowerCase().includes('exam') || 
+                        task.title.toLowerCase().includes('bharti') || 
+                        task.title.toLowerCase().includes('upsssc') ||
+                        (task.description && (
+                          task.description.toLowerCase().includes('job') ||
+                          task.description.toLowerCase().includes('recruitment') ||
+                          task.description.toLowerCase().includes('exam')
+                        ));
+          if (isJob) {
+            draft = {
+              title: task.title,
+              excerpt: `Latest recruitment notification for ${task.title}. Apply online, check eligibility, age limit, selection criteria, important dates and fees.`,
+              content: `<h2>${task.title} Notification</h2>
+<p>Here are the complete notification details, important dates, and eligibility criteria for ${task.title}. Candidates can apply online through the official portal before the deadline. Make sure to prepare your documents and compress photo/signature files to correct upload size using browser-only local compression tools before submitting the form.</p>
+<table class="job-details-table">
+  <tr>
+    <td colspan="2" class="table-header-main">
+      <h2>Uttar Pradesh Subordinate Service Selection Commission (UPSSSC)</h2>
+      <h3>UPSSSC Lower PCS (Graduate Level) Recruitment 2026</h3>
+      <div class="highlight-cyan" style="text-align: center;">Advt No. 07-Exam/2026 : Short Details of Notification</div>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <div class="highlight-cyan" style="text-align: center; font-size: 1.1rem; margin-bottom: 8px;">Important Dates</div>
+      <ul>
+        <li>Application Begin : <span class="highlight-green">29/05/2026</span></li>
+        <li>Last Date for Apply Online : <span class="highlight-red">18/06/2026</span></li>
+        <li>Last Date Pay Exam Fee : <span class="highlight-red">18/06/2026</span></li>
+        <li>Correction Last Date : <span class="highlight-cyan">25/06/2026</span></li>
+        <li>Exam Date : <span class="highlight-cyan">As Per Schedule</span></li>
+      </ul>
+    </td>
+    <td>
+      <div class="highlight-cyan" style="text-align: center; font-size: 1.1rem; margin-bottom: 8px;">Application Fee</div>
+      <ul>
+        <li>General / OBC / EWS : <span class="highlight-green">25/-</span></li>
+        <li>SC / ST : <span class="highlight-green">25/-</span></li>
+        <li>PH (Divyang) : <span class="highlight-green">25/-</span></li>
+        <li>Payment Mode : Online Debit/Credit Card, Net Banking</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <div class="highlight-cyan" style="text-align: center; font-size: 1.1rem; margin-bottom: 8px;">Age Limit as on 01/07/2026</div>
+      <ul>
+        <li>Minimum Age : <strong>18 Years</strong></li>
+        <li>Maximum Age : <strong>40 Years</strong></li>
+        <li>Age Relaxation Extra as per UPSSSC Lower PCS Recruitment Rules.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <div class="highlight-cyan" style="text-align: center; font-size: 1.1rem; margin-bottom: 8px;">Vacancy Details &amp; Eligibility (Total : 2285 Posts)</div>
+      <ul>
+        <li><strong>Post Name:</strong> Combined Lower Subordinate (Lower PCS)</li>
+        <li><strong>Total Post:</strong> 2285</li>
+        <li><strong>Eligibility:</strong> Bachelor Degree in Any Stream from Any Recognized University. For Executive Officer, Graduation with 'O' Level is required.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <div class="highlight-cyan" style="text-align: center; font-size: 1.1rem; margin-bottom: 8px;">Some Useful Important Links</div>
+      <table style="width: 100%; border: none; margin: 0; background: transparent;">
+        <tr style="background: transparent;">
+          <td style="border: none; padding: 6px;"><strong>Apply Online:</strong></td>
+          <td style="border: none; padding: 6px;"><a href="https://upsssc.gov.in" target="_blank">Click Here</a></td>
+        </tr>
+        <tr style="background: transparent;">
+          <td style="border: none; padding: 6px;"><strong>Download Notification:</strong></td>
+          <td style="border: none; padding: 6px;"><a href="#" target="_blank">Click Here</a></td>
+        </tr>
+        <tr style="background: transparent;">
+          <td style="border: none; padding: 6px;"><strong>Official Website:</strong></td>
+          <td style="border: none; padding: 6px;"><a href="https://upsssc.gov.in" target="_blank">UPSSSC Official Portal</a></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<p>Note: Remember to use local tools on quantumqbit.in to resize, crop and compress your photos and signatures. Since all processing happens in your browser locally, your personal and sensitive documents never reach third-party servers.</p>`,
+              category_id: "general-utilities",
+              imageGlow: "rgba(157, 78, 221, 0.15)"
+            };
+          } else {
+            draft = {
+              title: task.title,
+              excerpt: "How local browser processing safeguards user data and improves speeds.",
+              content: `<h2>Local Processing on Quantum Qbit</h2><p>In this article we discuss local first processing. This is a simulated local post generated during local dev testing mode.</p>`,
+              category_id: "privacy-security",
+              imageGlow: "rgba(0, 242, 254, 0.1)"
+            };
+          }
         }
         
         setTimeout(() => {

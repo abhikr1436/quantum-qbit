@@ -1503,4 +1503,101 @@ body.page-admin #bottom-sticky-banner-ad {
   background: rgba(0, 242, 254, 0.3);
 }
 
+/* Job Details Sarkari-style Table Theme */
+.rich-html-blog table.job-details-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2rem 0;
+  border: 1px solid var(--border-glass-active);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: rgba(10, 15, 30, 0.6);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), 
+              inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.rich-html-blog table.job-details-table th,
+.rich-html-blog table.job-details-table td {
+  padding: 14px 18px;
+  border: 1px solid var(--border-glass);
+  vertical-align: top;
+}
+
+/* Headings inside the job details table */
+.rich-html-blog table.job-details-table h2,
+.rich-html-blog table.job-details-table h3,
+.rich-html-blog table.job-details-table h4 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+  text-shadow: none;
+}
+
+.rich-html-blog table.job-details-table h2 {
+  color: var(--primary);
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+.rich-html-blog table.job-details-table h3 {
+  color: var(--secondary, #9d4ede);
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+/* Colored text highlights within job table */
+.rich-html-blog table.job-details-table .highlight-red {
+  color: #ff4a6b;
+  font-weight: bold;
+}
+
+.rich-html-blog table.job-details-table .highlight-green {
+  color: #10b981;
+  font-weight: bold;
+}
+
+.rich-html-blog table.job-details-table .highlight-cyan {
+  color: var(--primary);
+  font-weight: bold;
+}
+
+.rich-html-blog table.job-details-table ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.rich-html-blog table.job-details-table li {
+  margin-bottom: 0.4rem;
+  font-size: 0.95rem;
+}
+
+/* Links row styling */
+.rich-html-blog table.job-details-table a {
+  color: var(--primary);
+  text-shadow: 0 0 5px var(--primary-glow);
+  font-weight: 600;
+}
+
+.rich-html-blog table.job-details-table a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+/* Center alignments and headers */
+.rich-html-blog table.job-details-table .table-header-main {
+  background: rgba(0, 242, 254, 0.08);
+  text-align: center;
+  padding: 20px;
+}
+
+.rich-html-blog table.job-details-table .section-title {
+  background: rgba(255, 255, 255, 0.03);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
 
