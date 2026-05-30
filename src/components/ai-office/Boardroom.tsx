@@ -64,7 +64,6 @@ export const Boardroom: React.FC<BoardroomProps> = ({
   systemLogs = [],
   tasks = [],
   timeLeft = '--:--',
-  timerColor = 'rgba(255,255,255,0.6)',
   runLoopLoading = false,
   onTriggerAgentLoop
 }) => {
