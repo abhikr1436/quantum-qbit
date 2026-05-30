@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Users, MessageSquare, KanbanSquare, Sparkles, Search, Settings as SettingsIcon, RefreshCw, Layers, ShieldCheck } from 'lucide-react';
 import { OrgChart } from './OrgChart';
 import { WorkspaceChat } from './WorkspaceChat';
@@ -70,7 +70,21 @@ interface SystemLog {
   message: string;
 }
 
-export const AiOfficeTab: React.FC = () => {
+interface LocalOfficeDB {
+  config: OfficeConfig;
+  agents: Agent[];
+  tasks: OfficeTask[];
+  chatLogs: ChatMessage[];
+  systemLogs: SystemLog[];
+  publishedTopics: string[];
+}
+
+interface AiOfficeTabProps {
+  isLocalMode?: boolean;
+}
+
+
+export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false }) => {
   const [activeTab, setActiveTab] = useState<'org' | 'chat' | 'tasks' | 'boardroom' | 'seo' | 'settings'>('boardroom');
   
   // Dashboard States
@@ -91,9 +105,340 @@ export const AiOfficeTab: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState<string>('--:--');
   const [timerColor, setTimerColor] = useState<string>('rgba(255,255,255,0.6)');
 
-  // Fetch full dashboard state from PHP backend
-  const fetchDashboardData = async (showLoading = false) => {
+  // Local Storage Database Mock logic
+  const getLocalDB = () => {
+    const local = localStorage.getItem('quantum_office_db');
+    if (local) {
+      try {
+        return JSON.parse(local);
+      } catch {
+        // Fallback
+      }
+    }
+    const defaultDB = {
+      config: {
+        websitePath: '.',
+        deepseekKey: 'sk-d98...e2bf2',
+        githubToken: 'github_pat_11CD...zRHM9WRe',
+        automationIntervalMinutes: 60,
+        isAutomationActive: true,
+        lastRunTimestamp: new Date().toISOString(),
+        lastBrainstormTimestamp: new Date().toISOString()
+      },
+      agents: [
+        { name: 'Sophia', role: 'CEO', avatar: '💼', bio: 'Visionary executive who makes final approvals on business objectives, web deployments, and articles. Ensures everything matches the high standards of Quantum Qbit.', status: 'Idle' },
+        { name: 'Alex', role: 'Manager', avatar: '📋', bio: 'Coordinates task flows, parses board directives, assigns work to specialists, reviews drafts, and prepares reports for Sophia.', status: 'Idle' },
+        { name: 'Mark', role: 'Marketing', avatar: '✍️', bio: 'Specializes in keyword optimization, content writing, SEO research, and drafting educational technical blogs.', status: 'Idle' },
+        { name: 'Sarah', role: 'Social Media', avatar: '🐦', bio: 'Maintains company social media channels. Creates promotions, Twitter threads, LinkedIn summaries, and monitors online traffic.', status: 'Idle' },
+        { name: 'Codey', role: 'IT Developer', avatar: '💻', bio: 'Full-stack coder. Inspects target page elements, updates components, and develops new utilities for local-first browsers.', status: 'Idle' },
+        { name: 'Deployer', role: 'DevOps', avatar: '🚀', bio: 'Monitors build health, verifies code formats, compiles outputs, and pushes approved articles/code changes to website directories.', status: 'Idle' },
+        { name: 'Harper', role: 'HR', avatar: '🤝', bio: 'Handles personnel details, team cohesion, drafts job postings, and aligns core values.', status: 'Idle' }
+      ],
+      tasks: [],
+      chatLogs: [
+        {
+          id: 'welcome',
+          sender: 'Sophia',
+          text: 'Welcome to the Quantum Qbit Virtual Office! Here we brainstorm and build local-first features offline.',
+          timestamp: new Date(Date.now() - 3600000).toISOString()
+        }
+      ],
+      systemLogs: [
+        {
+          timestamp: new Date(Date.now() - 3600000).toISOString(),
+          agent: 'System',
+          message: 'Local Simulation database initialized.'
+        }
+      ],
+      publishedTopics: []
+    };
+    localStorage.setItem('quantum_office_db', JSON.stringify(defaultDB));
+    return defaultDB;
+  };
+
+  const saveLocalDB = (db: LocalOfficeDB) => {
+    localStorage.setItem('quantum_office_db', JSON.stringify(db));
+  };
+
+  // Local simulated blog publisher
+  const publishBlogLocally = (title: string, draft: DraftContent | null) => {
+    const localBlogsStr = localStorage.getItem('quantum_blogs');
+    let blogs = [];
+    if (localBlogsStr) {
+      try {
+        blogs = JSON.parse(localBlogsStr);
+      } catch {
+        // Fallback
+      }
+    }
+    
+    const slug = title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/[\s-]+/g, '-').trim();
+    const newBlog = {
+      id: slug,
+      title: title,
+      excerpt: draft?.excerpt || "A new technical article published on the site.",
+      content: draft?.content || `<p>This is the content for the blog post.</p>`,
+      author: 'Quantum AI Writer (Simulated)',
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+      readTime: "4 min read",
+      category: 'Privacy & Security',
+      category_id: draft?.category_id || 'privacy-security',
+      imageGlow: draft?.imageGlow || 'rgba(0, 242, 254, 0.1)',
+      created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+      updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+    };
+    
+    blogs.unshift(newBlog);
+    localStorage.setItem('quantum_blogs', JSON.stringify(blogs));
+  };
+
+  // Asynchronous Client-side Simulation state machine
+  const startLocalSimulation = (targetTaskId?: string) => {
+    if (!isLocalMode) return;
+    
+    const db = getLocalDB();
+    const tasks = db.tasks;
+    const task = (targetTaskId ? tasks.find((t: OfficeTask) => t.id === targetTaskId) : tasks.find((t: OfficeTask) => t.status === 'todo')) as OfficeTask | undefined;
+    
+    if (!task) {
+      simulateLocalBrainstorm();
+      return;
+    }
+    
+    const updateTaskStage = (status: string, agent: string, agentStatus: string, chatText: string, delay: number, next: () => void) => {
+      setTimeout(() => {
+        const currentDB = getLocalDB();
+        const currentTask = currentDB.tasks.find((t: OfficeTask) => t.id === (task as OfficeTask).id);
+        if (!currentTask) return;
+        
+        currentTask.status = status;
+        currentTask.updatedAt = new Date().toISOString();
+        
+        currentDB.agents = currentDB.agents.map((a: Agent) => {
+          if (a.name === agent) {
+            return { ...a, status: agentStatus };
+          }
+          return a.status === agentStatus ? { ...a, status: 'Idle' } : a;
+        });
+        
+        currentDB.chatLogs.push({
+          id: 'msg-' + Date.now() + Math.random(),
+          sender: agent,
+          text: chatText,
+          timestamp: new Date().toISOString(),
+          taskId: currentTask.id
+        });
+        
+        if (!currentDB.systemLogs) currentDB.systemLogs = [];
+        currentDB.systemLogs.push({
+          timestamp: new Date().toISOString(),
+          agent: agent,
+          message: `${agent} status changed to: ${agentStatus}`
+        });
+        
+        saveLocalDB(currentDB);
+        fetchDashboardData(false);
+        next();
+      }, delay);
+    };
+    
+    updateTaskStage(
+      'inprogress',
+      task.assignee,
+      'Drafting Content',
+      `Acknowledged, @Alex. Starting work on "${task.title}".`,
+      500,
+      () => {
+        let draft: DraftContent | string | null = 'Draft completed.';
+        if (task.type === 'blog') {
+          draft = {
+            title: task.title,
+            excerpt: "How local browser processing safeguards user data and improves speeds.",
+            content: `<h2>Local Processing on Quantum Qbit</h2><p>In this article we discuss local first processing. This is a simulated local post generated during local dev testing mode.</p>`,
+            category_id: "privacy-security",
+            imageGlow: "rgba(0, 242, 254, 0.1)"
+          };
+        }
+        
+        setTimeout(() => {
+          const currentDB = getLocalDB();
+          const currentTask = currentDB.tasks.find((t: OfficeTask) => t.id === (task as OfficeTask).id);
+          if (!currentTask) return;
+          currentTask.draftContent = draft;
+          saveLocalDB(currentDB);
+          
+          updateTaskStage(
+            'manager_review',
+            task.assignee,
+            'Idle',
+            `I've finished drafting the work for "${task.title}". @Alex, please check my submission!`,
+            10,
+            () => {
+              setTimeout(() => {
+                const innerDB = getLocalDB();
+                const innerTask = innerDB.tasks.find((t: OfficeTask) => t.id === (task as OfficeTask).id);
+                if (!innerTask) return;
+                innerTask.reviews.push({
+                  agent: 'Alex',
+                  reviewText: 'Excellent draft. Fits our criteria perfectly. Submitting to CEO.',
+                  decision: 'approved',
+                  timestamp: new Date().toISOString()
+                });
+                saveLocalDB(innerDB);
+                
+                updateTaskStage(
+                  'ceo_approval',
+                  'Alex',
+                  'Idle',
+                  `Draft for "${task.title}" is approved by me. @Sophia, please review and give final sign-off!`,
+                  10,
+                  () => {
+                    setTimeout(() => {
+                      const finalDB = getLocalDB();
+                      const finalTask = finalDB.tasks.find((t: OfficeTask) => t.id === (task as OfficeTask).id);
+                      if (!finalTask) return;
+                      finalTask.reviews.push({
+                        agent: 'Sophia',
+                        reviewText: 'Outstanding work. Pushing live.',
+                        decision: 'approved',
+                        timestamp: new Date().toISOString()
+                      });
+                      saveLocalDB(finalDB);
+                      
+                      updateTaskStage(
+                        'completed',
+                        'Sophia',
+                        'Idle',
+                        `Approved! Excellent job @${task.assignee}. @Deployer, please push this update live.`,
+                        10,
+                        () => {
+                          setTimeout(() => {
+                            const depDB = getLocalDB();
+                            depDB.agents = depDB.agents.map((a: Agent) => 
+                              a.name === 'Deployer' ? { ...a, status: 'Deploying' } : a
+                            );
+                            saveLocalDB(depDB);
+                            fetchDashboardData(false);
+                            
+                            setTimeout(() => {
+                              const doneDB = getLocalDB();
+                              doneDB.agents = doneDB.agents.map((a: Agent) => 
+                                a.name === 'Deployer' ? { ...a, status: 'Idle' } : a
+                              );
+                              doneDB.config.lastRunTimestamp = new Date().toISOString();
+                              doneDB.chatLogs.push({
+                                id: 'msg-' + Date.now() + Math.random(),
+                                sender: 'Deployer',
+                                text: `Deployment successful for "${task.title}"! Changes are live on local simulation.`,
+                                timestamp: new Date().toISOString(),
+                                taskId: task.id
+                              });
+                              
+                              if (!doneDB.systemLogs) doneDB.systemLogs = [];
+                              doneDB.systemLogs.push({
+                                timestamp: new Date().toISOString(),
+                                agent: 'Deployer',
+                                message: `Simulated deployment complete: "${task.title}"`
+                              });
+                              
+                              if (task.type === 'blog') {
+                                publishBlogLocally(task.title, draft as DraftContent);
+                              }
+                              
+                              saveLocalDB(doneDB);
+                              fetchDashboardData(false);
+                            }, 1500);
+                          }, 500);
+                        }
+                      );
+                    }, 1200);
+                  }
+                );
+              }, 1200);
+            }
+          );
+        }, 1500);
+      }
+    );
+  };
+
+  const simulateLocalBrainstorm = () => {
+    const db = getLocalDB();
+    db.agents = db.agents.map((a: Agent) => 
+      a.name === 'Mark' ? { ...a, status: 'Researching trending topics...' } : a
+    );
+    
+    if (!db.systemLogs) db.systemLogs = [];
+    db.systemLogs.push({
+      timestamp: new Date().toISOString(),
+      agent: 'Mark',
+      message: 'Mark started researching trending topics from Google Trends (Simulation)'
+    });
+    
+    saveLocalDB(db);
+    fetchDashboardData(false);
+    
+    setTimeout(() => {
+      const innerDB = getLocalDB();
+      const trends = [
+        "ISRO Gaganyaan Space Mission Launch Schedule (Search Volume: 500K+)",
+        "Delhi-NCR Storm and Weather Alert safety protocols (Search Volume: 200K+)",
+        "Aadhaar card masking offline privacy instructions (Search Volume: 100K+)",
+        "React 19 Server Components architecture migration (Search Volume: 50K+)"
+      ];
+      const selectedTrend = trends[Math.floor(Math.random() * trends.length)];
+      const title = selectedTrend.split(' (')[0];
+      
+      innerDB.agents = innerDB.agents.map((a: Agent) => 
+        a.name === 'Mark' ? { ...a, status: 'Idle' } : a
+      );
+      
+      const newTask = {
+        id: 'task-' + Math.random().toString(36).substr(2, 9),
+        title: `How to guide for ${title}`,
+        description: `Research context: ${selectedTrend}. Features unit converters or offline tools of quantumqbit.in. Keywords: ${title.split(' ')[0]}, offline converter, privacy secure.`,
+        type: 'blog',
+        assignee: 'Mark',
+        status: 'todo',
+        draftContent: null,
+        reviews: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      innerDB.tasks.push(newTask);
+      
+      innerDB.chatLogs.push({
+        id: 'msg-' + Date.now() + Math.random(),
+        sender: 'Alex',
+        text: `📝 [NEW TOPIC QUEUED] @Mark will write "${newTask.title}" — researched from live trending data. Added to workflows!`,
+        timestamp: new Date().toISOString(),
+        taskId: newTask.id
+      });
+      
+      saveLocalDB(innerDB);
+      fetchDashboardData(false);
+      
+      startLocalSimulation(newTask.id);
+    }, 1500);
+  };
+
+  // Fetch full dashboard state from PHP backend or LocalStorage
+  const fetchDashboardData = useCallback(async (showLoading = false) => {
     if (showLoading) setLoading(true);
+    
+    if (isLocalMode) {
+      const data = getLocalDB();
+      setConfig(data.config || null);
+      setAgents(data.agents || []);
+      setTasks(data.tasks || []);
+      setChatLogs(data.chatLogs || []);
+      setSystemLogs(data.systemLogs || []);
+      setErrorMsg(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/ai_office.php?action=dashboard');
       if (response.ok) {
@@ -112,7 +457,7 @@ export const AiOfficeTab: React.FC = () => {
     } finally {
       if (showLoading) setLoading(false);
     }
-  };
+  }, [isLocalMode]);
 
   // Initial fetch + background syncing (every 6 seconds)
   useEffect(() => {
@@ -121,7 +466,7 @@ export const AiOfficeTab: React.FC = () => {
       fetchDashboardData(false);
     }, 6000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchDashboardData]);
 
   // Countdown Timer logic based on lastRunTimestamp and automationIntervalMinutes
   useEffect(() => {
@@ -155,10 +500,10 @@ export const AiOfficeTab: React.FC = () => {
         const overdueMinutes = Math.abs(diffMs) / 60000;
         if (overdueMinutes > 15) {
           setTimeLeft('Overdue / Stalled');
-          setTimerColor('#ef4444'); // Red alert
+          setTimerColor('#ef4444');
         } else {
           setTimeLeft('Running...');
-          setTimerColor('#10b981'); // Green active
+          setTimerColor('#10b981');
         }
       } else {
         const minutes = Math.floor(diffMs / 60000);
@@ -166,7 +511,7 @@ export const AiOfficeTab: React.FC = () => {
         setTimeLeft(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
         
         if (minutes < 5) {
-          setTimerColor('#f59e0b'); // Amber for final 5 mins
+          setTimerColor('#f59e0b');
         } else {
           setTimerColor('rgba(255,255,255,0.8)');
         }
@@ -180,6 +525,14 @@ export const AiOfficeTab: React.FC = () => {
 
   // Update Settings
   const handleUpdateConfig = async (newConfig: Partial<OfficeConfig>) => {
+    if (isLocalMode) {
+      const db = getLocalDB();
+      db.config = { ...db.config, ...newConfig };
+      saveLocalDB(db);
+      fetchDashboardData(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/ai_office.php?action=save_config', {
         method: 'POST',
@@ -199,6 +552,19 @@ export const AiOfficeTab: React.FC = () => {
 
   // Send workspace chat message
   const handleSendMessage = async (text: string) => {
+    if (isLocalMode) {
+      const db = getLocalDB();
+      db.chatLogs.push({
+        id: 'msg-' + Date.now() + Math.random(),
+        sender: 'Board',
+        text,
+        timestamp: new Date().toISOString()
+      });
+      saveLocalDB(db);
+      fetchDashboardData(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/ai_office.php?action=chat', {
         method: 'POST',
@@ -216,6 +582,69 @@ export const AiOfficeTab: React.FC = () => {
   // Submit boardroom mandate directive
   const handleSendDirective = async (text: string) => {
     setBoardroomProcessing(true);
+    
+    if (isLocalMode) {
+      setTimeout(() => {
+        const db = getLocalDB();
+        if (!db.systemLogs) db.systemLogs = [];
+        db.systemLogs.push({
+          timestamp: new Date().toISOString(),
+          agent: 'System',
+          message: `Boardroom Directive received: "${text}"`
+        });
+        
+        const isBlog = text.toLowerCase().includes('blog') || text.toLowerCase().includes('article') || text.toLowerCase().includes('write');
+        const isSocial = text.toLowerCase().includes('social') || text.toLowerCase().includes('twitter') || text.toLowerCase().includes('post');
+        
+        let title = 'SEO Audit and Enhancements';
+        let assignee = 'Codey';
+        let type = 'feature';
+        let desc = 'Review browser utility layouts and tags for optimal crawler parsing.';
+        
+        if (isBlog) {
+          title = 'Write Trending Technical Article';
+          assignee = 'Mark';
+          type = 'blog';
+          desc = `Draft an educational blog post on the topic requested by the board: "${text}"`;
+        } else if (isSocial) {
+          title = 'Promote Quantum Tools on Socials';
+          assignee = 'Sarah';
+          type = 'social';
+          desc = `Draft a series of posts showcasing local-first tool performance based on: "${text}"`;
+        }
+        
+        const newTask = {
+          id: 'task-' + Math.random().toString(36).substr(2, 9),
+          title,
+          description: desc,
+          type,
+          assignee,
+          status: 'todo',
+          draftContent: null,
+          reviews: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        
+        db.tasks.push(newTask);
+        
+        db.chatLogs.push({
+          id: 'msg-' + Date.now() + Math.random(),
+          sender: 'Alex',
+          text: `Board directive received. I've created task "${newTask.title}" and assigned it to @${newTask.assignee}.`,
+          timestamp: new Date().toISOString(),
+          taskId: newTask.id
+        });
+        
+        saveLocalDB(db);
+        fetchDashboardData(false);
+        setBoardroomProcessing(false);
+        
+        startLocalSimulation(newTask.id);
+      }, 800);
+      return;
+    }
+
     try {
       const response = await fetch('/api/ai_office.php?action=boardroom_submit', {
         method: 'POST',
@@ -238,6 +667,15 @@ export const AiOfficeTab: React.FC = () => {
   // Trigger next step of the agent state machine loop (dispatches GitHub Action)
   const handleTriggerAgentLoop = async () => {
     setRunLoopLoading(true);
+    
+    if (isLocalMode) {
+      setTimeout(() => {
+        setRunLoopLoading(false);
+        startLocalSimulation();
+      }, 600);
+      return;
+    }
+
     try {
       const response = await fetch('/api/ai_office.php?action=trigger_cycle', {
         method: 'POST'
@@ -259,6 +697,18 @@ export const AiOfficeTab: React.FC = () => {
 
   // Manually override/update task status
   const handleUpdateTaskStatus = async (id: string, newStatus: string) => {
+    if (isLocalMode) {
+      const db = getLocalDB();
+      const task = db.tasks.find((t: OfficeTask) => t.id === id);
+      if (task) {
+        task.status = newStatus;
+        task.updatedAt = new Date().toISOString();
+        saveLocalDB(db);
+        fetchDashboardData(false);
+      }
+      return;
+    }
+
     try {
       const response = await fetch('/api/ai_office.php?action=update_task', {
         method: 'POST',
@@ -275,6 +725,20 @@ export const AiOfficeTab: React.FC = () => {
 
   // Trigger SEO audit check
   const handleTriggerAudit = async () => {
+    if (isLocalMode) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({
+            score: 96,
+            pagesScanned: ['/', '/blogs', '/about'],
+            criticalIssues: 0,
+            warnings: 2,
+            passedChecks: 12
+          });
+        }, 1000);
+      });
+    }
+
     const response = await fetch('/api/ai_office.php?action=seo_audit');
     if (!response.ok) {
       const errData = await response.json();

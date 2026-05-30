@@ -1259,7 +1259,7 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
 
         {activeTab === 'office' && (
           <div style={styles.tabContent}>
-            <AiOfficeTab />
+            <AiOfficeTab isLocalMode={isLocalMode} />
           </div>
         )}
       </div>

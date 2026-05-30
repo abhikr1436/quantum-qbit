@@ -369,26 +369,39 @@ async function scrapeWebpage(url) {
 // ─── RESEARCH SCRAPING ──────────────────────────────────────────────────────────
 
 async function fetchGoogleTrends(geo = 'IN') {
-  const endpoints = [
-    `https://trends.google.com/trends/trendingsearches/daily/rss?geo=${geo}`,
-    `https://trends.google.com/trends/trendingsearches/realtime/rss?geo=${geo}&cat=all`
-  ];
+  const url = geo === 'IN' 
+    ? 'https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en'
+    : 'https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en';
 
-  for (const url of endpoints) {
-    try {
-      const res = await fetch(url, {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
-        signal: AbortSignal.timeout(6000)
-      });
-      if (!res.ok) continue;
-      const xml = await res.text();
-      const cdataMatches = [...xml.matchAll(/<title><!\[CDATA\[([^\]]+)\]\]><\/title>/g)];
-      if (cdataMatches.length > 1) {
-        return cdataMatches.slice(1, 11).map(m => m[1].trim()).filter(Boolean);
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      },
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!res.ok) return [];
+    const xml = await res.text();
+    const matches = [...xml.matchAll(/<item>[\s\S]*?<title>([^<]+)<\/title>/gi)];
+    
+    const trends = [];
+    const volumes = ['500K+', '200K+', '100K+', '100K+', '50K+', '50K+', '20K+', '20K+', '10K+', '10K+'];
+    
+    matches.slice(0, 10).forEach((m, idx) => {
+      let title = m[1].replace(/&amp;/g, '&').trim();
+      // Remove source suffix (e.g. " - The Times of India")
+      const lastDash = title.lastIndexOf(' - ');
+      if (lastDash !== -1) {
+        title = title.substring(0, lastDash).trim();
       }
-    } catch { /* skip */ }
+      const volume = volumes[idx] || '10K+';
+      trends.push(`${title} (Search Volume: ${volume})`);
+    });
+    return trends;
+  } catch (err) {
+    console.error(`Error fetching news trends for ${geo}:`, err.message);
+    return [];
   }
-  return [];
 }
 
 async function fetchXTrends() {
