@@ -309,6 +309,7 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
     if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
     
     let pollCount = 0;
+    let lastLogCount = 0;
     
     const poll = async () => {
       pollCount++;
@@ -322,30 +323,39 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
               return `[${time}] [${log.agent.toUpperCase()}] ${log.message}`;
             });
             setLogs(formattedLogs);
+            lastLogCount = formattedLogs.length;
           }
           
-          // Check if Deployer published and marked Idle
-          const activeTask = data.tasks && data.tasks.find((t: { status: string }) => t.status !== 'completed');
-          if (!activeTask && pollCount > 3) {
-            // Task has completed
+          // Check if runner explicitly finished via the final completion log message
+          const allLogs: SystemLog[] = data.systemLogs || [];
+          const runnerDone = allLogs.some((l: SystemLog) => 
+            l.message && l.message.includes('Runner completed all cycle steps')
+          );
+
+          // Also check task completion: all tasks are marked completed
+          const tasks: Array<{ status: string }> = data.tasks || [];
+          const allTasksDone = tasks.length > 0 && tasks.every((t: { status: string }) => t.status === 'completed');
+          
+          if ((runnerDone || allTasksDone) && pollCount > 3) {
             setIsRunning(false);
             setActiveTask(null);
-            setStatusMessage('Cloud Campaign Complete');
+            setStatusMessage('Cloud Campaign Complete ✓');
             setStatusColor('#10b981');
             if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
             fetchConfig();
+            return;
           }
         }
       } catch (e) {
         console.error("Polling logs error", e);
       }
       
-      // Stop polling after 45 attempts (approx 3 minutes) to avoid infinite loops
-      if (pollCount > 45) {
+      // Stop polling after 150 attempts (~10 minutes) to avoid infinite loops
+      if (pollCount > 150) {
         setIsRunning(false);
         setActiveTask(null);
-        setStatusMessage('Polling Timed Out');
-        setStatusColor('#ef4444');
+        setStatusMessage('Polling Timed Out — Check logs for last known status');
+        setStatusColor('#f59e0b');
         if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
       }
     };

@@ -475,6 +475,8 @@ function recordPublishedTopic(db, title) {
 async function executeAgentWork(db, task, openai) {
   const assignee = task.assignee;
   setAgentStatus(db, assignee, `Drafting content for ${task.title}`);
+  setAgentStatus(db, 'System', 'Active', `✍️ ${assignee} started drafting: "${task.title}"`);
+  writeDB(db);
 
   if (!openai) {
     task.draftContent = getMockDraftContent(task);
@@ -552,6 +554,8 @@ Respond with a JSON object containing:
     task.status = 'manager_review';
     task.updatedAt = new Date().toISOString();
     setAgentStatus(db, assignee, 'Idle');
+    const wordCount = result.content ? result.content.split(' ').length : 0;
+    setAgentStatus(db, assignee, `📄 Draft complete for "${result.title || task.title}" — ${wordCount} words, category: ${result.category_id || 'n/a'}. Sending to Alex for review.`);
     addSystemMsg(db, assignee, `I've finished drafting the work for "${task.title}". @Alex, please check my submission!`, task.id);
     return true;
   } catch (err) {
@@ -567,6 +571,8 @@ Respond with a JSON object containing:
 
 async function executeManagerReview(db, task, openai) {
   setAgentStatus(db, 'Alex', `Reviewing work for ${task.title}`);
+  setAgentStatus(db, 'System', 'Active', `🔍 Alex (Manager) reviewing draft for "${task.title}"...`);
+  writeDB(db);
   const draftString = typeof task.draftContent === 'object' ? JSON.stringify(task.draftContent, null, 2) : task.draftContent;
 
   if (!openai) {
@@ -613,9 +619,11 @@ Respond with a JSON object:
 
     if (result.decision === 'approved') {
       task.status = 'ceo_approval';
+      setAgentStatus(db, 'System', 'Active', `✅ Alex approved draft for "${task.title}". Forwarding to Sophia (CEO) for final sign-off.`);
       addSystemMsg(db, 'Alex', `Draft for "${task.title}" is approved by me. @Sophia, please review and give the final sign-off! Notes: ${result.reviewText}`, task.id);
     } else {
       task.status = 'todo'; // Rework
+      setAgentStatus(db, 'System', 'Active', `🔄 Alex rejected draft for "${task.title}". Sending back to ${task.assignee} for revision.`);
       addSystemMsg(db, 'Alex', `I've rejected the draft for "${task.title}". @${task.assignee}, please revise based on feedback: ${result.reviewText}`, task.id);
     }
 
@@ -638,6 +646,8 @@ Respond with a JSON object:
 
 async function executeCEOApproval(db, task, openai) {
   setAgentStatus(db, 'Sophia', `Evaluating ${task.title}`);
+  setAgentStatus(db, 'System', 'Active', `👑 Sophia (CEO) evaluating "${task.title}" for final approval...`);
+  writeDB(db);
   const draftString = typeof task.draftContent === 'object' ? JSON.stringify(task.draftContent, null, 2) : task.draftContent;
 
   let decision = 'approved';
@@ -682,6 +692,7 @@ Respond with a JSON object:
   if (decision === 'approved') {
     task.status = 'completed';
     setAgentStatus(db, 'Sophia', 'Idle');
+    setAgentStatus(db, 'System', 'Active', `🚀 CEO approved! Deployer is publishing "${task.title}" to the live website now...`);
     addSystemMsg(db, 'Sophia', `Approved! Excellent job @${task.assignee}. @Deployer, please push this update live. Executive Notes: ${reviewText}`, task.id);
     
     // Deployment
@@ -690,6 +701,7 @@ Respond with a JSON object:
   } else {
     task.status = 'todo'; // Rework
     setAgentStatus(db, 'Sophia', 'Idle');
+    setAgentStatus(db, 'System', 'Active', `⚠️ CEO rejected "${task.title}". Sending back for revision. Feedback: ${reviewText}`);
     addSystemMsg(db, 'Sophia', `Rejected at CEO level. @Alex, coordinate with @${task.assignee} to rebuild. Feedback: ${reviewText}`, task.id);
     return true;
   }
@@ -779,6 +791,10 @@ function executeDeployment(db, task) {
     ? `Deployment failed for "${task.title}". Log: ${deployLog}`
     : `Deployment successful for "${task.title}"! Changes are staged. Log: ${deployLog}`, task.id);
 
+  if (!deployFailed) {
+    setAgentStatus(db, 'System', 'Idle', `🎉 PUBLISHED: "${task.title}" is now live on quantumqbit.in — ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST`);
+  }
+
   setAgentStatus(db, 'Deployer', 'Idle');
   task.updatedAt = new Date().toISOString();
 }
@@ -813,6 +829,8 @@ async function handleAutoBrainstorm(db, openai) {
 
   console.log("Marketing agent Mark is gathering live trending data to brainstorm...");
   setAgentStatus(db, 'Mark', 'Researching trending topics...');
+  setAgentStatus(db, 'System', 'Active', '🔎 Mark is fetching live Google Trends (India), global news, X hashtags, and Sarkari Result govt jobs...');
+  writeDB(db);
   
   const [trendsIndia, trendsGlobal, xTrends, govtJobs] = await Promise.all([
     fetchGoogleTrends('IN'),
@@ -820,6 +838,17 @@ async function handleAutoBrainstorm(db, openai) {
     fetchXTrends(),
     fetchGovtJobUpdates()
   ]);
+
+  setAgentStatus(db, 'System', 'Active', 
+    `📊 Trends fetched — India: ${trendsIndia.length} topics, Global: ${trendsGlobal.length} topics, X hashtags: ${xTrends.length}, Govt jobs: ${govtJobs.length} listings`
+  );
+  if (trendsIndia.length > 0) {
+    setAgentStatus(db, 'System', 'Active', `🏆 Top India Trend: ${trendsIndia[0]}`);
+  }
+  if (govtJobs.length > 0) {
+    setAgentStatus(db, 'System', 'Active', `📋 Top Govt Job: ${govtJobs[0]}`);
+  }
+  writeDB(db);
 
   const existingTitles = getExistingBlogTitles();
   console.log(`Gathered trends. Spawning brainstorm prompt...`);
@@ -868,6 +897,8 @@ Respond ONLY with a JSON object:
     setAgentStatus(db, 'Mark', 'Idle');
 
     if (result.title) {
+      setAgentStatus(db, 'System', 'Active', `💡 Topic selected by Mark: "${result.title}" [Category: ${result.category || 'n/a'}]`);
+      writeDB(db);
       recordPublishedTopic(db, result.title);
 
       const newTask = {
@@ -1048,40 +1079,74 @@ async function main() {
   const db = readDB();
   
   setAgentStatus(db, 'System', 'Idle', '=== Runner process started on GitHub Actions ===');
+  writeDB(db);
   
   // 1. Sync live updates from Hostinger
   try {
     setAgentStatus(db, 'System', 'Idle', 'Fetching boardroom directives and live chats from server...');
+    writeDB(db);
     await syncLiveUpdates(db);
   } catch (e) {
     setAgentStatus(db, 'System', 'Idle', 'Live sync error: ' + e.message);
+    writeDB(db);
   }
   
   if (!db.config.isAutomationActive) {
     console.log("Autonomous agent loop is disabled in configurations. Exiting.");
     setAgentStatus(db, 'System', 'Idle', 'Automation loop is disabled in configurations. Exiting.');
+    writeDB(db);
     return;
   }
 
   const openai = getDeepseekClient(db.config);
+
+  // Log queued task details so the UI terminal shows what topic was picked
+  const pendingTasks = (db.tasks || []).filter(t => t.status !== 'completed');
+  if (pendingTasks.length > 0) {
+    const t = pendingTasks[0];
+    setAgentStatus(db, 'System', 'Active', `Campaign task loaded: "${t.title}" — assigned to ${t.assignee} [status: ${t.status}]`);
+  }
+
   if (!openai) {
     setAgentStatus(db, 'System', 'Idle', 'Deepseek API key not set or invalid. Running in simulated offline mode.');
   } else {
     setAgentStatus(db, 'System', 'Idle', 'Deepseek client authorized successfully.');
   }
+  writeDB(db);
   
-  // 2. Run sequential cycles to process task pipeline
-  let maxCycles = 1;
+  // 2. Run sequential cycles to process task pipeline end-to-end in one run
+  let maxCycles = 10;
   let cycle = 0;
   let progress = true;
 
   while (progress && cycle < maxCycles) {
     console.log(`\n--- Running State Machine Cycle ${cycle + 1} ---`);
-    setAgentStatus(db, 'System', 'Idle', `Executing task cycle state machine step ${cycle + 1}...`);
+
+    // Log descriptive message about current pipeline state
+    const tasks = db.tasks || [];
+    const todoTask = tasks.find(t => t.status === 'todo');
+    const inProgressTask = tasks.find(t => t.status === 'inprogress');
+    const reviewTask = tasks.find(t => t.status === 'manager_review');
+    const approvalTask = tasks.find(t => t.status === 'ceo_approval');
+
+    if (todoTask) {
+      setAgentStatus(db, 'System', 'Active', `[Cycle ${cycle + 1}] Task queued: "${todoTask.title}" — Assigning to ${todoTask.assignee}...`);
+    } else if (inProgressTask) {
+      setAgentStatus(db, 'System', 'Active', `[Cycle ${cycle + 1}] ${inProgressTask.assignee} is drafting content for "${inProgressTask.title}"...`);
+    } else if (reviewTask) {
+      setAgentStatus(db, 'System', 'Active', `[Cycle ${cycle + 1}] Alex (Manager) is reviewing draft for "${reviewTask.title}"...`);
+    } else if (approvalTask) {
+      setAgentStatus(db, 'System', 'Active', `[Cycle ${cycle + 1}] Sophia (CEO) is evaluating "${approvalTask.title}" for final approval...`);
+    } else {
+      setAgentStatus(db, 'System', 'Active', `[Cycle ${cycle + 1}] No pending tasks — brainstorming new topic from live trends...`);
+    }
+    writeDB(db);
+
     try {
       progress = await runAutomationCycleStep(db, openai);
     } catch (e) {
       setAgentStatus(db, 'System', 'Idle', `Error during cycle step ${cycle + 1}: ${e.message}`);
+      writeDB(db);
       progress = false;
     }
     if (progress) {
@@ -1091,6 +1156,7 @@ async function main() {
   }
 
   setAgentStatus(db, 'System', 'Idle', '=== Runner completed all cycle steps and finished successfully ===');
+  writeDB(db);
   console.log("\n=== Quantum AI Office Cloud Runner Completed ===");
 }
 
