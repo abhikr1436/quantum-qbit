@@ -730,6 +730,102 @@ switch ($action) {
         ]);
         break;
         
+    case 'trigger_trends':
+        $db = getAIDB($dbFile);
+        $db['tasks'] = [];
+        $db['systemLogs'] = [[
+            'timestamp' => date(DATE_ATOM),
+            'agent' => 'System',
+            'message' => 'System initialized. Triggering Google Trends content campaign...'
+        ]];
+        
+        $newTask = [
+            'id' => 'task-' . time() . '-' . rand(100, 999),
+            'title' => 'Research and Publish Trending Article',
+            'description' => 'Research trending topics on Google Trends (IN) with high search volume, write a detailed guide, connect it to quantumqbit.in tools, and publish it.',
+            'type' => 'blog',
+            'assignee' => 'Mark',
+            'status' => 'todo',
+            'draftContent' => '',
+            'reviews' => [],
+            'createdAt' => date(DATE_ATOM),
+            'updatedAt' => date(DATE_ATOM)
+        ];
+        $db['tasks'][] = $newTask;
+        $db['config']['lastRunTimestamp'] = date(DATE_ATOM);
+        
+        // Reset agent statuses
+        foreach ($db['agents'] as &$ag) {
+            if ($ag['name'] === 'Alex') $ag['status'] = 'Assigning briefing';
+            else if ($ag['name'] === 'Mark') $ag['status'] = 'Analyzing trends & keywords';
+            else $ag['status'] = 'Idle';
+        }
+        saveAIDB($dbFile, $db);
+        
+        // Dispatch Action
+        $keys = getAIKeys($keysFile);
+        $token = isset($keys['githubToken']) ? $keys['githubToken'] : '';
+        $res = dispatchGitHubWorkflow($token);
+        
+        if ($res['success']) {
+            echo json_encode(['success' => true, 'message' => 'Google Trends campaign triggered successfully!']);
+        } else {
+            http_response_code(isset($res['details']) ? 502 : 400);
+            echo json_encode([
+                'error' => $res['error'],
+                'details' => isset($res['details']) ? $res['details'] : null
+            ]);
+        }
+        break;
+
+    case 'trigger_jobs':
+        $db = getAIDB($dbFile);
+        $db['tasks'] = [];
+        $db['systemLogs'] = [[
+            'timestamp' => date(DATE_ATOM),
+            'agent' => 'System',
+            'message' => 'System initialized. Checking latest job vacancies...'
+        ]];
+        
+        $newTask = [
+            'id' => 'task-' . time() . '-' . rand(100, 999),
+            'title' => 'Check & Post Latest Job Vacancy',
+            'description' => 'Check recent government or private job updates, format details in a structured table inspired by Sarkari Result, and post it.',
+            'type' => 'blog',
+            'assignee' => 'Mark',
+            'status' => 'todo',
+            'draftContent' => '',
+            'reviews' => [],
+            'createdAt' => date(DATE_ATOM),
+            'updatedAt' => date(DATE_ATOM)
+        ];
+        $db['tasks'][] = $newTask;
+        $db['config']['lastRunTimestamp'] = date(DATE_ATOM);
+        
+        // Reset agent statuses
+        foreach ($db['agents'] as &$ag) {
+            if ($ag['name'] === 'Alex') $ag['status'] = 'Assigning briefing';
+            else if ($ag['name'] === 'Mark') $ag['status'] = 'Searching for job openings';
+            else $ag['status'] = 'Idle';
+        }
+        saveAIDB($dbFile, $db);
+        
+        // Dispatch Action
+        $keys = getAIKeys($keysFile);
+        $token = isset($keys['githubToken']) ? $keys['githubToken'] : '';
+        $res = dispatchGitHubWorkflow($token);
+        
+        if ($res['success']) {
+            echo json_encode(['success' => true, 'message' => 'Job postings campaign triggered successfully!']);
+        } else {
+            http_response_code(isset($res['details']) ? 502 : 400);
+            echo json_encode([
+                'error' => $res['error'],
+                'details' => isset($res['details']) ? $res['details'] : null
+            ]);
+        }
+        break;
+
     case 'trigger_cycle':
         $keys = getAIKeys($keysFile);
         $token = isset($keys['githubToken']) ? $keys['githubToken'] : '';

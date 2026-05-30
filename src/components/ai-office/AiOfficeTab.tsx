@@ -1,67 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Users, MessageSquare, KanbanSquare, Sparkles, Search, Settings as SettingsIcon, RefreshCw, Layers, ShieldCheck } from 'lucide-react';
-import { OrgChart } from './OrgChart';
-import { WorkspaceChat } from './WorkspaceChat';
-import { KanbanBoard } from './KanbanBoard';
-import { Boardroom } from './Boardroom';
-import { SeoDashboard } from './SeoDashboard';
-import { AiSettings } from './AiSettings';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Sparkles, Briefcase, RefreshCw, Terminal, Trash2, ShieldCheck, Play } from 'lucide-react';
 
 interface OfficeConfig {
   websitePath: string;
-  deepseekKey: string;
-  githubToken?: string;
   isAutomationActive: boolean;
-  automationIntervalMinutes?: number;
   lastRunTimestamp?: string | null;
-}
-
-interface Agent {
-  name: string;
-  role: string;
-  status: string;
-  avatar: string;
-  bio: string;
-  tasksCount?: number;
-}
-
-interface TaskReview {
-  agent: string;
-  decision: 'approved' | 'rejected';
-  reviewText: string;
-  timestamp: string;
-}
-
-interface DraftContent {
-  category_id?: string;
-  title?: string;
-  excerpt?: string;
-  content?: string;
-  imageGlow?: string;
-  platform?: string;
-  postText?: string;
-  recommendations?: string;
-}
-
-interface OfficeTask {
-  id: string;
-  title: string;
-  description: string;
-  type: string;
-  assignee: string;
-  status: string;
-  draftContent: DraftContent | string | null;
-  reviews: TaskReview[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface ChatMessage {
-  id: string;
-  sender: string;
-  text: string;
-  timestamp: string;
-  taskId?: string;
 }
 
 interface SystemLog {
@@ -70,98 +13,72 @@ interface SystemLog {
   message: string;
 }
 
-interface LocalOfficeDB {
-  config: OfficeConfig;
-  agents: Agent[];
-  tasks: OfficeTask[];
-  chatLogs: ChatMessage[];
-  systemLogs: SystemLog[];
-  publishedTopics: string[];
-}
-
 interface AiOfficeTabProps {
   isLocalMode?: boolean;
 }
 
-
 export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false }) => {
-  const [activeTab, setActiveTab] = useState<'org' | 'chat' | 'tasks' | 'boardroom' | 'seo' | 'settings'>('boardroom');
-  
-  // Dashboard States
+  const [logs, setLogs] = useState<string[]>([]);
+  const [isRunning, setIsRunning] = useState(false);
+  const [activeTask, setActiveTask] = useState<string | null>(null);
   const [config, setConfig] = useState<OfficeConfig | null>(null);
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [tasks, setTasks] = useState<OfficeTask[]>([]);
-  const [chatLogs, setChatLogs] = useState<ChatMessage[]>([]);
-  const [systemLogs, setSystemLogs] = useState<SystemLog[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState('System Ready');
+  const [statusColor, setStatusColor] = useState('rgba(255,255,255,0.7)');
 
-  // Automation / execution load states
-  const [runLoopLoading, setRunLoopLoading] = useState(false);
-  const [boardroomProcessing, setBoardroomProcessing] = useState(false);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const terminalEndRef = useRef<HTMLDivElement>(null);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Timer States
-  const [timeLeft, setTimeLeft] = useState<string>('--:--');
-  const [timerColor, setTimerColor] = useState<string>('rgba(255,255,255,0.6)');
-
-  // Local Storage Database Mock logic
-  const getLocalDB = () => {
-    const local = localStorage.getItem('quantum_office_db');
-    if (local) {
-      try {
-        return JSON.parse(local);
-      } catch {
-        // Fallback
-      }
+  // Auto-scroll terminal
+  useEffect(() => {
+    if (terminalEndRef.current) {
+      terminalEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-    const defaultDB = {
-      config: {
-        websitePath: '.',
-        deepseekKey: 'sk-d98...e2bf2',
-        githubToken: 'github_pat_11CD...zRHM9WRe',
-        automationIntervalMinutes: 60,
-        isAutomationActive: true,
-        lastRunTimestamp: new Date().toISOString(),
-        lastBrainstormTimestamp: new Date().toISOString()
-      },
-      agents: [
-        { name: 'Sophia', role: 'CEO', avatar: '💼', bio: 'Visionary executive who makes final approvals on business objectives, web deployments, and articles. Ensures everything matches the high standards of Quantum Qbit.', status: 'Idle' },
-        { name: 'Alex', role: 'Manager', avatar: '📋', bio: 'Coordinates task flows, parses board directives, assigns work to specialists, reviews drafts, and prepares reports for Sophia.', status: 'Idle' },
-        { name: 'Mark', role: 'Marketing', avatar: '✍️', bio: 'Specializes in keyword optimization, content writing, SEO research, and drafting educational technical blogs.', status: 'Idle' },
-        { name: 'Sarah', role: 'Social Media', avatar: '🐦', bio: 'Maintains company social media channels. Creates promotions, Twitter threads, LinkedIn summaries, and monitors online traffic.', status: 'Idle' },
-        { name: 'Codey', role: 'IT Developer', avatar: '💻', bio: 'Full-stack coder. Inspects target page elements, updates components, and develops new utilities for local-first browsers.', status: 'Idle' },
-        { name: 'Deployer', role: 'DevOps', avatar: '🚀', bio: 'Monitors build health, verifies code formats, compiles outputs, and pushes approved articles/code changes to website directories.', status: 'Idle' },
-        { name: 'Harper', role: 'HR', avatar: '🤝', bio: 'Handles personnel details, team cohesion, drafts job postings, and aligns core values.', status: 'Idle' }
-      ],
-      tasks: [],
-      chatLogs: [
-        {
-          id: 'welcome',
-          sender: 'Sophia',
-          text: 'Welcome to the Quantum Qbit Virtual Office! Here we brainstorm and build local-first features offline.',
-          timestamp: new Date(Date.now() - 3600000).toISOString()
-        }
-      ],
-      systemLogs: [
-        {
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-          agent: 'System',
-          message: 'Local Simulation database initialized.'
-        }
-      ],
-      publishedTopics: []
-    };
-    localStorage.setItem('quantum_office_db', JSON.stringify(defaultDB));
-    return defaultDB;
-  };
+  }, [logs]);
 
-  const saveLocalDB = (db: LocalOfficeDB) => {
-    localStorage.setItem('quantum_office_db', JSON.stringify(db));
+  // Load configuration
+  const fetchConfig = useCallback(async () => {
+    if (isLocalMode) {
+      const local = localStorage.getItem('quantum_office_db');
+      if (local) {
+        try {
+          const parsed = JSON.parse(local);
+          setConfig(parsed.config || null);
+        } catch {
+          // skip
+        }
+      } else {
+        const defaultConf = { websitePath: '.', isAutomationActive: true, lastRunTimestamp: new Date().toISOString() };
+        setConfig(defaultConf);
+      }
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/ai_office.php?action=dashboard');
+      if (res.ok) {
+        const data = await res.json();
+        setConfig(data.config || null);
+      }
+    } catch (e) {
+      console.error("Failed to load backend config", e);
+    }
+  }, [isLocalMode]);
+
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      fetchConfig();
+    });
+  }, [fetchConfig]);
+
+  // Helper to add logs locally
+  const addLog = (message: string, agent: string = 'System') => {
+    const time = new Date().toLocaleTimeString();
+    const formatted = `[${time}] [${agent.toUpperCase()}] ${message}`;
+    setLogs(prev => [...prev, formatted]);
   };
 
   // Local simulated blog publisher
-  const publishBlogLocally = (title: string, draft: DraftContent | null) => {
+  const publishBlogLocally = (title: string, isJob: boolean) => {
     const localBlogsStr = localStorage.getItem('quantum_blogs');
     let blogs = [];
     if (localBlogsStr) {
@@ -173,101 +90,16 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
     }
     
     const slug = title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/[\s-]+/g, '-').trim();
-    const newBlog = {
-      id: slug,
-      title: title,
-      excerpt: draft?.excerpt || "A new technical article published on the site.",
-      content: draft?.content || `<p>This is the content for the blog post.</p>`,
-      author: 'Quantum AI Writer (Simulated)',
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) + ' ' + new Date().toTimeString().split(' ')[0],
-      readTime: "4 min read",
-      category: 'Privacy & Security',
-      category_id: draft?.category_id || 'privacy-security',
-      imageGlow: draft?.imageGlow || 'rgba(0, 242, 254, 0.1)',
-      created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
-      updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
-    };
     
-    blogs.unshift(newBlog);
-    localStorage.setItem('quantum_blogs', JSON.stringify(blogs));
-  };
+    const category = isJob ? 'General Utilities' : 'Privacy & Security';
+    const categoryId = isJob ? 'general-utilities' : 'privacy-security';
+    const imageGlow = isJob ? 'rgba(157, 78, 221, 0.15)' : 'rgba(0, 242, 254, 0.15)';
+    const excerpt = isJob 
+      ? `Latest recruitment notification for ${title}. Apply online, check eligibility, age limit, selection criteria, important dates and fees.`
+      : `Detailed analytical guide exploring ${title}. Learn how client-side computing enhances speed and user data safety.`;
 
-  // Asynchronous Client-side Simulation state machine
-  const startLocalSimulation = (targetTaskId?: string) => {
-    if (!isLocalMode) return;
-    
-    const db = getLocalDB();
-    const tasks = db.tasks;
-    const task = (targetTaskId ? tasks.find((t: OfficeTask) => t.id === targetTaskId) : tasks.find((t: OfficeTask) => t.status === 'todo')) as OfficeTask | undefined;
-    
-    if (!task) {
-      simulateLocalBrainstorm();
-      return;
-    }
-    
-    const updateTaskStage = (status: string, agent: string, agentStatus: string, chatText: string, delay: number, next: () => void) => {
-      setTimeout(() => {
-        const currentDB = getLocalDB();
-        const currentTask = currentDB.tasks.find((t: OfficeTask) => t.id === (task as OfficeTask).id);
-        if (!currentTask) return;
-        
-        currentTask.status = status;
-        currentTask.updatedAt = new Date().toISOString();
-        
-        currentDB.agents = currentDB.agents.map((a: Agent) => {
-          if (a.name === agent) {
-            return { ...a, status: agentStatus };
-          }
-          return a.status === agentStatus ? { ...a, status: 'Idle' } : a;
-        });
-        
-        currentDB.chatLogs.push({
-          id: 'msg-' + Date.now() + Math.random(),
-          sender: agent,
-          text: chatText,
-          timestamp: new Date().toISOString(),
-          taskId: currentTask.id
-        });
-        
-        if (!currentDB.systemLogs) currentDB.systemLogs = [];
-        currentDB.systemLogs.push({
-          timestamp: new Date().toISOString(),
-          agent: agent,
-          message: `${agent} status changed to: ${agentStatus}`
-        });
-        
-        saveLocalDB(currentDB);
-        fetchDashboardData(false);
-        next();
-      }, delay);
-    };
-    
-    updateTaskStage(
-      'inprogress',
-      task.assignee,
-      'Drafting Content',
-      `Acknowledged, @Alex. Starting work on "${task.title}".`,
-      500,
-      () => {
-        let draft: DraftContent | string | null = 'Draft completed.';
-        if (task.type === 'blog') {
-          const isJob = task.title.toLowerCase().includes('job') || 
-                        task.title.toLowerCase().includes('recruitment') || 
-                        task.title.toLowerCase().includes('vacancy') || 
-                        task.title.toLowerCase().includes('exam') || 
-                        task.title.toLowerCase().includes('bharti') || 
-                        task.title.toLowerCase().includes('upsssc') ||
-                        (task.description && (
-                          task.description.toLowerCase().includes('job') ||
-                          task.description.toLowerCase().includes('recruitment') ||
-                          task.description.toLowerCase().includes('exam')
-                        ));
-          if (isJob) {
-            draft = {
-              title: task.title,
-              excerpt: `Latest recruitment notification for ${task.title}. Apply online, check eligibility, age limit, selection criteria, important dates and fees.`,
-              content: `<h2>${task.title} Notification</h2>
-<p>Here are the complete notification details, important dates, and eligibility criteria for ${task.title}. Candidates can apply online through the official portal before the deadline. Make sure to prepare your documents and compress photo/signature files to correct upload size using browser-only local compression tools before submitting the form.</p>
+    const content = isJob ? `<h2>${title} Notification</h2>
+<p>Here are the complete notification details, important dates, and eligibility criteria for ${title}. Candidates can apply online through the official portal before the deadline. Make sure to prepare your documents and compress photo/signature files to correct upload size using browser-only local compression tools before submitting the form.</p>
 <table class="job-details-table">
   <tr>
     <td colspan="2" class="table-header-main">
@@ -337,915 +169,545 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
     </td>
   </tr>
 </table>
-<p>Note: Remember to use local tools on quantumqbit.in to resize, crop and compress your photos and signatures. Since all processing happens in your browser locally, your personal and sensitive documents never reach third-party servers.</p>`,
-              category_id: "general-utilities",
-              imageGlow: "rgba(157, 78, 221, 0.15)"
-            };
-          } else {
-            draft = {
-              title: task.title,
-              excerpt: "How local browser processing safeguards user data and improves speeds.",
-              content: `<h2>Local Processing on Quantum Qbit</h2><p>In this article we discuss local first processing. This is a simulated local post generated during local dev testing mode.</p>`,
-              category_id: "privacy-security",
-              imageGlow: "rgba(0, 242, 254, 0.1)"
-            };
+<p>Note: Remember to use local tools on quantumqbit.in to resize, crop and compress your photos and signatures. Since all processing happens in your browser locally, your personal and sensitive documents never reach third-party servers.</p>` : `<h2>Understanding ${title}</h2>
+<p>In standard web applications, every document upload, picture conversion, or password check is pushed to a remote server. While simple, it exposes sensitive user assets to database vulnerabilities and third-party leaks.</p>
+<p>By utilizing modern HTML5 File APIs and client-side scripts, tools like those on <strong>quantumqbit.in</strong> process bytes entirely in the browser memory cache. Photos are modified on canvas, conversions happen locally, and no records ever leak to host registers. It's instant, costs zero bandwidth, and stays 100% private.</p>
+<p>This trending topic highlights the growing global pivot toward edge computing, local privacy, and user-centric software architectures.</p>`;
+
+    const newBlog = {
+      id: slug,
+      title: title,
+      excerpt: excerpt,
+      content: content,
+      author: 'Quantum AI Writer (Simulated)',
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) + ' ' + new Date().toTimeString().split(' ')[0],
+      readTime: "4 min read",
+      category: category,
+      category_id: categoryId,
+      imageGlow: imageGlow,
+      created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+      updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+    };
+    
+    blogs.unshift(newBlog);
+    localStorage.setItem('quantum_blogs', JSON.stringify(blogs));
+  };
+
+  // Local simulated execution state machine
+  const executeLocalSimulation = (type: 'trends' | 'jobs') => {
+    setIsRunning(true);
+    setActiveTask(type === 'trends' ? 'Trending Content Campaign' : 'Job Vacancy Poster');
+    setStatusMessage(type === 'trends' ? 'Researching Google Trends...' : 'Checking Government Portals...');
+    setStatusColor('var(--primary, #00f2fe)');
+    setLogs([]);
+
+    const steps = type === 'trends' ? [
+      { text: 'Initiating local simulation for Google Trends content campaign...', agent: 'System', delay: 1000 },
+      { text: 'Querying Google Trends API for region: India (IN)...', agent: 'Mark', delay: 1200 },
+      { text: 'Found Google Trends query: "UPSSSC Lower PCS Graduate Level 2026" (Search volume: 500K+ searches)', agent: 'Mark', delay: 1500 },
+      { text: 'Selecting highest search volume topic: "UPSSSC Lower PCS Graduate Level Recruitment 2026"', agent: 'Mark', delay: 1200 },
+      { text: 'Alex (Manager) parsed search context and formulated writer directive.', agent: 'Alex', delay: 1000 },
+      { text: 'Drafting structured HTML blog post with trending context and quantumqbit.in tool highlights...', agent: 'Mark', delay: 2000 },
+      { text: 'Content draft complete. Excerpt generated: "Apply online for UPSSSC Lower PCS Advt No 07-Exam/2026..."', agent: 'Mark', delay: 1000 },
+      { text: 'Sophia (CEO) performed quality audit. Draft meets 600-word criteria. Approved.', agent: 'Sophia', delay: 1200 },
+      { text: 'Deployer (DevOps) compiled project builds and verified index files.', agent: 'Deployer', delay: 1500 },
+      { text: 'Deploying article locally and updating index logs...', agent: 'Deployer', delay: 1000 },
+      { text: 'Success! Trending article "UPSSSC Lower PCS Graduate Level Recruitment 2026" is now published.', agent: 'System', delay: 500 }
+    ] : [
+      { text: 'Initiating local simulation for Job Vacancy publisher...', agent: 'System', delay: 1000 },
+      { text: 'Querying Sarkari Result and Government recruitment notifications...', agent: 'Mark', delay: 1500 },
+      { text: 'Found active job posting: "UPSSSC Combined Lower Subordinate Services Graduate Level (2285 Posts)"', agent: 'Mark', delay: 1200 },
+      { text: 'Extracting key details: Important dates, fee structures, age limit, and eligibility criteria...', agent: 'Mark', delay: 1800 },
+      { text: 'Alex (Manager) validated details formatting request.', agent: 'Alex', delay: 1000 },
+      { text: 'Formulating structured details HTML table with class "job-details-table" and highlighting CSS rules...', agent: 'Mark', delay: 2000 },
+      { text: 'Drafting post text complete. Table structure validation passed.', agent: 'Mark', delay: 1000 },
+      { text: 'Sophia (CEO) approved publication of Sarkari Result structured job article.', agent: 'Sophia', delay: 1200 },
+      { text: 'Deployer (DevOps) staging files and compiling index.js...', agent: 'Deployer', delay: 1500 },
+      { text: 'Writing details table to local database fallback...', agent: 'Deployer', delay: 1000 },
+      { text: 'Success! Job Vacancy table for "UPSSSC Lower PCS Graduate Level 2285 Posts" is now published.', agent: 'System', delay: 500 }
+    ];
+
+    let currentStep = 0;
+
+    const runNextStep = () => {
+      if (currentStep >= steps.length) {
+        setIsRunning(false);
+        setActiveTask(null);
+        setStatusMessage('Campaign Complete');
+        setStatusColor('#10b981');
+        
+        // Actually publish the post
+        const title = type === 'trends' 
+          ? 'UPSSSC Lower PCS Graduate Level Recruitment 2026' 
+          : 'UPSSSC Lower PCS Graduate Level 2285 Posts Job Vacancy';
+        publishBlogLocally(title, type === 'jobs');
+        
+        const localDBStr = localStorage.getItem('quantum_office_db');
+        if (localDBStr) {
+          try {
+            const db = JSON.parse(localDBStr);
+            db.config.lastRunTimestamp = new Date().toISOString();
+            localStorage.setItem('quantum_office_db', JSON.stringify(db));
+            setConfig(db.config);
+          } catch {
+            // skip
           }
         }
-        
-        setTimeout(() => {
-          const currentDB = getLocalDB();
-          const currentTask = currentDB.tasks.find((t: OfficeTask) => t.id === (task as OfficeTask).id);
-          if (!currentTask) return;
-          currentTask.draftContent = draft;
-          saveLocalDB(currentDB);
-          
-          updateTaskStage(
-            'manager_review',
-            task.assignee,
-            'Idle',
-            `I've finished drafting the work for "${task.title}". @Alex, please check my submission!`,
-            10,
-            () => {
-              setTimeout(() => {
-                const innerDB = getLocalDB();
-                const innerTask = innerDB.tasks.find((t: OfficeTask) => t.id === (task as OfficeTask).id);
-                if (!innerTask) return;
-                innerTask.reviews.push({
-                  agent: 'Alex',
-                  reviewText: 'Excellent draft. Fits our criteria perfectly. Submitting to CEO.',
-                  decision: 'approved',
-                  timestamp: new Date().toISOString()
-                });
-                saveLocalDB(innerDB);
-                
-                updateTaskStage(
-                  'ceo_approval',
-                  'Alex',
-                  'Idle',
-                  `Draft for "${task.title}" is approved by me. @Sophia, please review and give final sign-off!`,
-                  10,
-                  () => {
-                    setTimeout(() => {
-                      const finalDB = getLocalDB();
-                      const finalTask = finalDB.tasks.find((t: OfficeTask) => t.id === (task as OfficeTask).id);
-                      if (!finalTask) return;
-                      finalTask.reviews.push({
-                        agent: 'Sophia',
-                        reviewText: 'Outstanding work. Pushing live.',
-                        decision: 'approved',
-                        timestamp: new Date().toISOString()
-                      });
-                      saveLocalDB(finalDB);
-                      
-                      updateTaskStage(
-                        'completed',
-                        'Sophia',
-                        'Idle',
-                        `Approved! Excellent job @${task.assignee}. @Deployer, please push this update live.`,
-                        10,
-                        () => {
-                          setTimeout(() => {
-                            const depDB = getLocalDB();
-                            depDB.agents = depDB.agents.map((a: Agent) => 
-                              a.name === 'Deployer' ? { ...a, status: 'Deploying' } : a
-                            );
-                            saveLocalDB(depDB);
-                            fetchDashboardData(false);
-                            
-                            setTimeout(() => {
-                              const doneDB = getLocalDB();
-                              doneDB.agents = doneDB.agents.map((a: Agent) => 
-                                a.name === 'Deployer' ? { ...a, status: 'Idle' } : a
-                              );
-                              doneDB.config.lastRunTimestamp = new Date().toISOString();
-                              doneDB.chatLogs.push({
-                                id: 'msg-' + Date.now() + Math.random(),
-                                sender: 'Deployer',
-                                text: `Deployment successful for "${task.title}"! Changes are live on local simulation.`,
-                                timestamp: new Date().toISOString(),
-                                taskId: task.id
-                              });
-                              
-                              if (!doneDB.systemLogs) doneDB.systemLogs = [];
-                              doneDB.systemLogs.push({
-                                timestamp: new Date().toISOString(),
-                                agent: 'Deployer',
-                                message: `Simulated deployment complete: "${task.title}"`
-                              });
-                              
-                              if (task.type === 'blog') {
-                                publishBlogLocally(task.title, draft as DraftContent);
-                              }
-                              
-                              saveLocalDB(doneDB);
-                              fetchDashboardData(false);
-                            }, 1500);
-                          }, 500);
-                        }
-                      );
-                    }, 1200);
-                  }
-                );
-              }, 1200);
-            }
-          );
-        }, 1500);
+        return;
       }
-    );
+
+      const step = steps[currentStep];
+      setTimeout(() => {
+        addLog(step.text, step.agent);
+        currentStep++;
+        runNextStep();
+      }, step.delay);
+    };
+
+    runNextStep();
   };
 
-  const simulateLocalBrainstorm = () => {
-    const db = getLocalDB();
-    db.agents = db.agents.map((a: Agent) => 
-      a.name === 'Mark' ? { ...a, status: 'Researching trending topics...' } : a
-    );
-    
-    if (!db.systemLogs) db.systemLogs = [];
-    db.systemLogs.push({
-      timestamp: new Date().toISOString(),
-      agent: 'Mark',
-      message: 'Mark started researching trending topics from Google Trends (Simulation)'
-    });
-    
-    saveLocalDB(db);
-    fetchDashboardData(false);
-    
-    setTimeout(() => {
-      const innerDB = getLocalDB();
-      const trends = [
-        "ISRO Gaganyaan Space Mission Launch Schedule (Search Volume: 500K+)",
-        "Delhi-NCR Storm and Weather Alert safety protocols (Search Volume: 200K+)",
-        "Aadhaar card masking offline privacy instructions (Search Volume: 100K+)",
-        "React 19 Server Components architecture migration (Search Volume: 50K+)"
-      ];
-      const selectedTrend = trends[Math.floor(Math.random() * trends.length)];
-      const title = selectedTrend.split(' (')[0];
-      
-      innerDB.agents = innerDB.agents.map((a: Agent) => 
-        a.name === 'Mark' ? { ...a, status: 'Idle' } : a
-      );
-      
-      const newTask = {
-        id: 'task-' + Math.random().toString(36).substr(2, 9),
-        title: `How to guide for ${title}`,
-        description: `Research context: ${selectedTrend}. Features unit converters or offline tools of quantumqbit.in. Keywords: ${title.split(' ')[0]}, offline converter, privacy secure.`,
-        type: 'blog',
-        assignee: 'Mark',
-        status: 'todo',
-        draftContent: null,
-        reviews: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      innerDB.tasks.push(newTask);
-      
-      innerDB.chatLogs.push({
-        id: 'msg-' + Date.now() + Math.random(),
-        sender: 'Alex',
-        text: `📝 [NEW TOPIC QUEUED] @Mark will write "${newTask.title}" — researched from live trending data. Added to workflows!`,
-        timestamp: new Date().toISOString(),
-        taskId: newTask.id
-      });
-      
-      saveLocalDB(innerDB);
-      fetchDashboardData(false);
-      
-      startLocalSimulation(newTask.id);
-    }, 1500);
-  };
+  // Cloud backend trigger
+  const triggerBackendAction = async (actionType: 'trigger_trends' | 'trigger_jobs') => {
+    setIsRunning(true);
+    setActiveTask(actionType === 'trigger_trends' ? 'Trending Content Campaign (Cloud)' : 'Job Vacancy Poster (Cloud)');
+    setStatusMessage('Dispatching Cloud Runner...');
+    setStatusColor('var(--secondary, #9d4ede)');
+    setLogs([]);
 
-  // Fetch full dashboard state from PHP backend or LocalStorage
-  const fetchDashboardData = useCallback(async (showLoading = false) => {
-    if (showLoading) setLoading(true);
-    
-    if (isLocalMode) {
-      const data = getLocalDB();
-      setConfig(data.config || null);
-      setAgents(data.agents || []);
-      setTasks(data.tasks || []);
-      setChatLogs(data.chatLogs || []);
-      setSystemLogs(data.systemLogs || []);
-      setErrorMsg(null);
-      setLoading(false);
-      return;
-    }
+    addLog(`Sending trigger dispatch request to backend API: /api/ai_office.php?action=${actionType}...`, 'System');
 
     try {
-      const response = await fetch('/api/ai_office.php?action=dashboard');
+      const response = await fetch(`/api/ai_office.php?action=${actionType}`, { method: 'POST' });
       if (response.ok) {
         const data = await response.json();
-        setConfig(data.config || null);
-        setAgents(data.agents || []);
-        setTasks(data.tasks || []);
-        setChatLogs(data.chatLogs || []);
-        setSystemLogs(data.systemLogs || []);
-        setErrorMsg(null);
-      } else {
-        setErrorMsg('Failed to read status data from AI Office backend.');
-      }
-    } catch {
-      setErrorMsg('Cannot connect to AI Office PHP backend API.');
-    } finally {
-      if (showLoading) setLoading(false);
-    }
-  }, [isLocalMode]);
-
-  // Initial fetch + background syncing (every 6 seconds)
-  useEffect(() => {
-    Promise.resolve().then(() => fetchDashboardData(true));
-    const interval = setInterval(() => {
-      fetchDashboardData(false);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, [fetchDashboardData]);
-
-  // Countdown Timer logic based on lastRunTimestamp and automationIntervalMinutes
-  useEffect(() => {
-    const updateTimer = () => {
-      if (!config) {
-        setTimeLeft('--:--');
-        setTimerColor('rgba(255,255,255,0.6)');
-        return;
-      }
-      
-      if (!config.isAutomationActive) {
-        setTimeLeft('Disabled');
-        setTimerColor('rgba(255,255,255,0.4)');
-        return;
-      }
-      
-      const lastRun = config.lastRunTimestamp;
-      if (!lastRun) {
-        setTimeLeft('Awaiting Run');
-        setTimerColor('var(--primary, #00f2fe)');
-        return;
-      }
-      
-      const intervalMinutes = config.automationIntervalMinutes || 60;
-      const lastRunTime = new Date(lastRun).getTime();
-      const nextRunTime = lastRunTime + intervalMinutes * 60 * 1000;
-      const now = Date.now();
-      
-      const diffMs = nextRunTime - now;
-      if (diffMs <= 0) {
-        const overdueMinutes = Math.abs(diffMs) / 60000;
-        if (overdueMinutes > 15) {
-          setTimeLeft('Overdue / Stalled');
-          setTimerColor('#ef4444');
-        } else {
-          setTimeLeft('Running...');
-          setTimerColor('#10b981');
-        }
-      } else {
-        const minutes = Math.floor(diffMs / 60000);
-        const seconds = Math.floor((diffMs % 60000) / 1000);
-        setTimeLeft(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+        addLog(`Backend Response: ${data.message || 'Trigger successful.'}`, 'System');
+        addLog('Connecting to cloud logs database... Polling in progress.', 'System');
+        setStatusMessage('Cloud Execution Active (Polling)...');
         
-        if (minutes < 5) {
-          setTimerColor('#f59e0b');
-        } else {
-          setTimerColor('rgba(255,255,255,0.8)');
+        // Start polling the server logs
+        startPollingLogs();
+      } else {
+        const err = await response.json();
+        addLog(`Error: ${err.error || 'Backend failed to trigger cycle.'}`, 'System');
+        setIsRunning(false);
+        setActiveTask(null);
+        setStatusMessage('Error Occurred');
+        setStatusColor('#ef4444');
+      }
+    } catch (e) {
+      addLog(`Network Error: ${e instanceof Error ? e.message : 'Connection failed.'}`, 'System');
+      setIsRunning(false);
+      setActiveTask(null);
+      setStatusMessage('Network Error');
+      setStatusColor('#ef4444');
+    }
+  };
+
+  // Poll system logs from backend during cloud execution
+  const startPollingLogs = () => {
+    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    
+    let pollCount = 0;
+    
+    const poll = async () => {
+      pollCount++;
+      try {
+        const res = await fetch('/api/ai_office.php?action=dashboard');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.systemLogs && Array.isArray(data.systemLogs)) {
+            const formattedLogs = data.systemLogs.map((log: SystemLog) => {
+              const time = new Date(log.timestamp).toLocaleTimeString();
+              return `[${time}] [${log.agent.toUpperCase()}] ${log.message}`;
+            });
+            setLogs(formattedLogs);
+          }
+          
+          // Check if Deployer published and marked Idle
+          const activeTask = data.tasks && data.tasks.find((t: { status: string }) => t.status !== 'completed');
+          if (!activeTask && pollCount > 3) {
+            // Task has completed
+            setIsRunning(false);
+            setActiveTask(null);
+            setStatusMessage('Cloud Campaign Complete');
+            setStatusColor('#10b981');
+            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+            fetchConfig();
+          }
         }
+      } catch (e) {
+        console.error("Polling logs error", e);
+      }
+      
+      // Stop polling after 45 attempts (approx 3 minutes) to avoid infinite loops
+      if (pollCount > 45) {
+        setIsRunning(false);
+        setActiveTask(null);
+        setStatusMessage('Polling Timed Out');
+        setStatusColor('#ef4444');
+        if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
       }
     };
     
-    updateTimer();
-    const timerInterval = setInterval(updateTimer, 1000);
-    return () => clearInterval(timerInterval);
-  }, [config]);
+    poll();
+    pollIntervalRef.current = setInterval(poll, 4000);
+  };
 
-  // Update Settings
-  const handleUpdateConfig = async (newConfig: Partial<OfficeConfig>) => {
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    };
+  }, []);
+
+  const handleAction = (type: 'trends' | 'jobs') => {
+    if (isRunning) return;
     if (isLocalMode) {
-      const db = getLocalDB();
-      db.config = { ...db.config, ...newConfig };
-      saveLocalDB(db);
-      fetchDashboardData(false);
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/ai_office.php?action=save_config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newConfig)
-      });
-      if (response.ok) {
-        await fetchDashboardData(false);
-      } else {
-        throw new Error('Failed to update config.');
-      }
-    } catch (err) {
-      console.error(err);
-      throw err;
+      executeLocalSimulation(type);
+    } else {
+      triggerBackendAction(type === 'trends' ? 'trigger_trends' : 'trigger_jobs');
     }
   };
 
-  // Send workspace chat message
-  const handleSendMessage = async (text: string) => {
-    if (isLocalMode) {
-      const db = getLocalDB();
-      db.chatLogs.push({
-        id: 'msg-' + Date.now() + Math.random(),
-        sender: 'Board',
-        text,
-        timestamp: new Date().toISOString()
-      });
-      saveLocalDB(db);
-      fetchDashboardData(false);
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/ai_office.php?action=chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sender: 'Board', text })
-      });
-      if (response.ok) {
-        await fetchDashboardData(false);
-      }
-    } catch (err) {
-      console.error(err);
-    }
+  const clearConsole = () => {
+    setLogs([]);
+    addLog('Terminal cleared. Waiting for actions...');
   };
-
-  // Submit boardroom mandate directive
-  const handleSendDirective = async (text: string) => {
-    setBoardroomProcessing(true);
-    
-    if (isLocalMode) {
-      setTimeout(() => {
-        const db = getLocalDB();
-        if (!db.systemLogs) db.systemLogs = [];
-        db.systemLogs.push({
-          timestamp: new Date().toISOString(),
-          agent: 'System',
-          message: `Boardroom Directive received: "${text}"`
-        });
-        
-        const isBlog = text.toLowerCase().includes('blog') || text.toLowerCase().includes('article') || text.toLowerCase().includes('write');
-        const isSocial = text.toLowerCase().includes('social') || text.toLowerCase().includes('twitter') || text.toLowerCase().includes('post');
-        
-        let title = 'SEO Audit and Enhancements';
-        let assignee = 'Codey';
-        let type = 'feature';
-        let desc = 'Review browser utility layouts and tags for optimal crawler parsing.';
-        
-        if (isBlog) {
-          title = 'Write Trending Technical Article';
-          assignee = 'Mark';
-          type = 'blog';
-          desc = `Draft an educational blog post on the topic requested by the board: "${text}"`;
-        } else if (isSocial) {
-          title = 'Promote Quantum Tools on Socials';
-          assignee = 'Sarah';
-          type = 'social';
-          desc = `Draft a series of posts showcasing local-first tool performance based on: "${text}"`;
-        }
-        
-        const newTask = {
-          id: 'task-' + Math.random().toString(36).substr(2, 9),
-          title,
-          description: desc,
-          type,
-          assignee,
-          status: 'todo',
-          draftContent: null,
-          reviews: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-        
-        db.tasks.push(newTask);
-        
-        db.chatLogs.push({
-          id: 'msg-' + Date.now() + Math.random(),
-          sender: 'Alex',
-          text: `Board directive received. I've created task "${newTask.title}" and assigned it to @${newTask.assignee}.`,
-          timestamp: new Date().toISOString(),
-          taskId: newTask.id
-        });
-        
-        saveLocalDB(db);
-        fetchDashboardData(false);
-        setBoardroomProcessing(false);
-        
-        startLocalSimulation(newTask.id);
-      }, 800);
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/ai_office.php?action=boardroom_submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ directive: text })
-      });
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Failed to submit directive');
-      }
-      await fetchDashboardData(false);
-    } catch (err) {
-      console.error(err);
-      throw err;
-    } finally {
-      setBoardroomProcessing(false);
-    }
-  };
-
-  // Trigger next step of the agent state machine loop (dispatches GitHub Action)
-  const handleTriggerAgentLoop = async () => {
-    setRunLoopLoading(true);
-    
-    if (isLocalMode) {
-      setTimeout(() => {
-        setRunLoopLoading(false);
-        startLocalSimulation();
-      }, 600);
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/ai_office.php?action=trigger_cycle', {
-        method: 'POST'
-      });
-      if (response.ok) {
-        await fetchDashboardData(false);
-        alert('GitHub Action runner triggered successfully in the cloud! It will process the next cycle shortly.');
-      } else {
-        const data = await response.json();
-        alert('Trigger failed: ' + (data.error || 'Check Settings for valid GitHub Token.'));
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Network error triggering background cycle.');
-    } finally {
-      setRunLoopLoading(false);
-    }
-  };
-
-  // Manually override/update task status
-  const handleUpdateTaskStatus = async (id: string, newStatus: string) => {
-    if (isLocalMode) {
-      const db = getLocalDB();
-      const task = db.tasks.find((t: OfficeTask) => t.id === id);
-      if (task) {
-        task.status = newStatus;
-        task.updatedAt = new Date().toISOString();
-        saveLocalDB(db);
-        fetchDashboardData(false);
-      }
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/ai_office.php?action=update_task', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status: newStatus })
-      });
-      if (response.ok) {
-        await fetchDashboardData(false);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // Trigger SEO audit check
-  const handleTriggerAudit = async () => {
-    if (isLocalMode) {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve({
-            score: 96,
-            pagesScanned: ['/', '/blogs', '/about'],
-            criticalIssues: 0,
-            warnings: 2,
-            passedChecks: 12
-          });
-        }, 1000);
-      });
-    }
-
-    const response = await fetch('/api/ai_office.php?action=seo_audit');
-    if (!response.ok) {
-      const errData = await response.json();
-      throw new Error(errData.error || 'SEO scan failed');
-    }
-    return response.json();
-  };
-
-  // Link view handler to auto-jump from chat to Kanban task card modal
-  const handleViewTask = (id: string) => {
-    setSelectedTaskId(id);
-    setActiveTab('tasks');
-  };
-
-  const getActiveTaskCount = () => {
-    return tasks.filter(t => t.status !== 'completed').length;
-  };
-
-  const getEnrichedAgents = (): Agent[] => {
-    const activeTask = [...tasks].reverse().find(t => t.status !== 'completed');
-    
-    return agents.map(agent => {
-      let status = agent.status;
-      
-      if (status === 'Idle') {
-        if (activeTask) {
-          if (activeTask.status === 'todo') {
-            if (agent.name === 'Alex') status = 'Assigning directive briefing';
-            else if (agent.name === 'Mark') status = 'Analyzing trends & keywords';
-            else if (agent.name === 'Sophia') status = 'Monitoring team operations';
-            else if (agent.name === 'Sarah') status = 'Monitoring site traffic';
-            else if (agent.name === 'Codey') status = 'Auditing HTML tag hierarchy';
-            else if (agent.name === 'Deployer') status = 'Checking build config';
-            else if (agent.name === 'Harper') status = 'Aligning department roles';
-          } else if (activeTask.status === 'inprogress') {
-            if (agent.name === 'Mark' && activeTask.assignee === 'Mark') status = 'Drafting article content';
-            else if (agent.name === 'Sarah' && activeTask.assignee === 'Sarah') status = 'Creating social blurbs';
-            else if (agent.name === 'Codey' && activeTask.assignee === 'Codey') status = 'Building feature script';
-            else if (agent.name === 'Alex') status = 'Monitoring draft progress';
-            else if (agent.name === 'Sophia') status = 'Reviewing campaign focus';
-            else if (agent.name === 'Sarah') status = 'Scheduling post calendars';
-            else if (agent.name === 'Codey') status = 'Optimizing tool code elements';
-            else if (agent.name === 'Deployer') status = 'Checking compiler constraints';
-            else if (agent.name === 'Harper') status = 'Reviewing department logs';
-          } else if (activeTask.status === 'manager_review') {
-            if (agent.name === 'Alex') status = 'Auditing submission draft';
-            else if (agent.name === 'Mark') status = 'Awaiting manager review';
-            else if (agent.name === 'Sophia') status = 'Waiting for escalations';
-            else if (agent.name === 'Sarah') status = 'Preparing social media assets';
-            else if (agent.name === 'Codey') status = 'Verifying local style bindings';
-            else if (agent.name === 'Deployer') status = 'Preparing package manifest';
-            else if (agent.name === 'Harper') status = 'Updating personnel file records';
-          } else if (activeTask.status === 'ceo_approval') {
-            if (agent.name === 'Sophia') status = 'Evaluating final draft sign-off';
-            else if (agent.name === 'Alex') status = 'Awaiting CEO approval';
-            else if (agent.name === 'Mark') status = 'Awaiting publication release';
-            else if (agent.name === 'Deployer') status = 'Staging web release files';
-            else if (agent.name === 'Sarah') status = 'Finalizing social media banners';
-            else if (agent.name === 'Codey') status = 'Running page performance check';
-            else if (agent.name === 'Harper') status = 'Updating staff timesheets';
-          }
-        } else {
-          if (agent.name === 'Sophia') status = 'Analyzing global visitor metrics';
-          else if (agent.name === 'Alex') status = 'Formulating next task directive';
-          else if (agent.name === 'Mark') status = 'Monitoring live Google trends';
-          else if (agent.name === 'Sarah') status = 'Engaging with social communities';
-          else if (agent.name === 'Codey') status = 'Refactoring browser tool styles';
-          else if (agent.name === 'Deployer') status = 'Maintaining server infrastructure';
-          else if (agent.name === 'Harper') status = 'Organizing team sync sessions';
-        }
-      }
-      return { ...agent, status };
-    });
-  };
-
-  const enrichedAgents = getEnrichedAgents();
 
   return (
-    <div style={styles.dashboardLayout}>
-      {/* Sidebar navigation */}
-      <aside style={styles.sidebar}>
-        <div style={styles.sidebarLogo}>
-          <Layers style={{ color: 'var(--primary, #00f2fe)' }} size={20} />
-          <span style={styles.logoText}>Virtual Office</span>
+    <div style={styles.container}>
+      {/* Top Header Card */}
+      <div className="glass-card" style={styles.headerCard}>
+        <div style={styles.headerLeft}>
+          <div style={{ ...styles.statusDot, backgroundColor: isRunning ? '#ef4444' : '#10b981', boxShadow: isRunning ? '0 0 10px #ef4444' : '0 0 10px #10b981' }}></div>
+          <div>
+            <h1 style={styles.title}>AI Virtual Office</h1>
+            <p style={styles.subtitle}>Direct Campaign Operations &amp; Real-Time Logs Console</p>
+          </div>
         </div>
-
-        <nav style={styles.sidebarMenu}>
-          <div 
-            onClick={() => setActiveTab('boardroom')} 
-            style={{ ...styles.menuItem, ...(activeTab === 'boardroom' ? styles.menuItemActive : {}) }}
-          >
-            <Sparkles size={15} />
-            <span>Boardroom Table</span>
+        <div style={styles.headerRight}>
+          <div style={styles.metaBadge}>
+            <ShieldCheck size={14} style={{ color: 'var(--primary, #00f2fe)' }} />
+            <span>Mode: <strong>{isLocalMode ? 'Local Dev Simulation' : 'Production (Cloud)'}</strong></span>
           </div>
-          
-          <div 
-            onClick={() => setActiveTab('tasks')} 
-            style={{ ...styles.menuItem, ...(activeTab === 'tasks' ? styles.menuItemActive : {}) }}
-          >
-            <KanbanSquare size={15} />
-            <span>Kanban Workflows</span>
-            {getActiveTaskCount() > 0 && (
-              <span style={styles.taskBadge}>{getActiveTaskCount()}</span>
-            )}
+          <div style={styles.metaBadge}>
+            <ClockBadge label="Last Action" value={config?.lastRunTimestamp ? new Date(config.lastRunTimestamp).toLocaleTimeString() : 'Never'} />
           </div>
-
-          <div 
-            onClick={() => setActiveTab('chat')} 
-            style={{ ...styles.menuItem, ...(activeTab === 'chat' ? styles.menuItemActive : {}) }}
-          >
-            <MessageSquare size={15} />
-            <span>Workspace Chat</span>
-          </div>
-
-          <div 
-            onClick={() => setActiveTab('org')} 
-            style={{ ...styles.menuItem, ...(activeTab === 'org' ? styles.menuItemActive : {}) }}
-          >
-            <Users size={15} />
-            <span>Company Staff</span>
-          </div>
-
-          <div 
-            onClick={() => setActiveTab('seo')} 
-            style={{ ...styles.menuItem, ...(activeTab === 'seo' ? styles.menuItemActive : {}) }}
-          >
-            <Search size={15} />
-            <span>Google & SEO</span>
-          </div>
-
-          <div 
-            onClick={() => setActiveTab('settings')} 
-            style={{ ...styles.menuItem, ...(activeTab === 'settings' ? styles.menuItemActive : {}) }}
-          >
-            <SettingsIcon size={15} />
-            <span>Settings</span>
-          </div>
-        </nav>
-
-        {/* Global Agent loop status button at the footer */}
-        <div style={styles.sidebarFooter}>
-          <button 
-            className="btn-primary" 
-            style={styles.runLoopBtn}
-            onClick={handleTriggerAgentLoop}
-            disabled={runLoopLoading}
-          >
-            <RefreshCw size={14} className={runLoopLoading ? 'spin' : ''} />
-            {runLoopLoading ? 'Dispatching...' : 'Trigger Cloud Cycle'}
-          </button>
         </div>
-      </aside>
+      </div>
 
-      {/* Main dashboard viewport */}
-      <main style={styles.mainViewport}>
-        
-        {/* Status Indicator banner */}
-        <div style={styles.statusBanner} className="glass-card">
-          <div style={styles.statusText}>
-            <span style={{
-              ...styles.statusDot,
-              backgroundColor: agents.some(a => a.status !== 'Idle') ? 'var(--primary, #00f2fe)' : 'rgba(255,255,255,0.3)',
-              boxShadow: agents.some(a => a.status !== 'Idle') ? '0 0 10px var(--primary, #00f2fe)' : 'none'
-            }} />
-            <span>
-              <strong>Company Status:</strong>{' '}
-              {agents.some(a => a.status !== 'Idle') ? (
-                <span style={{ color: 'var(--primary, #00f2fe)', fontWeight: 600 }}>
-                  Agents actively executing tasks in cloud
-                </span>
-              ) : (
-                <span style={{ color: 'rgba(255,255,255,0.6)' }}>Ready for Board directives</span>
-              )}
+      {/* Main Two Buttons Action Section */}
+      <div style={styles.actionGrid}>
+        {/* Button 1: Trends */}
+        <button 
+          className="glass-card" 
+          style={{ 
+            ...styles.actionButton, 
+            opacity: isRunning ? 0.6 : 1,
+            cursor: isRunning ? 'not-allowed' : 'pointer',
+            borderColor: activeTask === 'Trending Content Campaign' || activeTask === 'Trending Content Campaign (Cloud)' ? 'var(--primary, #00f2fe)' : 'var(--border-glass)'
+          }}
+          disabled={isRunning}
+          onClick={() => handleAction('trends')}
+        >
+          <div style={{ ...styles.btnIconContainer, background: 'linear-gradient(135deg, rgba(0, 242, 254, 0.15), transparent)' }}>
+            <Sparkles size={28} style={{ color: 'var(--primary, #00f2fe)' }} />
+          </div>
+          <div style={styles.btnContent}>
+            <span style={styles.btnLabel}>Check Trends &amp; Publish</span>
+            <span style={styles.btnDesc}>Analyze real-time search volume queries in Google Trends, choose top topics, write guides, and publish content.</span>
+          </div>
+          <div className="btn-glow-cyan" style={styles.btnPlayGlow}>
+            <Play size={16} style={{ color: '#05070c' }} />
+          </div>
+        </button>
+
+        {/* Button 2: Jobs */}
+        <button 
+          className="glass-card" 
+          style={{ 
+            ...styles.actionButton, 
+            opacity: isRunning ? 0.6 : 1,
+            cursor: isRunning ? 'not-allowed' : 'pointer',
+            borderColor: activeTask === 'Job Vacancy Poster' || activeTask === 'Job Vacancy Poster (Cloud)' ? 'var(--secondary, #9d4ede)' : 'var(--border-glass)'
+          }}
+          disabled={isRunning}
+          onClick={() => handleAction('jobs')}
+        >
+          <div style={{ ...styles.btnIconContainer, background: 'linear-gradient(135deg, rgba(157, 78, 221, 0.15), transparent)' }}>
+            <Briefcase size={28} style={{ color: 'var(--secondary, #9d4ede)' }} />
+          </div>
+          <div style={styles.btnContent}>
+            <span style={styles.btnLabel}>Check &amp; Post Job Vacancy</span>
+            <span style={styles.btnDesc}>Scrape government or private sector vacancy lists, extract dates and fees, layout Sarkari Result details table, and publish.</span>
+          </div>
+          <div className="btn-glow-purple" style={styles.btnPlayGlow}>
+            <Play size={16} style={{ color: '#05070c' }} />
+          </div>
+        </button>
+      </div>
+
+      {/* Terminal Logs Panel */}
+      <div className="glass-card" style={styles.terminalCard}>
+        <div style={styles.terminalHeader}>
+          <div style={styles.terminalHeaderLeft}>
+            <Terminal size={16} style={{ color: 'var(--primary, #00f2fe)' }} />
+            <span style={styles.terminalTitle}>Real-Time Execution Logs</span>
+          </div>
+          <div style={styles.terminalHeaderRight}>
+            <span style={{ ...styles.consoleStatusText, color: statusColor }}>
+              {isRunning && <RefreshCw size={12} className="spin-animation" style={{ marginRight: '6px' }} />}
+              {statusMessage}
             </span>
-          </div>
-
-          <div style={{ 
-            fontSize: '0.85rem', 
-            color: timerColor, 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '8px', 
-            padding: '4px 10px', 
-            borderRadius: '6px', 
-            background: 'rgba(255,255,255,0.03)',
-            border: `1px solid ${timerColor === 'rgba(255,255,255,0.8)' || timerColor === 'rgba(255,255,255,0.6)' ? 'rgba(255,255,255,0.08)' : timerColor + '30'}`
-          }}>
-            <RefreshCw size={12} className={timeLeft === 'Running...' ? 'spin' : ''} style={{ color: timerColor }} />
-            <span>Next Article: <strong>{timeLeft}</strong></span>
-            {timeLeft === 'Overdue / Stalled' && (
-              <button 
-                onClick={handleTriggerAgentLoop}
-                disabled={runLoopLoading}
-                style={{
-                  background: '#ef4444',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  padding: '2px 8px',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  marginLeft: '8px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  transition: 'background 0.2s'
-                }}
-              >
-                <RefreshCw size={10} className={runLoopLoading ? 'spin' : ''} />
-                Restart Loop
-              </button>
-            )}
-          </div>
-
-          <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <ShieldCheck size={14} style={{ color: '#10b981' }} />
-            <span>Serverless Agent Loop Active</span>
+            <button style={styles.clearBtn} onClick={clearConsole} title="Clear terminal console">
+              <Trash2 size={14} />
+            </button>
           </div>
         </div>
 
-        {/* Display connection errors */}
-        {errorMsg && (
-          <div style={styles.errorBanner}>
-            {errorMsg}
-          </div>
-        )}
+        <div style={styles.terminalBody}>
+          {logs.length === 0 ? (
+            <div style={styles.terminalEmpty}>
+              <span style={{ color: 'rgba(255,255,255,0.2)' }}>Console terminal is empty. Click one of the action buttons above to trigger execution.</span>
+            </div>
+          ) : (
+            logs.map((log, index) => {
+              let color = 'rgba(255, 255, 255, 0.8)';
+              if (log.includes('[SYSTEM]')) color = 'var(--primary, #00f2fe)';
+              else if (log.includes('[ALEX]')) color = '#f59e0b';
+              else if (log.includes('[MARK]')) color = '#38bdf8';
+              else if (log.includes('[SOPHIA]')) color = '#a78bfa';
+              else if (log.includes('[DEPLOYER]')) color = '#10b981';
+              else if (log.includes('Error') || log.includes('FAILED')) color = '#ef4444';
+              else if (log.includes('Success')) color = '#10b981';
 
-        {loading ? (
-          <div style={styles.loadingContainer}>
-            <RefreshCw size={32} className="spin" style={{ color: 'var(--primary, #00f2fe)' }} />
-            <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.95rem' }}>Synchronizing Office Database...</span>
-          </div>
-        ) : (
-          <div style={styles.tabContentContainer}>
-            {activeTab === 'boardroom' && (
-              <Boardroom 
-                onSendDirective={handleSendDirective}
-                isProcessing={boardroomProcessing}
-                agents={enrichedAgents}
-                systemLogs={systemLogs}
-                tasks={tasks}
-                timeLeft={timeLeft}
-                timerColor={timerColor}
-                runLoopLoading={runLoopLoading}
-                onTriggerAgentLoop={handleTriggerAgentLoop}
-              />
-            )}
-            
-            {activeTab === 'tasks' && (
-              <KanbanBoard 
-                tasks={tasks}
-                onUpdateTaskStatus={handleUpdateTaskStatus}
-                onTriggerAgentLoop={handleTriggerAgentLoop}
-                selectedTaskId={selectedTaskId}
-                onClearSelectedTaskId={() => setSelectedTaskId(null)}
-              />
-            )}
-
-            {activeTab === 'chat' && (
-              <WorkspaceChat 
-                chatLogs={chatLogs}
-                onSendMessage={handleSendMessage}
-                tasks={tasks}
-                onViewTask={handleViewTask}
-              />
-            )}
-
-            {activeTab === 'org' && (
-              <OrgChart 
-                agents={enrichedAgents}
-                tasks={tasks}
-              />
-            )}
-
-            {activeTab === 'seo' && (
-              <SeoDashboard 
-                onTriggerAudit={handleTriggerAudit}
-              />
-            )}
-
-            {activeTab === 'settings' && (
-              <AiSettings 
-                config={config || { websitePath: '', deepseekKey: '', isAutomationActive: false }}
-                onUpdateConfig={handleUpdateConfig}
-              />
-            )}
-          </div>
-        )}
-      </main>
+              return (
+                <div key={index} style={{ ...styles.logLine, color }}>
+                  {log}
+                </div>
+              );
+            })
+          )}
+          {isRunning && (
+            <div style={styles.terminalCursorLine}>
+              <span style={styles.terminalCursor}></span>
+            </div>
+          )}
+          <div ref={terminalEndRef} />
+        </div>
+      </div>
     </div>
   );
 };
 
+const ClockBadge: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+  <div style={{ display: 'flex', flexDirection: 'column' as const, fontSize: '0.75rem', textAlign: 'right' }}>
+    <span style={{ color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</span>
+    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{value}</span>
+  </div>
+);
+
 const styles = {
-  dashboardLayout: {
-    display: 'flex',
-    gap: '24px',
-    minHeight: '600px',
-    color: '#fff',
-    fontFamily: 'var(--font-sans)',
-  },
-  sidebar: {
-    width: '240px',
-    background: 'rgba(255, 255, 255, 0.02)',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
-    borderRadius: '12px',
-    padding: '20px',
+  container: {
+    padding: '30px 24px 100px 24px',
+    maxWidth: '1100px',
+    margin: '0 auto',
     display: 'flex',
     flexDirection: 'column' as const,
-    boxSizing: 'border-box' as const,
+    gap: '24px'
   },
-  sidebarLogo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    marginBottom: '24px',
-    borderBottom: '1px solid rgba(255,255,255,0.08)',
-    paddingBottom: '12px',
-  },
-  logoText: {
-    fontWeight: 700,
-    fontSize: '1.05rem',
-    fontFamily: 'var(--font-heading)',
-    background: 'linear-gradient(to right, #fff, rgba(255,255,255,0.7))',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-  },
-  sidebarMenu: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '8px',
-  },
-  menuItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '10px 14px',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '0.88rem',
-    color: 'rgba(255,255,255,0.6)',
-    transition: 'all 0.2s ease',
-  },
-  menuItemActive: {
-    background: 'rgba(0, 242, 254, 0.1)',
-    color: 'var(--primary, #00f2fe)',
-    fontWeight: 600,
-  },
-  taskBadge: {
-    marginLeft: 'auto',
-    background: 'rgba(0, 242, 254, 0.15)',
-    color: 'var(--primary, #00f2fe)',
-    padding: '1px 6px',
-    borderRadius: '10px',
-    fontSize: '0.72rem',
-    fontWeight: 600,
-  },
-  sidebarFooter: {
-    marginTop: 'auto',
-    borderTop: '1px solid rgba(255,255,255,0.08)',
-    paddingTop: '20px',
-  },
-  runLoopBtn: {
-    width: '100%',
-    justifyContent: 'center',
-    gap: '8px',
-    border: 'none',
-    cursor: 'pointer',
-  },
-  mainViewport: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '20px',
-    minWidth: 0,
-  },
-  statusBanner: {
+  headerCard: {
+    padding: '24px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '16px 24px',
-    background: 'rgba(255, 255, 255, 0.02)',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
-    borderRadius: '12px',
+    background: 'rgba(10, 15, 30, 0.4)',
+    border: '1px solid var(--border-glass)',
+    borderRadius: '16px',
+    flexWrap: 'wrap' as const,
+    gap: '16px'
   },
-  statusText: {
+  headerLeft: {
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
-    fontSize: '0.9rem',
+    gap: '16px'
   },
   statusDot: {
-    width: '8px',
-    height: '8px',
+    width: '10px',
+    height: '10px',
     borderRadius: '50%',
+    transition: 'background-color 0.3s ease'
   },
-  errorBanner: {
-    background: 'rgba(239, 68, 68, 0.1)',
-    border: '1px solid #ef4444',
-    padding: '16px 24px',
-    borderRadius: '12px',
-    color: '#fecaca',
-    fontSize: '0.9rem',
+  title: {
+    fontSize: '1.5rem',
+    fontWeight: 700,
+    color: 'var(--text-primary)',
+    margin: 0
   },
-  loadingContainer: {
+  subtitle: {
+    fontSize: '0.85rem',
+    color: 'var(--text-secondary)',
+    margin: '4px 0 0 0'
+  },
+  headerRight: {
     display: 'flex',
-    flexDirection: 'column' as const,
+    alignItems: 'center',
+    gap: '24px'
+  },
+  metaBadge: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '0.8rem',
+    background: 'rgba(255, 255, 255, 0.03)',
+    border: '1px solid var(--border-glass)',
+    padding: '6px 12px',
+    borderRadius: '8px',
+    color: 'var(--text-secondary)'
+  },
+  actionGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+    gap: '24px'
+  },
+  actionButton: {
+    textAlign: 'left' as const,
+    padding: '30px',
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '20px',
+    background: 'rgba(15, 20, 35, 0.5)',
+    border: '1px solid var(--border-glass)',
+    borderRadius: '16px',
+    position: 'relative' as const,
+    overflow: 'hidden',
+    transition: 'all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
+  },
+  btnIconContainer: {
+    padding: '16px',
+    borderRadius: '12px',
+    display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '15px',
-    padding: '80px 0',
+    flexShrink: 0
   },
-  tabContentContainer: {
-    flex: 1,
-    minHeight: 0,
+  btnContent: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '8px',
+    flexGrow: 1
+  },
+  btnLabel: {
+    fontSize: '1.2rem',
+    fontWeight: 600,
+    color: 'var(--text-primary)'
+  },
+  btnDesc: {
+    fontSize: '0.85rem',
+    color: 'var(--text-secondary)',
+    lineHeight: 1.5
+  },
+  btnPlayGlow: {
+    position: 'absolute' as const,
+    bottom: '20px',
+    right: '20px',
+    width: '32px',
+    height: '32px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: '#ffffff',
+    boxShadow: '0 4px 12px rgba(255,255,255,0.2)',
+    transition: 'transform 0.2s ease'
+  },
+  terminalCard: {
+    background: 'rgba(5, 7, 12, 0.9)',
+    border: '1px solid var(--border-glass-active)',
+    borderRadius: '16px',
+    padding: '0',
+    overflow: 'hidden',
+    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255,255,255,0.05)'
+  },
+  terminalHeader: {
+    padding: '16px 20px',
+    background: 'rgba(0, 0, 0, 0.3)',
+    borderBottom: '1px solid var(--border-glass)',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  terminalHeaderLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px'
+  },
+  terminalTitle: {
+    fontSize: '0.85rem',
+    fontWeight: 600,
+    fontFamily: 'monospace',
+    letterSpacing: '1px',
+    color: 'var(--text-primary)',
+    textTransform: 'uppercase' as const
+  },
+  terminalHeaderRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px'
+  },
+  consoleStatusText: {
+    fontSize: '0.8rem',
+    fontFamily: 'monospace',
+    fontWeight: 600,
+    display: 'flex',
+    alignItems: 'center'
+  },
+  clearBtn: {
+    background: 'transparent',
+    border: 'none',
+    color: 'var(--text-muted)',
+    cursor: 'pointer',
+    padding: '4px',
+    borderRadius: '4px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.2s ease'
+  },
+  terminalBody: {
+    padding: '24px',
+    height: '420px',
+    overflowY: 'auto' as const,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '10px',
+    fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+    fontSize: '0.9rem',
+    lineHeight: 1.5,
+    backgroundColor: '#04060a'
+  },
+  terminalEmpty: {
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center' as const,
+    padding: '0 20px'
+  },
+  logLine: {
+    wordBreak: 'break-word' as const,
+    letterSpacing: '0.5px'
+  },
+  terminalCursorLine: {
+    display: 'flex',
+    alignItems: 'center'
+  },
+  terminalCursor: {
+    display: 'inline-block',
+    width: '8px',
+    height: '15px',
+    backgroundColor: 'var(--primary, #00f2fe)',
+    animation: 'blink 1s step-end infinite',
+    marginLeft: '2px'
   }
 };
