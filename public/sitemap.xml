@@ -205,4 +205,16 @@
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://quantumqbit.in/blogs/cbse-onmark-portal-vulnerabilities-contained-amid-security-concerns-what-students-and-parents-must-know</loc>
+    <lastmod>2026-05-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://quantumqbit.in/blogs/building-collapse-near-saket-metro-station-how-to-compress-and-resize-your-id-photos-for-police-verification-forms</loc>
+    <lastmod>2026-05-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
 </urlset>
