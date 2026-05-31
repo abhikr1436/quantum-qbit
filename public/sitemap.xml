@@ -217,4 +217,16 @@
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://quantumqbit.in/blogs/cbse-onmark-portal-vulnerability-what-students-parents-must-do-now-security-guide</loc>
+    <lastmod>2026-05-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://quantumqbit.in/blogs/cbse-onmark-portal-security-flaw-how-to-safely-upload-documents-without-leaking-personal-data</loc>
+    <lastmod>2026-05-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
 </urlset>
