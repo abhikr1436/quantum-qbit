@@ -235,4 +235,16 @@
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://quantumqbit.in/blogs/iran-suspends-talks-with-us-over-israels-lebanon-strikes-what-it-means-for-global-security</loc>
+    <lastmod>2026-06-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://quantumqbit.in/blogs/cbse-osm-row-how-to-compress-and-upload-your-affidavits-and-documents-for-the-delhi-high-court-case</loc>
+    <lastmod>2026-06-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
 </urlset>
