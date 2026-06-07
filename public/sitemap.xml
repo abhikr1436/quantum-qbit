@@ -367,4 +367,10 @@
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://quantumqbit.in/blogs/french-open-2023-a-historic-upset-and-the-privacy-lessons-for-live-sports-fans</loc>
+    <lastmod>2026-06-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
 </urlset>
