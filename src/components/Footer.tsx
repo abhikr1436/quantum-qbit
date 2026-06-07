@@ -71,6 +71,7 @@ export const Footer: React.FC = () => {
               <li><a href="/tools/image-transform" onClick={(e) => handleDirectNavigate(e, '/tools/image-transform')} style={{...styles.footerBtn, textDecoration: 'none'}}>Image Studio (Filters & Editor)</a></li>
               <li><a href="/tools/pdf-editor" onClick={(e) => handleDirectNavigate(e, '/tools/pdf-editor')} style={{...styles.footerBtn, textDecoration: 'none'}}>PDF Workshop (Convert)</a></li>
               <li><a href="/tools/math-calculators" onClick={(e) => handleDirectNavigate(e, '/tools/math-calculators')} style={{...styles.footerBtn, textDecoration: 'none'}}>Math Workbench</a></li>
+              <li><a href="/isro-ta-computer-science-pyq/" style={{...styles.footerBtn, textDecoration: 'none'}}>ISRO TA CS PYQ Mock Test</a></li>
             </ul>
           </div>
 

@@ -11,7 +11,8 @@ import {
   FileText, 
   Info, 
   Phone,
-  Compass
+  Compass,
+  Award
 } from 'lucide-react';
 import { navigate } from '../utils/router';
 
@@ -186,6 +187,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 >
                   <Calculator size={15} />
                   <span>Math Workbench</span>
+                </a>
+                <a 
+                  href="/isro-ta-computer-science-pyq/"
+                  className="sidebar-sub-item"
+                  onClick={() => onClose()}
+                  style={{ textDecoration: 'none' }}
+                >
+                  <Award size={15} />
+                  <span>ISRO TA CS PYQ</span>
                 </a>
               </div>
             )}

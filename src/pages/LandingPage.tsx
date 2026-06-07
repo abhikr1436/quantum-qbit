@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Cpu, Image as ImageIcon, FileText, Calculator, ShieldCheck, Zap, Lock, BookOpen } from 'lucide-react';
+import { Cpu, Image as ImageIcon, FileText, Calculator, ShieldCheck, Zap, Lock, BookOpen, Award } from 'lucide-react';
 import { navigate } from '../utils/router';
 import { ThreeDQbit } from '../components/ThreeDQbit';
 
@@ -383,6 +383,28 @@ export const LandingPage: React.FC = () => {
                   <button className="scroll-card-link-btn" onClick={() => navigate('/tools/math-unit')}>Unit Adapter</button>
                   <button className="scroll-card-link-btn" onClick={() => navigate('/tools/math-solver')}>Equation Solver</button>
                   <button className="scroll-card-link-btn" style={{ gridColumn: 'span 2' }} onClick={() => navigate('/tools/math-plotter')}>Graph Plotter</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4: PYQ Mock Tests */}
+            <div className="glass-card horizontal-scroll-card">
+              <div className="scroll-card-glow" style={{ background: 'radial-gradient(circle, rgba(157, 78, 221, 0.12) 0%, transparent 70%)' }}></div>
+              <div className="scroll-card-content">
+                <h3 className="scroll-card-title">
+                  <Award size={24} style={{ color: 'var(--secondary)' }} />
+                  <span>PYQ Mock Tests</span>
+                </h3>
+                <p className="scroll-card-desc">
+                  Practice standard Technical Assistant and Engineer exams with real Computer Based Test (CBT) interfaces and grading.
+                </p>
+                <div className="scroll-card-links-grid">
+                  <a href="/isro-ta-computer-science-pyq/" className="scroll-card-link-btn btn-purple" style={{ gridColumn: 'span 2', textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    ISRO TA CS Mock Test
+                  </a>
+                  <button className="scroll-card-link-btn btn-purple" onClick={() => navigate('/tools')} style={{ gridColumn: 'span 2' }}>
+                    Browse All Tests
+                  </button>
                 </div>
               </div>
             </div>

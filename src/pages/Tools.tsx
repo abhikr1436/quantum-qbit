@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Image, FileText, Calculator, ArrowLeft } from 'lucide-react';
+import { Search, Image, FileText, Calculator, ArrowLeft, Award } from 'lucide-react';
 const ImageEditor = React.lazy(() => import('./tools/ImageEditor').then(m => ({ default: m.ImageEditor })));
 const PdfEditor = React.lazy(() => import('./tools/PdfEditor').then(m => ({ default: m.PdfEditor })));
 const MathCalculators = React.lazy(() => import('./tools/MathCalculators').then(m => ({ default: m.MathCalculators })));
@@ -38,6 +38,14 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, def
       category: "math",
       description: "Interactive calculators including: Scientific Calculator, real-time Binary/Hex/Octal base converter, and Unit adapter.",
       keywords: ["calculator", "math", "hex", "binary", "octal", "base", "unit", "converter"]
+    },
+    {
+      id: 'isro-ta-computer-science-pyq',
+      icon: <Award size={22} style={{ color: 'var(--secondary)' }} />,
+      title: "ISRO TA Computer Science PYQ Mock Test",
+      category: "mock-tests",
+      description: "Attempt the Indian Space Research Organisation (ISRO) Technical Assistant (TA) Computer Science Previous Year Question (PYQ) Mock Test in a real Computer Based Test (CBT) practice environment.",
+      keywords: ["isro", "ta", "technical assistant", "computer science", "pyq", "mock test", "exam", "cbt"]
     }
   ];
 
@@ -139,18 +147,27 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, def
           </div>
 
           <div style={styles.categories}>
-            {['all', 'creative', 'productivity', 'math'].map((cat) => (
-              <button
-                key={cat}
-                style={{
-                  ...styles.categoryBtn,
-                  ...(activeCategory === cat ? styles.activeCategoryBtn : {})
-                }}
-                onClick={() => setActiveCategory(cat)}
-              >
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
-              </button>
-            ))}
+            {['all', 'creative', 'productivity', 'math', 'mock-tests'].map((cat) => {
+              const categoryLabels: Record<string, string> = {
+                all: 'All',
+                creative: 'Creative',
+                productivity: 'Productivity',
+                math: 'Math',
+                'mock-tests': 'PYQ Mock Tests'
+              };
+              return (
+                <button
+                  key={cat}
+                  style={{
+                    ...styles.categoryBtn,
+                    ...(activeCategory === cat ? styles.activeCategoryBtn : {})
+                  }}
+                  onClick={() => setActiveCategory(cat)}
+                >
+                  {categoryLabels[cat]}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -166,10 +183,12 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, def
                 <h3 style={styles.cardTitle}>{tool.title}</h3>
                 <p style={styles.cardDesc}>{tool.description}</p>
                 <a
-                  href={`/tools/${tool.id}`}
+                  href={tool.id === 'isro-ta-computer-science-pyq' ? '/isro-ta-computer-science-pyq/' : `/tools/${tool.id}`}
                   onClick={(e) => {
-                    e.preventDefault();
-                    setSelectedTool(tool.id);
+                    if (tool.id !== 'isro-ta-computer-science-pyq') {
+                      e.preventDefault();
+                      setSelectedTool(tool.id);
+                    }
                   }}
                   className="btn-primary"
                   style={{ ...styles.openBtn, textDecoration: 'none', display: 'flex' }}

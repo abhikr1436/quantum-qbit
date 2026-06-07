@@ -2,6 +2,9 @@
   RewriteEngine On
   RewriteBase /
 
+  # Redirect old ISRO PYQ URL to new SEO-friendly URL
+  RewriteRule ^isro-pyq(.*)$ /isro-ta-computer-science-pyq$1 [R=301,L]
+
   # 1. Do not rewrite requests that are already for the dist/ folder
   RewriteCond %{REQUEST_URI} ^/dist/ [NC]
   RewriteRule ^ - [L]

@@ -27,6 +27,13 @@ function App() {
   const rawPath = usePath();
   const path = rawPath.endsWith('/') && rawPath.length > 1 ? rawPath.slice(0, -1) : rawPath;
 
+  // Safety net: force full page reload for static directories to bypass client-side SPA routing
+  useEffect(() => {
+    if (rawPath.startsWith('/isro-pyq') || rawPath.startsWith('/isro-ta-computer-science-pyq')) {
+      window.location.replace(rawPath.endsWith('/') ? rawPath : rawPath + '/');
+    }
+  }, [rawPath]);
+
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [blogCategory, setBlogCategory] = useState<string>('all');
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
