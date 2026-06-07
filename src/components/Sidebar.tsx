@@ -45,6 +45,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [categories, setCategories] = useState<Category[]>([]);
   const [toolsExpanded, setToolsExpanded] = useState<boolean>(true);
   const [blogsExpanded, setBlogsExpanded] = useState<boolean>(false);
+  const [mockTestsExpanded, setMockTestsExpanded] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -188,13 +189,39 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <Calculator size={15} />
                   <span>Math Workbench</span>
                 </a>
+              </div>
+            )}
+          </div>
+
+          {/* Mock Tests options with suboptions */}
+          <div style={styles.groupContainer}>
+            <button 
+              className={`sidebar-nav-item ${currentPage === 'mock-tests' ? 'active' : ''}`}
+              onClick={() => setMockTestsExpanded(!mockTestsExpanded)}
+            >
+              <Award size={18} />
+              <span style={{ flexGrow: 1 }}>Mock Tests</span>
+              {mockTestsExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+            
+            {mockTestsExpanded && (
+              <div style={styles.subItemsContainer}>
+                <a 
+                  href="/mock-tests"
+                  className={`sidebar-sub-item ${currentPage === 'mock-tests' ? 'active' : ''}`}
+                  onClick={(e) => { e.preventDefault(); handleNav('mock-tests'); }}
+                  style={{ textDecoration: 'none' }}
+                >
+                  <Compass size={15} />
+                  <span>All Mock Tests</span>
+                </a>
                 <a 
                   href="/isro-ta-computer-science-pyq/"
                   className="sidebar-sub-item"
                   onClick={() => onClose()}
                   style={{ textDecoration: 'none' }}
                 >
-                  <Award size={15} />
+                  <Award size={15} style={{ opacity: 0.8 }} />
                   <span>ISRO TA CS PYQ</span>
                 </a>
               </div>

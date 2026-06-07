@@ -22,6 +22,7 @@ const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions'));
 const Blogs = lazy(() => import('./pages/Blogs'));
 const Admin = lazy(() => import('./pages/Admin'));
+const MockTests = lazy(() => import('./pages/MockTests'));
 
 function App() {
   const rawPath = usePath();
@@ -212,6 +213,8 @@ function App() {
     page = 'terms';
   } else if (path === '/admin') {
     page = 'admin';
+  } else if (path === '/mock-tests') {
+    page = 'mock-tests';
   }
 
   // Toggle body class for admin page to hide the traditional sticky bottom ad
@@ -294,6 +297,12 @@ function App() {
         "Management interface for blogging categories and publishing content.",
         "/admin"
       );
+    } else if (page === 'mock-tests') {
+      updateSEO(
+        "Competitive Exam Mock Tests | Quantum Qbit",
+        "Attempt previous year question (PYQ) mock tests for ISRO Technical Assistant (TA) Computer Science and other competitive exams with real-time scoring.",
+        "/mock-tests"
+      );
     }
   }, [page, tool]);
 
@@ -345,6 +354,8 @@ function App() {
         return <TermsAndConditions setCurrentPage={handleSetCurrentPage} />;
       case 'admin':
         return <Admin setCurrentPage={handleSetCurrentPage} />;
+      case 'mock-tests':
+        return <MockTests />;
       default:
         return <LandingPage />;
     }
