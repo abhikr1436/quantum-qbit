@@ -6,7 +6,7 @@
     "automationIntervalMinutes": 60,
     "isAutomationActive": true,
     "lastRunTimestamp": "2026-06-07T10:15:34.959Z",
-    "lastBrainstormTimestamp": "2026-06-07T10:15:19.597Z",
+    "lastBrainstormTimestamp": "2026-06-07T16:19:33.014Z",
     "campaignMode": null
   },
   "agents": [
@@ -4376,36 +4376,6 @@
   ],
   "systemLogs": [
     {
-      "timestamp": "2026-06-05T11:53:39.993Z",
-      "agent": "System",
-      "message": "🚀 CEO approved! Deployer is publishing \"World Environment Day 2025: How to Compress and Resize Posters Offline Without Uploading to Any Server\" to the live website now..."
-    },
-    {
-      "timestamp": "2026-06-05T11:53:40.011Z",
-      "agent": "System",
-      "message": "🎉 PUBLISHED: \"World Environment Day 2025: How to Compress and Resize Posters Offline Without Uploading to Any Server\" is now live on quantumqbit.in — 5/6/2026, 5:23:40 pm IST"
-    },
-    {
-      "timestamp": "2026-06-05T11:53:40.016Z",
-      "agent": "System",
-      "message": "[Cycle 5] No pending tasks — brainstorming new topic from live trends..."
-    },
-    {
-      "timestamp": "2026-06-05T11:53:40.021Z",
-      "agent": "System",
-      "message": "=== Runner completed all cycle steps and finished successfully ==="
-    },
-    {
-      "timestamp": "2026-06-05T18:31:22.953Z",
-      "agent": "System",
-      "message": "=== Runner process started on GitHub Actions ==="
-    },
-    {
-      "timestamp": "2026-06-05T18:31:22.984Z",
-      "agent": "System",
-      "message": "Fetching boardroom directives and live chats from server..."
-    },
-    {
       "timestamp": "2026-06-05T18:31:23.856Z",
       "agent": "System",
       "message": "Running autonomous hourly brainstorm — checking live trends for new article topic..."
@@ -5122,6 +5092,36 @@
     },
     {
       "timestamp": "2026-06-07T10:15:34.972Z",
+      "agent": "System",
+      "message": "=== Runner completed all cycle steps and finished successfully ==="
+    },
+    {
+      "timestamp": "2026-06-07T16:19:32.998Z",
+      "agent": "System",
+      "message": "=== Runner process started on GitHub Actions ==="
+    },
+    {
+      "timestamp": "2026-06-07T16:19:33.002Z",
+      "agent": "System",
+      "message": "Fetching boardroom directives and live chats from server..."
+    },
+    {
+      "timestamp": "2026-06-07T16:19:33.006Z",
+      "agent": "System",
+      "message": "Running autonomous hourly brainstorm — checking live trends for new article topic..."
+    },
+    {
+      "timestamp": "2026-06-07T16:19:33.006Z",
+      "agent": "System",
+      "message": "Deepseek API key not set or invalid. Running in simulated offline mode."
+    },
+    {
+      "timestamp": "2026-06-07T16:19:33.009Z",
+      "agent": "System",
+      "message": "[Cycle 1] No pending tasks — brainstorming new topic from live trends..."
+    },
+    {
+      "timestamp": "2026-06-07T16:19:33.014Z",
       "agent": "System",
       "message": "=== Runner completed all cycle steps and finished successfully ==="
     }

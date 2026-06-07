@@ -260,6 +260,113 @@ function dispatchGitHubWorkflow($token) {
     }
 }
 
+// Fallback mock trends if google trends RSS fails or geo is requested
+function getPHPGoogleMockTrends($geo) {
+    if ($geo === 'IN') {
+        return [
+            [
+                'title' => 'UPSSSC Lower PCS Graduate Level 2026',
+                'traffic' => '500K+',
+                'trafficNumeric' => 500000,
+                'pubDate' => date('r', time() - 2 * 3600),
+                'pubDateIso' => date('c', time() - 2 * 3600),
+                'hoursSinceStart' => 2.0,
+                'growthScore' => 166667,
+                'newsTitle' => 'UPSSSC Combined Lower Subordinate Services Notification out for 2285 Posts',
+                'newsUrl' => 'https://upsssc.gov.in',
+                'picture' => ''
+            ],
+            [
+                'title' => 'ISRO TA Recruitment CS Syllabus',
+                'traffic' => '100K+',
+                'trafficNumeric' => 100000,
+                'pubDate' => date('r', time() - 3600),
+                'pubDateIso' => date('c', time() - 3600),
+                'hoursSinceStart' => 1.0,
+                'growthScore' => 50000,
+                'newsTitle' => 'ISRO releases syllabus for Technical Assistant Computer Science PYQ CBT Exam',
+                'newsUrl' => 'https://www.isro.gov.in',
+                'picture' => ''
+            ],
+            [
+                'title' => 'Aadhaar Masking PDF Download',
+                'traffic' => '100K+',
+                'trafficNumeric' => 100000,
+                'pubDate' => date('r', time() - 5 * 3600),
+                'pubDateIso' => date('c', time() - 5 * 3600),
+                'hoursSinceStart' => 5.0,
+                'growthScore' => 16667,
+                'newsTitle' => 'UIDAI issues guidelines on downloading masked Aadhaar for privacy',
+                'newsUrl' => 'https://uidai.gov.in',
+                'picture' => ''
+            ],
+            [
+                'title' => 'IBPS RRB Clerk Online Form',
+                'traffic' => '200K+',
+                'trafficNumeric' => 200000,
+                'pubDate' => date('r', time() - 12 * 3600),
+                'pubDateIso' => date('c', time() - 12 * 3600),
+                'hoursSinceStart' => 12.0,
+                'growthScore' => 15385,
+                'newsTitle' => 'IBPS RRB Clerk and PO vacancies announced, apply online now',
+                'newsUrl' => 'https://ibps.in',
+                'picture' => ''
+            ],
+            [
+                'title' => 'Deepseek V3 API Launch',
+                'traffic' => '50K+',
+                'trafficNumeric' => 50000,
+                'pubDate' => date('r', time() - 3 * 3600),
+                'pubDateIso' => date('c', time() - 3 * 3600),
+                'hoursSinceStart' => 3.0,
+                'growthScore' => 12500,
+                'newsTitle' => 'Deepseek launches its powerful new coder models globally',
+                'newsUrl' => 'https://deepseek.com',
+                'picture' => ''
+            ]
+        ];
+    } else {
+        return [
+            [
+                'title' => 'WWDC 2026 Apple Intelligence',
+                'traffic' => '500K+',
+                'trafficNumeric' => 500000,
+                'pubDate' => date('r', time() - 3 * 3600),
+                'pubDateIso' => date('c', time() - 3 * 3600),
+                'hoursSinceStart' => 3.0,
+                'growthScore' => 125000,
+                'newsTitle' => 'Apple announces major updates to its local client-side processing core',
+                'newsUrl' => 'https://apple.com',
+                'picture' => ''
+            ],
+            [
+                'title' => 'ChatGPT Search Chrome Extension',
+                'traffic' => '200K+',
+                'trafficNumeric' => 200000,
+                'pubDate' => date('r', time() - 2 * 3600),
+                'pubDateIso' => date('c', time() - 2 * 3600),
+                'hoursSinceStart' => 2.0,
+                'growthScore' => 66667,
+                'newsTitle' => 'OpenAI rolls out official browser search integration',
+                'newsUrl' => 'https://openai.com',
+                'picture' => ''
+            ],
+            [
+                'title' => 'GitHub Actions Security Policy',
+                'traffic' => '100K+',
+                'trafficNumeric' => 100000,
+                'pubDate' => date('r', time() - 6 * 3600),
+                'pubDateIso' => date('c', time() - 6 * 3600),
+                'hoursSinceStart' => 6.0,
+                'growthScore' => 14286,
+                'newsTitle' => 'GitHub updates rules on workflow dispatches and branch permissions',
+                'newsUrl' => 'https://github.com',
+                'picture' => ''
+            ]
+        ];
+    }
+}
+
 // Extract request action
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 $input = json_decode(file_get_contents('php://input'), true);
@@ -399,6 +506,103 @@ switch ($action) {
 
         echo json_encode($db);
         break;
+
+    case 'get_live_trends':
+        $geo = isset($_GET['geo']) ? $_GET['geo'] : 'IN';
+        if ($geo !== 'US') {
+            $geo = 'IN';
+        }
+        $url = "https://trends.google.com/trending/rss?geo=" . $geo;
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+        curl_setopt($ch, CURLOPT_TIMEOUT, 8);
+        $xml = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($httpCode !== 200 || !$xml) {
+            $trends = getPHPGoogleMockTrends($geo);
+            echo json_encode($trends);
+            exit;
+        }
+        
+        preg_match_all('/<item>(.*?)<\/item>/is', $xml, $matches);
+        $trends = [];
+        
+        foreach ($matches[1] as $itemXml) {
+            $title = '';
+            $traffic = '10K+';
+            $pubDateStr = '';
+            $newsTitle = '';
+            $newsUrl = '';
+            $picture = '';
+            
+            if (preg_match('/<title>(.*?)<\/title>/is', $itemXml, $m)) {
+                $title = html_entity_decode(trim($m[1]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            }
+            if (preg_match('/<ht:approx_traffic>(.*?)<\/ht:approx_traffic>/is', $itemXml, $m)) {
+                $traffic = trim($m[1]);
+            }
+            if (preg_match('/<pubDate>(.*?)<\/pubDate>/is', $itemXml, $m)) {
+                $pubDateStr = trim($m[1]);
+            }
+            if (preg_match('/<ht:news_item_title>(.*?)<\/ht:news_item_title>/is', $itemXml, $m)) {
+                $newsTitle = html_entity_decode(trim($m[1]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            }
+            if (preg_match('/<ht:news_item_url>(.*?)<\/ht:news_item_url>/is', $itemXml, $m)) {
+                $newsUrl = trim($m[1]);
+            }
+            if (preg_match('/<ht:picture>(.*?)<\/ht:picture>/is', $itemXml, $m)) {
+                $picture = trim($m[1]);
+            }
+            
+            // Numeric traffic
+            $trafficNumeric = 0;
+            $cleanTraffic = str_replace([',', '+', ' '], '', strtolower($traffic));
+            if (strpos($cleanTraffic, 'k') !== false) {
+                $trafficNumeric = floatval(str_replace('k', '', $cleanTraffic)) * 1000;
+            } elseif (strpos($cleanTraffic, 'm') !== false) {
+                $trafficNumeric = floatval(str_replace('m', '', $cleanTraffic)) * 1000000;
+            } else {
+                $trafficNumeric = intval($cleanTraffic);
+            }
+            if ($trafficNumeric === 0) {
+                $trafficNumeric = 10000;
+            }
+            
+            // Hours since start
+            $pubTimestamp = strtotime($pubDateStr);
+            if (!$pubTimestamp) {
+                $pubTimestamp = time();
+            }
+            $hoursSinceStart = max(0.1, (time() - $pubTimestamp) / 3600);
+            
+            // Growth Score: traffic / (hours + 1)
+            $growthScore = round($trafficNumeric / ($hoursSinceStart + 1.0));
+            
+            $trends[] = [
+                'title' => $title,
+                'traffic' => $traffic,
+                'trafficNumeric' => $trafficNumeric,
+                'pubDate' => $pubDateStr,
+                'pubDateIso' => date('c', $pubTimestamp),
+                'hoursSinceStart' => round($hoursSinceStart, 1),
+                'growthScore' => $growthScore,
+                'newsTitle' => $newsTitle,
+                'newsUrl' => $newsUrl,
+                'picture' => $picture
+            ];
+        }
+        
+        usort($trends, function($a, $b) {
+            return $b['growthScore'] - $a['growthScore'];
+        });
+        
+        echo json_encode($trends);
+        exit;
         
     case 'save_config':
         $db = getAIDB($dbFile);

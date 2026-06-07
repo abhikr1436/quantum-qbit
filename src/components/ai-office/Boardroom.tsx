@@ -55,6 +55,7 @@ interface BoardroomProps {
   timerColor?: string;
   runLoopLoading?: boolean;
   onTriggerAgentLoop?: () => Promise<void>;
+  preFilledText?: string;
 }
 
 export const Boardroom: React.FC<BoardroomProps> = ({ 
@@ -65,9 +66,18 @@ export const Boardroom: React.FC<BoardroomProps> = ({
   tasks = [],
   timeLeft = '--:--',
   runLoopLoading = false,
-  onTriggerAgentLoop
+  onTriggerAgentLoop,
+  preFilledText = ''
 }) => {
   const logBodyRef = useRef<HTMLDivElement>(null);
+  const [directiveText, setDirectiveText] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (preFilledText) {
+      setDirectiveText(preFilledText);
+    }
+  }, [preFilledText]);
 
   // Scroll within the log container only — never moves the page
   useEffect(() => {
@@ -75,8 +85,6 @@ export const Boardroom: React.FC<BoardroomProps> = ({
       logBodyRef.current.scrollTop = logBodyRef.current.scrollHeight;
     }
   }, [systemLogs]);
-  const [directiveText, setDirectiveText] = useState('');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
