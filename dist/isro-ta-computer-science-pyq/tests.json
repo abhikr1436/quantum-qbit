@@ -1,7 +1,7 @@
 [
   {
     "id": 1,
-    "name": "IPRC Dec 2016 — TA Computer Science",
+    "name": "IPRC 2016 (Technical Assistant - CSE)",
     "questions": [
       {
         "local_id": 1,
@@ -1387,7 +1387,7 @@
   },
   {
     "id": 2,
-    "name": "VSSC Dec 2016 — TA Computer Science",
+    "name": "SAC 2016 (Technical Assistant - Computer)",
     "questions": [
       {
         "local_id": 1,
@@ -3233,7 +3233,7 @@
   },
   {
     "id": 3,
-    "name": "SAC Ahmedabad Dec 2016 — TA CS/IT",
+    "name": "SAC 2017 (Technical Assistant - Computer)",
     "questions": [
       {
         "local_id": 1,
@@ -5079,7 +5079,7 @@
   },
   {
     "id": 4,
-    "name": "SDSC SHAR — TA Computer Science",
+    "name": "SDSC SHAR 2016 (Technical Assistant - CSE)",
     "questions": [
       {
         "local_id": 1,
@@ -6465,7 +6465,7 @@
   },
   {
     "id": 5,
-    "name": "SDSC SHAR June 2022 — TA Computer Science",
+    "name": "SDSC SHAR 2022 (Technical Assistant - CSE)",
     "questions": [
       {
         "local_id": 1,
@@ -8311,7 +8311,7 @@
   },
   {
     "id": 6,
-    "name": "SDSC SHAR — TA CS Booklet 2",
+    "name": "URSC 2016 (Technical Assistant - CS)",
     "questions": [
       {
         "local_id": 1,
@@ -9697,7 +9697,7 @@
   },
   {
     "id": 7,
-    "name": "URSC Bengaluru Mar 2019 — TA Computer Science",
+    "name": "URSC 2019 (Technical Assistant - CS)",
     "questions": [
       {
         "local_id": 1,
@@ -11083,7 +11083,7 @@
   },
   {
     "id": 8,
-    "name": "SAC Ahmedabad Post 1370 — TA CS",
+    "name": "VSSC 2018 (Technical Assistant - CS, Post 1370)",
     "questions": [
       {
         "local_id": 1,
@@ -12929,7 +12929,7 @@
   },
   {
     "id": 9,
-    "name": "SAC Ahmedabad Post 1386 — TA CS",
+    "name": "VSSC 2019 (Technical Assistant - CS, Post 1386)",
     "questions": [
       {
         "local_id": 1,
@@ -14775,7 +14775,7 @@
   },
   {
     "id": 10,
-    "name": "ISRO Scientist / Engineer SC — Computer Science",
+    "name": "VSSC 2021 (Technical Assistant - CS, Post 1427)",
     "questions": [
       {
         "local_id": 1,
@@ -16616,6 +16616,1852 @@
           }
         ],
         "correct_answer": "C"
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "name": "VSSC 2024 (Technical Assistant - CS, Post 1481)",
+    "questions": [
+      {
+        "local_id": 1,
+        "text": "What is the output of the following Java code?\n\npublic class test {\n    public static void main(String [] args) {\n        int[][] m1 = {\n            {1, 2, 3},\n            {4, 5, 6},\n            {7, 8, 9}\n        };\n        int [][] m2 = new int [3][3];\n        for (int i=0 ; i<3; i++) {\n            for (int j=0; j<3; j++) {\n                m2[j][i] = m1[i][j];\n            }\n        }\n        for (int i=0 ; i<3; i++) {\n            for (int j=0; j<3; j++) {\n                System.out.print(m2[i][j] + \" \");\n            }\n            System.out.println();\n        }\n    }\n}",
+        "options": [
+          {
+            "label": "A",
+            "text": "1 2 3\n4 5 6\n7 8 9"
+          },
+          {
+            "label": "B",
+            "text": "1 4 7\n2 5 8\n3 6 9"
+          },
+          {
+            "label": "C",
+            "text": "9 6 3\n8 5 2\n7 4 1"
+          },
+          {
+            "label": "D",
+            "text": "2 5 8\n3 6 9\n4 7 10"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 2,
+        "text": "Which Linux mechanism/utility helps users to schedule a job to run at fixed times, days or intervals?",
+        "options": [
+          {
+            "label": "A",
+            "text": "crontab"
+          },
+          {
+            "label": "B",
+            "text": "Task Manager"
+          },
+          {
+            "label": "C",
+            "text": "sched"
+          },
+          {
+            "label": "D",
+            "text": "awk"
+          }
+        ],
+        "correct_answer": "A"
+      },
+      {
+        "local_id": 3,
+        "text": "Find the child node/nodes of the node with value 17 in the array representation of the binary tree given below (1-indexed):\n\nIndex  Value\n1      20\n2      15\n3      35\n4      12\n5      17\n6      21\n7      39\n8      6\n9      10\n10     11\n11     18\n12     36\n13     45",
+        "options": [
+          {
+            "label": "A",
+            "text": "18"
+          },
+          {
+            "label": "B",
+            "text": "39"
+          },
+          {
+            "label": "C",
+            "text": "12"
+          },
+          {
+            "label": "D",
+            "text": "21"
+          }
+        ],
+        "correct_answer": "A"
+      },
+      {
+        "local_id": 4,
+        "text": "Identify the incorrect statement related to the array data structure.",
+        "options": [
+          {
+            "label": "A",
+            "text": "An array can be represented in memory as a contiguous block of elements."
+          },
+          {
+            "label": "B",
+            "text": "It is a collection of similar data elements."
+          },
+          {
+            "label": "C",
+            "text": "An array is a linear data structure."
+          },
+          {
+            "label": "D",
+            "text": "Random access of data is not allowed in arrays."
+          }
+        ],
+        "correct_answer": "D"
+      },
+      {
+        "local_id": 5,
+        "text": "Consider the following statements with respect to memory fragmentation:\n\nI. The mechanism of having fixed sized blocks of memory can result in internal fragmentation.\nII. Shared memory solves the problem of external fragmentation to a great extent.\nIII. By segmentation, the processes can be allocated non-contiguous memory to minimize external fragmentation.\n\nWhich of the following options is correct?",
+        "options": [
+          {
+            "label": "A",
+            "text": "Only Statement I is True"
+          },
+          {
+            "label": "B",
+            "text": "Statements I, II and III are True"
+          },
+          {
+            "label": "C",
+            "text": "Statements I, II and III are False"
+          },
+          {
+            "label": "D",
+            "text": "Statements I and III are True"
+          }
+        ],
+        "correct_answer": "D"
+      },
+      {
+        "local_id": 6,
+        "text": "Which of the following is the correct representation in Hexadecimal and BCD formats respectively of the Octal number 43?",
+        "options": [
+          {
+            "label": "A",
+            "text": "2B, 0100 0011"
+          },
+          {
+            "label": "B",
+            "text": "23, 0100 0011"
+          },
+          {
+            "label": "C",
+            "text": "23, 0011 0101"
+          },
+          {
+            "label": "D",
+            "text": "2B, 0011 0101"
+          }
+        ],
+        "correct_answer": "C"
+      },
+      {
+        "local_id": 7,
+        "text": "What is the exponent part, if the floating-point number 2.5 is represented in single precision IEEE 754 format?",
+        "options": [
+          {
+            "label": "A",
+            "text": "00000001"
+          },
+          {
+            "label": "B",
+            "text": "10000000"
+          },
+          {
+            "label": "C",
+            "text": "10000001"
+          },
+          {
+            "label": "D",
+            "text": "10000010"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 8,
+        "text": "Which of the following is correct for an 'm' bit microprocessor?",
+        "options": [
+          {
+            "label": "A",
+            "text": "It has m-1 bits Instruction register"
+          },
+          {
+            "label": "B",
+            "text": "It has m bit Data register"
+          },
+          {
+            "label": "C",
+            "text": "It has m bit Address register"
+          },
+          {
+            "label": "D",
+            "text": "It has m bit Accumulator"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 9,
+        "text": "A microprocessor operates with a crystal frequency of 16 MHz and a clock frequency half the crystal frequency. The time required to execute an instruction is 0.5 microseconds. What is the number of T-states needed for executing that particular instruction?",
+        "options": [
+          {
+            "label": "A",
+            "text": "1"
+          },
+          {
+            "label": "B",
+            "text": "4"
+          },
+          {
+            "label": "C",
+            "text": "5"
+          },
+          {
+            "label": "D",
+            "text": "8"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 10,
+        "text": "Match the logic gates in Column A with their equivalent bubbled representations in Column B:\n\nColumn A:\nA. NAND gate\nB. NOR gate\nC. XOR gate\nD. XNOR gate\n\nColumn B:\n1. Bubbled XNOR gate\n2. Bubbled OR gate\n3. Bubbled AND gate\n4. Bubbled XNOR gate with inverted output\n\nChoose the correct option:",
+        "options": [
+          {
+            "label": "A",
+            "text": "A-2, B-3, C-1, D-4"
+          },
+          {
+            "label": "B",
+            "text": "A-2, B-3, C-4, D-1"
+          },
+          {
+            "label": "C",
+            "text": "A-3, B-2, C-1, D-4"
+          },
+          {
+            "label": "D",
+            "text": "A-3, B-2, C-4, D-1"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 11,
+        "text": "What is the minimal form of the function represented by the following Karnaugh Map?\n'X' denotes a don't care term\n\nCD \\ AB   00   01   11   10\n00        1    X    X    1\n01        1              1\n11\n10        X              1",
+        "options": [
+          {
+            "label": "A",
+            "text": "B'D' + B'C' + C'D'"
+          },
+          {
+            "label": "B",
+            "text": "B'D' + B'C'"
+          },
+          {
+            "label": "C",
+            "text": "B'D' + B'C'D'"
+          },
+          {
+            "label": "D",
+            "text": "C'D' + B'D' + B'C'D'"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 12,
+        "text": "Two finite state machines are said to be equivalent if",
+        "options": [
+          {
+            "label": "A",
+            "text": "Both have same number of edges"
+          },
+          {
+            "label": "B",
+            "text": "Both have same number of states"
+          },
+          {
+            "label": "C",
+            "text": "Both recognize the same set of tokens / strings"
+          },
+          {
+            "label": "D",
+            "text": "Both have same number of edges and states"
+          }
+        ],
+        "correct_answer": "C"
+      },
+      {
+        "local_id": 13,
+        "text": "Consider the database JOIN of a relation X with a relation Y. If relation X has x tuples and relation Y has y tuples, then the minimum and maximum sizes of the join are respectively:",
+        "options": [
+          {
+            "label": "A",
+            "text": "0 and x*y"
+          },
+          {
+            "label": "B",
+            "text": "(x-y) and x+y"
+          },
+          {
+            "label": "C",
+            "text": "0 and x+y"
+          },
+          {
+            "label": "D",
+            "text": "x/y and x*y"
+          }
+        ],
+        "correct_answer": "A"
+      },
+      {
+        "local_id": 14,
+        "text": "Consider the following two database queries:\n\nQuery 1: Select studentName from STUDENT where studentClass = 7 or studentClass = 10\nQuery 2: (Select studentName from STUDENT where studentClass = 7) UNION (Select studentName from STUDENT where studentClass = 10)\n\nWhich of the following is correct?",
+        "options": [
+          {
+            "label": "A",
+            "text": "Query 1 and Query 2 always give the same number of rows"
+          },
+          {
+            "label": "B",
+            "text": "Query 1 and Query 2 give same number of rows if there are no duplicates in studentName"
+          },
+          {
+            "label": "C",
+            "text": "OR operation cannot be used in WHERE clause"
+          },
+          {
+            "label": "D",
+            "text": "Query 1 and Query 2 will never return same results"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 15,
+        "text": "If (123)_7 - (123)_4 = (X)_10, what is the value of X?",
+        "options": [
+          {
+            "label": "A",
+            "text": "29"
+          },
+          {
+            "label": "B",
+            "text": "39"
+          },
+          {
+            "label": "C",
+            "text": "49"
+          },
+          {
+            "label": "D",
+            "text": "19"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 16,
+        "text": "Which of the following is incorrect with reference to the OSI model?",
+        "options": [
+          {
+            "label": "A",
+            "text": "Network layer is responsible for packet routing"
+          },
+          {
+            "label": "B",
+            "text": "Transport layer allows end-to-end communication between two processes"
+          },
+          {
+            "label": "C",
+            "text": "Session layer is responsible for Congestion control"
+          },
+          {
+            "label": "D",
+            "text": "Application layer presents meaningful data to users"
+          }
+        ],
+        "correct_answer": "C"
+      },
+      {
+        "local_id": 17,
+        "text": "Which one of the following uses UDP as the transport protocol?",
+        "options": [
+          {
+            "label": "A",
+            "text": "HTTP"
+          },
+          {
+            "label": "B",
+            "text": "DNS"
+          },
+          {
+            "label": "C",
+            "text": "FTP"
+          },
+          {
+            "label": "D",
+            "text": "HTTPS"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 18,
+        "text": "Which algorithm is used to compute the minimum spanning tree of a graph?",
+        "options": [
+          {
+            "label": "A",
+            "text": "Kruskal's Algorithm"
+          },
+          {
+            "label": "B",
+            "text": "Binary Search Algorithm"
+          },
+          {
+            "label": "C",
+            "text": "Depth-First Search"
+          },
+          {
+            "label": "D",
+            "text": "Breadth-First Search"
+          }
+        ],
+        "correct_answer": "A"
+      },
+      {
+        "local_id": 19,
+        "text": "In Chat GPT, GPT stands for",
+        "options": [
+          {
+            "label": "A",
+            "text": "Generative Pre-trained Transformer"
+          },
+          {
+            "label": "B",
+            "text": "Generative Process Trainer"
+          },
+          {
+            "label": "C",
+            "text": "General Processor Transformer"
+          },
+          {
+            "label": "D",
+            "text": "General Pre-training Transformer"
+          }
+        ],
+        "correct_answer": "A"
+      },
+      {
+        "local_id": 20,
+        "text": "The AI based National Language Translation Mission by Govt. of India is",
+        "options": [
+          {
+            "label": "A",
+            "text": "Bhashini"
+          },
+          {
+            "label": "B",
+            "text": "Bhuvan"
+          },
+          {
+            "label": "C",
+            "text": "Bhasha"
+          },
+          {
+            "label": "D",
+            "text": "Babel"
+          }
+        ],
+        "correct_answer": "A"
+      },
+      {
+        "local_id": 21,
+        "text": "Find the value of: lim_{x->0} (sin(x)/x)",
+        "options": [
+          {
+            "label": "A",
+            "text": "-1"
+          },
+          {
+            "label": "B",
+            "text": "1"
+          },
+          {
+            "label": "C",
+            "text": "0"
+          },
+          {
+            "label": "D",
+            "text": "8"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 22,
+        "text": "Box A contains 3 red and 3 black balls while box B contains 4 red and 6 black balls. If a ball is randomly picked up from each box, what is the probability that the balls will be of the same colour?",
+        "options": [
+          {
+            "label": "A",
+            "text": "0.2"
+          },
+          {
+            "label": "B",
+            "text": "0.3"
+          },
+          {
+            "label": "C",
+            "text": "0.5"
+          },
+          {
+            "label": "D",
+            "text": "0.6"
+          }
+        ],
+        "correct_answer": "C"
+      },
+      {
+        "local_id": 23,
+        "text": "Which of the following is true about Dijkstra's Algorithm?",
+        "options": [
+          {
+            "label": "A",
+            "text": "It is used to filter out malicious data from networks"
+          },
+          {
+            "label": "B",
+            "text": "It is used for finding the shortest path between nodes in a weighted graph"
+          },
+          {
+            "label": "C",
+            "text": "It is used to resolve deadlocks during resource allocation in operating systems"
+          },
+          {
+            "label": "D",
+            "text": "It is implemented in firewalls for encryption purpose"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 24,
+        "text": "A Binary search tree whose left sub tree and right sub tree differ in height by at most one unit is called",
+        "options": [
+          {
+            "label": "A",
+            "text": "Complete Binary Tree"
+          },
+          {
+            "label": "B",
+            "text": "AVL tree"
+          },
+          {
+            "label": "C",
+            "text": "Lemma tree"
+          },
+          {
+            "label": "D",
+            "text": "Red-Black Tree"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 25,
+        "text": "Which of the following data structures has search efficiency of O(1) always?",
+        "options": [
+          {
+            "label": "A",
+            "text": "Tree"
+          },
+          {
+            "label": "B",
+            "text": "Heap"
+          },
+          {
+            "label": "C",
+            "text": "Hash Table"
+          },
+          {
+            "label": "D",
+            "text": "Linked List"
+          }
+        ],
+        "correct_answer": "C"
+      },
+      {
+        "local_id": 26,
+        "text": "In a Finite State Automaton, S is the start state and T is the only final state. For the strings:\nx = cbabbaba, y = baab, z = aabbcb\nWhich of the following is true?",
+        "options": [
+          {
+            "label": "A",
+            "text": "Automaton accepts x and y, but not z"
+          },
+          {
+            "label": "B",
+            "text": "Accepts x, y and z"
+          },
+          {
+            "label": "C",
+            "text": "Rejects x, y, z"
+          },
+          {
+            "label": "D",
+            "text": "Accepts x, but rejects y and z"
+          }
+        ],
+        "correct_answer": "D"
+      },
+      {
+        "local_id": 27,
+        "text": "Which of the following is a class C private IP address?",
+        "options": [
+          {
+            "label": "A",
+            "text": "172.16.0.0"
+          },
+          {
+            "label": "B",
+            "text": "192.168.24.43"
+          },
+          {
+            "label": "C",
+            "text": "192.155.24.43"
+          },
+          {
+            "label": "D",
+            "text": "168.172.19.39"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 28,
+        "text": "Which of the following protocols use TCP?",
+        "options": [
+          {
+            "label": "A",
+            "text": "DHCP, SMTP, FTP"
+          },
+          {
+            "label": "B",
+            "text": "TFTP, DHCP, FTP"
+          },
+          {
+            "label": "C",
+            "text": "SMTP, FTP, HTTP"
+          },
+          {
+            "label": "D",
+            "text": "FTP, DHCP, TFTP"
+          }
+        ],
+        "correct_answer": "C"
+      },
+      {
+        "local_id": 29,
+        "text": "What is the length of the Address field in IPv6 protocol?",
+        "options": [
+          {
+            "label": "A",
+            "text": "32 bits"
+          },
+          {
+            "label": "B",
+            "text": "128 bits"
+          },
+          {
+            "label": "C",
+            "text": "64 bits"
+          },
+          {
+            "label": "D",
+            "text": "64 bits with rightmost 8 bits padded with zeroes"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 30,
+        "text": "Which of the following is true regarding priority inversion?",
+        "options": [
+          {
+            "label": "A",
+            "text": "Priority inversion is a solution for avoiding deadlock conditions"
+          },
+          {
+            "label": "B",
+            "text": "Priority inversion is the primary cause for entering into deadlock conditions"
+          },
+          {
+            "label": "C",
+            "text": "Priority inversion occurs when a low priority task is holding a resource when a higher priority task is waiting for the same resource"
+          },
+          {
+            "label": "D",
+            "text": "Priority inversion occurs when a high priority task is holding a resource when a lower priority task is waiting for the same resource"
+          }
+        ],
+        "correct_answer": "C"
+      },
+      {
+        "local_id": 31,
+        "text": "What is Phishing?",
+        "options": [
+          {
+            "label": "A",
+            "text": "Intruding into another person's computer by breaking the password"
+          },
+          {
+            "label": "B",
+            "text": "Sending emails to users which appear to be legitimate to gather sensitive information"
+          },
+          {
+            "label": "C",
+            "text": "Denial of service attack"
+          },
+          {
+            "label": "D",
+            "text": "Illegally decoding encrypted messages"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 32,
+        "text": "A Cross Compiler is a compiler that:",
+        "options": [
+          {
+            "label": "A",
+            "text": "Runs on a machine and generates object code for the same target machine"
+          },
+          {
+            "label": "B",
+            "text": "Runs on a machine and generates object code for another target machine"
+          },
+          {
+            "label": "C",
+            "text": "Runs on a machine and generates object code for another language"
+          },
+          {
+            "label": "D",
+            "text": "Runs on a machine and generates intermediate object code"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 33,
+        "text": "Which of the following is incorrect?",
+        "options": [
+          {
+            "label": "A",
+            "text": "Time Bomb is a malware which gets activated at a pre-defined time"
+          },
+          {
+            "label": "B",
+            "text": "Firewall is a network security device which monitors and filters network traffic based on pre-defined policies"
+          },
+          {
+            "label": "C",
+            "text": "RSA is a network data storage algorithm"
+          },
+          {
+            "label": "D",
+            "text": "Blowfish is an algorithm used widely for encryption"
+          }
+        ],
+        "correct_answer": "C"
+      },
+      {
+        "local_id": 34,
+        "text": "A probability experiment has 5 possible outcomes V, W, X, Y and Z. The outcome of W is 5 times as likely as each of the four remaining outcomes. The probability of W is:",
+        "options": [
+          {
+            "label": "A",
+            "text": "1/5"
+          },
+          {
+            "label": "B",
+            "text": "2/9"
+          },
+          {
+            "label": "C",
+            "text": "5/9"
+          },
+          {
+            "label": "D",
+            "text": "8/9"
+          }
+        ],
+        "correct_answer": "C"
+      },
+      {
+        "local_id": 35,
+        "text": "What is the probability of rolling 4 six-sided dice and getting a different number on each die?",
+        "options": [
+          {
+            "label": "A",
+            "text": "15/54"
+          },
+          {
+            "label": "B",
+            "text": "4/54"
+          },
+          {
+            "label": "C",
+            "text": "1/6"
+          },
+          {
+            "label": "D",
+            "text": "0"
+          }
+        ],
+        "correct_answer": "A"
+      },
+      {
+        "local_id": 36,
+        "text": "Which of the following statements is correct about Mealy and Moore machines?",
+        "options": [
+          {
+            "label": "A",
+            "text": "In Mealy machine output depends only on present state and in Moore machine output depends both on present state and present input"
+          },
+          {
+            "label": "B",
+            "text": "In Mealy machine output depends both on present state and present input and in Moore machine output depends only on present state"
+          },
+          {
+            "label": "C",
+            "text": "In Mealy machine output depends both on present state and present input and in Moore machine output depends only on present input"
+          },
+          {
+            "label": "D",
+            "text": "In Mealy machine output depends on present input and in Moore machine output depends only on present state"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 37,
+        "text": "Determine the output for the input sequence 110100 for the Finite State Machine shown below. Consider 'S0' as the initial state:\n\nPresent State | Next State (X=0) | Next State (X=1) | Output (X=0) | Output (X=1)\nS0            | S1               | S2               | 0            | 0\nS1            | S2               | S1               | 0            | 1\nS2            | S1               | S2               | 1            | 1",
+        "options": [
+          {
+            "label": "A",
+            "text": "110100"
+          },
+          {
+            "label": "B",
+            "text": "011111"
+          },
+          {
+            "label": "C",
+            "text": "010111"
+          },
+          {
+            "label": "D",
+            "text": "011101"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 38,
+        "text": "What is the minimum length of Opcode (in bits) required to implement a CPU with 20 arithmetic instructions, 1 control instruction and 2 data transfer instructions?",
+        "options": [
+          {
+            "label": "A",
+            "text": "6"
+          },
+          {
+            "label": "B",
+            "text": "5"
+          },
+          {
+            "label": "C",
+            "text": "8"
+          },
+          {
+            "label": "D",
+            "text": "16"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 39,
+        "text": "How many elements are there in the power set of set A = {0, 1, 2, 3, 4}?",
+        "options": [
+          {
+            "label": "A",
+            "text": "16"
+          },
+          {
+            "label": "B",
+            "text": "5"
+          },
+          {
+            "label": "C",
+            "text": "6"
+          },
+          {
+            "label": "D",
+            "text": "32"
+          }
+        ],
+        "correct_answer": "D"
+      },
+      {
+        "local_id": 40,
+        "text": "Which among the following is a one-to-one function?",
+        "options": [
+          {
+            "label": "A",
+            "text": "f(x) = x^2"
+          },
+          {
+            "label": "B",
+            "text": "f(x) = x + 1"
+          },
+          {
+            "label": "C",
+            "text": "f(x) = |x|"
+          },
+          {
+            "label": "D",
+            "text": "f(x) = x^4 + 1"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 41,
+        "text": "In a school, 4 different coloured uniforms are chosen for a cultural event. How many students need to be selected at a minimum to ensure that at least 8 will have the same colour?",
+        "options": [
+          {
+            "label": "A",
+            "text": "29"
+          },
+          {
+            "label": "B",
+            "text": "32"
+          },
+          {
+            "label": "C",
+            "text": "8"
+          },
+          {
+            "label": "D",
+            "text": "4"
+          }
+        ],
+        "correct_answer": "A"
+      },
+      {
+        "local_id": 42,
+        "text": "How many permutations of the letters of the word VIBGYOR contain the string 'OR'?",
+        "options": [
+          {
+            "label": "A",
+            "text": "720"
+          },
+          {
+            "label": "B",
+            "text": "120"
+          },
+          {
+            "label": "C",
+            "text": "5040"
+          },
+          {
+            "label": "D",
+            "text": "35"
+          }
+        ],
+        "correct_answer": "A"
+      },
+      {
+        "local_id": 43,
+        "text": "Which among the following is a postfix expression?",
+        "options": [
+          {
+            "label": "A",
+            "text": "*xy"
+          },
+          {
+            "label": "B",
+            "text": "x+y/z"
+          },
+          {
+            "label": "C",
+            "text": "xyz*+ab+-"
+          },
+          {
+            "label": "D",
+            "text": "x/y*(a+b)"
+          }
+        ],
+        "correct_answer": "C"
+      },
+      {
+        "local_id": 44,
+        "text": "Which among the following is incorrect for a Linux command?",
+        "options": [
+          {
+            "label": "A",
+            "text": "ps command is used to find the status of processes in a system"
+          },
+          {
+            "label": "B",
+            "text": "grep command searches for patterns in a file"
+          },
+          {
+            "label": "C",
+            "text": "cat command concatenates or displays file contents to standard output"
+          },
+          {
+            "label": "D",
+            "text": "top command lists the first few lines of a file"
+          }
+        ],
+        "correct_answer": "D"
+      },
+      {
+        "local_id": 45,
+        "text": "Which among the following is a programming technique that allows developers to interact with a Relational Database Management System using objects in Object-Oriented Programming?",
+        "options": [
+          {
+            "label": "A",
+            "text": "ODM (Object Document Mapping)"
+          },
+          {
+            "label": "B",
+            "text": "ORM (Object Relational Mapping)"
+          },
+          {
+            "label": "C",
+            "text": "DAO (Data Access Object)"
+          },
+          {
+            "label": "D",
+            "text": "COM (Component Object Model)"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 46,
+        "text": "Identify the correct statement from the following:",
+        "options": [
+          {
+            "label": "A",
+            "text": "Graph is a Primitive Data Structure"
+          },
+          {
+            "label": "B",
+            "text": "Graph is a Non-Linear Data Structure"
+          },
+          {
+            "label": "C",
+            "text": "Data part of a node in a singly linked list can only have integer values"
+          },
+          {
+            "label": "D",
+            "text": "Stack is a Non-Linear Data Structure"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 47,
+        "text": "Which of the following is the equivalent Infix expression corresponding to inorder traversal for the expression tree?",
+        "options": [
+          {
+            "label": "A",
+            "text": "(a+b*d)+(a*d-b*d)/8"
+          },
+          {
+            "label": "B",
+            "text": "(a/(b*b)) + (d*d-a*a)/8"
+          },
+          {
+            "label": "C",
+            "text": "(b*b/a)+(8/(a*a-d*d))"
+          },
+          {
+            "label": "D",
+            "text": "(b+d)/a+(8/(a*d-a*d)"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 48,
+        "text": "Identify the incorrect statement related to a Singly Linked List.",
+        "options": [
+          {
+            "label": "A",
+            "text": "Elements can only be accessed in a sequential manner"
+          },
+          {
+            "label": "B",
+            "text": "Each node has a data field and a pointer to the next node"
+          },
+          {
+            "label": "C",
+            "text": "New node can be inserted at the beginning"
+          },
+          {
+            "label": "D",
+            "text": "Elements must be stored consecutively in memory"
+          }
+        ],
+        "correct_answer": "D"
+      },
+      {
+        "local_id": 49,
+        "text": "Which of the following is incorrect for a Java constructor?",
+        "options": [
+          {
+            "label": "A",
+            "text": "It is used to initialize the state of an object"
+          },
+          {
+            "label": "B",
+            "text": "It must have the same name as the class"
+          },
+          {
+            "label": "C",
+            "text": "It must have a return type"
+          },
+          {
+            "label": "D",
+            "text": "A class can have multiple constructors"
+          }
+        ],
+        "correct_answer": "C"
+      },
+      {
+        "local_id": 50,
+        "text": "The following commands are sequentially executed in a Linux system:\n\nmkdir a\ncd a\ntouch b\ntouch c\nls > d.txt\ngrep \"b\" d.txt\n\nWhat is the final output?",
+        "options": [
+          {
+            "label": "A",
+            "text": "a"
+          },
+          {
+            "label": "B",
+            "text": "b"
+          },
+          {
+            "label": "C",
+            "text": "bc"
+          },
+          {
+            "label": "D",
+            "text": "d.txt"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 51,
+        "text": "Consider the following statements about B+ Trees for indexing in DBMS:\n\nI. B+ Trees are self-balancing.\nII. In B+ Trees, the data pointers are stored only at the leaf nodes.\nIII. In B+ Trees, the structure of the leaf nodes and internal nodes will be the same.\n\nWhich of the following options is correct?",
+        "options": [
+          {
+            "label": "A",
+            "text": "All the statements I, II and III are FALSE"
+          },
+          {
+            "label": "B",
+            "text": "Only statement II is FALSE"
+          },
+          {
+            "label": "C",
+            "text": "Both statements II and III are FALSE"
+          },
+          {
+            "label": "D",
+            "text": "Only statement III is FALSE"
+          }
+        ],
+        "correct_answer": "D"
+      },
+      {
+        "local_id": 52,
+        "text": "In a microprocessor with 16 address lines, the active low chip select is generated by passing the address lines A15...A10 through a 6-input NAND gate for selecting the address in the range from 0xAC00 to 0xAFFF. What are the inputs to the NAND gate to generate the chip select?",
+        "options": [
+          {
+            "label": "A",
+            "text": "A15, A14', A13, A12', A11, A10"
+          },
+          {
+            "label": "B",
+            "text": "A15', A14, A13', A12, A11, A10'"
+          },
+          {
+            "label": "C",
+            "text": "A15, A14, A13, A12, A11, A10"
+          },
+          {
+            "label": "D",
+            "text": "A15', A14', A13', A12', A11', A10'"
+          }
+        ],
+        "correct_answer": "A"
+      },
+      {
+        "local_id": 53,
+        "text": "Equivalent Boolean expression of A + B + C is:",
+        "options": [
+          {
+            "label": "A",
+            "text": "A . (B + C)"
+          },
+          {
+            "label": "B",
+            "text": "(A' . B' . C')'"
+          },
+          {
+            "label": "C",
+            "text": "A' + B' + C'"
+          },
+          {
+            "label": "D",
+            "text": "A . B . C"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 54,
+        "text": "For the logic circuit shown, what is the output F?",
+        "options": [
+          {
+            "label": "A",
+            "text": "F = 1"
+          },
+          {
+            "label": "B",
+            "text": "F = X"
+          },
+          {
+            "label": "C",
+            "text": "F = 0"
+          },
+          {
+            "label": "D",
+            "text": "F = X'"
+          }
+        ],
+        "correct_answer": "C"
+      },
+      {
+        "local_id": 55,
+        "text": "Consider the following Statements for a square matrix A:\n\n1. |A^T| = |A|\n2. Inverse of a matrix A exists if A is singular.\n3. Adj(A) = (cofactor of (A))^T\n\nWhich of the following options is correct?",
+        "options": [
+          {
+            "label": "A",
+            "text": "1 alone is correct"
+          },
+          {
+            "label": "B",
+            "text": "1 and 3 are correct"
+          },
+          {
+            "label": "C",
+            "text": "1, 2 and 3 are correct"
+          },
+          {
+            "label": "D",
+            "text": "3 alone is correct"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 56,
+        "text": "Find the solution (x, y) to the system of equations given below:\n\n[ 4  10 ] [ x ]   [  2 ]\n[ -8  6 ] [ y ] = [ -30 ]",
+        "options": [
+          {
+            "label": "A",
+            "text": "3, 1"
+          },
+          {
+            "label": "B",
+            "text": "-3, -1"
+          },
+          {
+            "label": "C",
+            "text": "-3, 1"
+          },
+          {
+            "label": "D",
+            "text": "3, -1"
+          }
+        ],
+        "correct_answer": "D"
+      },
+      {
+        "local_id": 57,
+        "text": "Consider a 4-segment pipeline with a clock cycle time of 25 ns in each sub-operation. Find the speed-up ratio between the pipelined and non-pipelined system to execute 50 instructions without stall conditions.",
+        "options": [
+          {
+            "label": "A",
+            "text": "5.0"
+          },
+          {
+            "label": "B",
+            "text": "4.0"
+          },
+          {
+            "label": "C",
+            "text": "3.77"
+          },
+          {
+            "label": "D",
+            "text": "4.81"
+          }
+        ],
+        "correct_answer": "C"
+      },
+      {
+        "local_id": 58,
+        "text": "In a relational Database, which level of locking provides the highest degree of concurrency?",
+        "options": [
+          {
+            "label": "A",
+            "text": "Column level"
+          },
+          {
+            "label": "B",
+            "text": "Row level"
+          },
+          {
+            "label": "C",
+            "text": "Table level"
+          },
+          {
+            "label": "D",
+            "text": "Column, Row and Table level have the same degree of concurrency"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 59,
+        "text": "Suppose you want to do a Level order traversal in a rooted tree. Which of the following will you do?",
+        "options": [
+          {
+            "label": "A",
+            "text": "Starting from the root, perform Linear Search"
+          },
+          {
+            "label": "B",
+            "text": "Starting from the root, perform Binary Search"
+          },
+          {
+            "label": "C",
+            "text": "Starting from the root, perform Breadth-First Search (BFS)"
+          },
+          {
+            "label": "D",
+            "text": "Starting from the root, perform Depth-First Search (DFS)"
+          }
+        ],
+        "correct_answer": "C"
+      },
+      {
+        "local_id": 60,
+        "text": "Spatial Locality refers to the fact that once a memory location is referenced:",
+        "options": [
+          {
+            "label": "A",
+            "text": "It will not be referenced again"
+          },
+          {
+            "label": "B",
+            "text": "It will be referenced again immediately"
+          },
+          {
+            "label": "C",
+            "text": "A nearby memory location will be referenced soon"
+          },
+          {
+            "label": "D",
+            "text": "None of the above"
+          }
+        ],
+        "correct_answer": "C"
+      },
+      {
+        "local_id": 61,
+        "text": "Which of the following is correct?",
+        "options": [
+          {
+            "label": "A",
+            "text": "A Tree is a Connected Acyclic Graph"
+          },
+          {
+            "label": "B",
+            "text": "A Tree is a Disconnected Graph"
+          },
+          {
+            "label": "C",
+            "text": "In a tree, there are multiple paths from one node to another"
+          },
+          {
+            "label": "D",
+            "text": "A tree with n nodes can have n*n edges"
+          }
+        ],
+        "correct_answer": "A"
+      },
+      {
+        "local_id": 62,
+        "text": "Consider the following two statements:\n\nStatement-1: A hash function may give the same hash value for distinct messages.\nStatement-2: A hash function takes a message of arbitrary length and generates a fixed length code.\n\nWhich of the following options is correct?",
+        "options": [
+          {
+            "label": "A",
+            "text": "Both Statement 1 and Statement 2 are TRUE"
+          },
+          {
+            "label": "B",
+            "text": "Both Statement 1 and Statement 2 are FALSE"
+          },
+          {
+            "label": "C",
+            "text": "Statement 1 is TRUE but Statement 2 is FALSE"
+          },
+          {
+            "label": "D",
+            "text": "Statement 1 is FALSE but Statement 2 is TRUE"
+          }
+        ],
+        "correct_answer": "A"
+      },
+      {
+        "local_id": 63,
+        "text": "What is the output of the following 'C' code snippet?\n\n#include <stdio.h>\nvoid tchange(int* b, int* a) {\n    *a += *a;\n    *b *= *a;\n    *a++ = ++*b;\n    *--b = *--a;\n}\nvoid main() {\n    int a = 2, b = 5;\n    tchange(&a, &b);\n    printf(\"%d %d\", a, b);\n}",
+        "options": [
+          {
+            "label": "A",
+            "text": "21 21"
+          },
+          {
+            "label": "B",
+            "text": "20 20"
+          },
+          {
+            "label": "C",
+            "text": "11 11"
+          },
+          {
+            "label": "D",
+            "text": "22 22"
+          }
+        ],
+        "correct_answer": "A"
+      },
+      {
+        "local_id": 64,
+        "text": "A complete n-ary tree is one in which each node has n children or no children. Let I be the number of internal nodes and L be the number of leaves in a complete n-ary tree. If L = 41 and I = 10, what is the value of n?",
+        "options": [
+          {
+            "label": "A",
+            "text": "3"
+          },
+          {
+            "label": "B",
+            "text": "4"
+          },
+          {
+            "label": "C",
+            "text": "5"
+          },
+          {
+            "label": "D",
+            "text": "6"
+          }
+        ],
+        "correct_answer": "C"
+      },
+      {
+        "local_id": 65,
+        "text": "Which of the following statements is correct (where n is the number of elements to be searched)?",
+        "options": [
+          {
+            "label": "A",
+            "text": "Worst case time complexity of linear search algorithm is O(n)"
+          },
+          {
+            "label": "B",
+            "text": "Best case time complexity of linear search algorithm is O(n/2)"
+          },
+          {
+            "label": "C",
+            "text": "Best case time complexity of binary search algorithm is O(n*log n)"
+          },
+          {
+            "label": "D",
+            "text": "Worst case time complexity of binary search algorithm is O(1)"
+          }
+        ],
+        "correct_answer": "A"
+      },
+      {
+        "local_id": 66,
+        "text": "Arrange the following in increasing order of time complexity:",
+        "options": [
+          {
+            "label": "A",
+            "text": "Binary Search Algorithm, Merge Sort, Bubble Sort"
+          },
+          {
+            "label": "B",
+            "text": "Merge Sort, Binary Search Algorithm, Bubble Sort"
+          },
+          {
+            "label": "C",
+            "text": "Bubble Sort, Binary Search Algorithm, Merge Sort"
+          },
+          {
+            "label": "D",
+            "text": "Merge Sort, Bubble Sort, Binary Search Algorithm"
+          }
+        ],
+        "correct_answer": "A"
+      },
+      {
+        "local_id": 67,
+        "text": "In 2's complement number system, the maximum and minimum numbers which can be represented using n bits are:",
+        "options": [
+          {
+            "label": "A",
+            "text": "-2^(n-1) and (2^(n-1) - 1)"
+          },
+          {
+            "label": "B",
+            "text": "(2^(n-1) - 1) and -2^(n-1)"
+          },
+          {
+            "label": "C",
+            "text": "-(2^(n-1) - 1) and (2^(n-1) + 1)"
+          },
+          {
+            "label": "D",
+            "text": "2^(n-1) + 1 and -2^(n-1)"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 68,
+        "text": "Which of the following protocols is used to identify the Physical address of a device?",
+        "options": [
+          {
+            "label": "A",
+            "text": "DNS"
+          },
+          {
+            "label": "B",
+            "text": "FTP"
+          },
+          {
+            "label": "C",
+            "text": "ICMP"
+          },
+          {
+            "label": "D",
+            "text": "ARP"
+          }
+        ],
+        "correct_answer": "D"
+      },
+      {
+        "local_id": 69,
+        "text": "Which of the following statements is true?",
+        "options": [
+          {
+            "label": "A",
+            "text": "TCP is connection-oriented but not reliable"
+          },
+          {
+            "label": "B",
+            "text": "UDP is reliable but not connection-oriented"
+          },
+          {
+            "label": "C",
+            "text": "UDP and TCP are connection-less but reliable"
+          },
+          {
+            "label": "D",
+            "text": "UDP is connection-less and unreliable"
+          }
+        ],
+        "correct_answer": "D"
+      },
+      {
+        "local_id": 70,
+        "text": "The output of lexical analysis is a:",
+        "options": [
+          {
+            "label": "A",
+            "text": "Parse tree"
+          },
+          {
+            "label": "B",
+            "text": "Context free grammar"
+          },
+          {
+            "label": "C",
+            "text": "Object code"
+          },
+          {
+            "label": "D",
+            "text": "Set of tokens"
+          }
+        ],
+        "correct_answer": "D"
+      },
+      {
+        "local_id": 71,
+        "text": "Which of the following is correct about Alpha testing of a software product?",
+        "options": [
+          {
+            "label": "A",
+            "text": "Testing at customer site without participation of developer team"
+          },
+          {
+            "label": "B",
+            "text": "Testing at development center along with developer team"
+          },
+          {
+            "label": "C",
+            "text": "Developer tests the software product at developer's center along with selected users"
+          },
+          {
+            "label": "D",
+            "text": "Standalone testing of software product in the actual site of usage"
+          }
+        ],
+        "correct_answer": "C"
+      },
+      {
+        "local_id": 72,
+        "text": "The most appropriate data structure for implementing recursive procedures is:",
+        "options": [
+          {
+            "label": "A",
+            "text": "Queue"
+          },
+          {
+            "label": "B",
+            "text": "Trie"
+          },
+          {
+            "label": "C",
+            "text": "Stack"
+          },
+          {
+            "label": "D",
+            "text": "Linked List"
+          }
+        ],
+        "correct_answer": "C"
+      },
+      {
+        "local_id": 73,
+        "text": "Which of the following life cycle documents effectively bridges the communication gap between client/user and developer?",
+        "options": [
+          {
+            "label": "A",
+            "text": "System Requirements Document"
+          },
+          {
+            "label": "B",
+            "text": "System Design Document"
+          },
+          {
+            "label": "C",
+            "text": "Interface Definition Document"
+          },
+          {
+            "label": "D",
+            "text": "Test Plan Document"
+          }
+        ],
+        "correct_answer": "A"
+      },
+      {
+        "local_id": 74,
+        "text": "The most appropriate software life cycle model for a system where all requirements are known before initiating the project is:",
+        "options": [
+          {
+            "label": "A",
+            "text": "Agile Methodology"
+          },
+          {
+            "label": "B",
+            "text": "Prototype Model"
+          },
+          {
+            "label": "C",
+            "text": "Spiral Model"
+          },
+          {
+            "label": "D",
+            "text": "Waterfall Model"
+          }
+        ],
+        "correct_answer": "D"
+      },
+      {
+        "local_id": 75,
+        "text": "The method of testing a software product to ensure new modifications are not affecting existing aspects is called:",
+        "options": [
+          {
+            "label": "A",
+            "text": "Mutation Testing"
+          },
+          {
+            "label": "B",
+            "text": "Smoke Testing"
+          },
+          {
+            "label": "C",
+            "text": "Regression Testing"
+          },
+          {
+            "label": "D",
+            "text": "Bottom-up Testing"
+          }
+        ],
+        "correct_answer": "C"
+      },
+      {
+        "local_id": 76,
+        "text": "Three students independently solve a puzzle correctly with probability 1/2, 4/5 and 1/8. What is the probability that the problem is solved correctly by at least one of them?",
+        "options": [
+          {
+            "label": "A",
+            "text": "19/20"
+          },
+          {
+            "label": "B",
+            "text": "73/80"
+          },
+          {
+            "label": "C",
+            "text": "4/80"
+          },
+          {
+            "label": "D",
+            "text": "7/80"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 77,
+        "text": "In the following 'C' program snippet, what is the output that gets printed?\n\n#include <stdio.h>\nvoid main() {\n    int x = 2, y, z;\n    x *= 3 + 2;\n    x *= y = z = 4;\n    printf(\"%d\", x);\n}",
+        "options": [
+          {
+            "label": "A",
+            "text": "10"
+          },
+          {
+            "label": "B",
+            "text": "40"
+          },
+          {
+            "label": "C",
+            "text": "20"
+          },
+          {
+            "label": "D",
+            "text": "2"
+          }
+        ],
+        "correct_answer": "B"
+      },
+      {
+        "local_id": 78,
+        "text": "Given that a memory chip has an access time of 100 ns and an additional 250 ns for handling page faults, what is the effective memory access time if a page fault is generated for every 50 memory accesses?",
+        "options": [
+          {
+            "label": "A",
+            "text": "250 ns"
+          },
+          {
+            "label": "B",
+            "text": "152 ns"
+          },
+          {
+            "label": "C",
+            "text": "105 ns"
+          },
+          {
+            "label": "D",
+            "text": "103 ns"
+          }
+        ],
+        "correct_answer": "D"
+      },
+      {
+        "local_id": 79,
+        "text": "In the following combination of 4:1 MUX circuit, X1 and X2 are control inputs for MUX1, and Y1 and Y2 are control inputs for MUX2. If X1 and Y1 are MSBs of control inputs, then the output of the circuit is:",
+        "options": [
+          {
+            "label": "A",
+            "text": "(X1 + X2) . Y1 Y2"
+          },
+          {
+            "label": "B",
+            "text": "(X1' . X2') Y1 Y2"
+          },
+          {
+            "label": "C",
+            "text": "(X1 XOR X2) . Y1"
+          },
+          {
+            "label": "D",
+            "text": "(X1 + X2) . Y1"
+          }
+        ],
+        "correct_answer": "C"
+      },
+      {
+        "local_id": 80,
+        "text": "A RAM chip has 8 data lines and 10 address lines and no address multiplexing is recommended for addressing the chip. The maximum amount/volume of data (in bits) that can be stored in the RAM chip is:",
+        "options": [
+          {
+            "label": "A",
+            "text": "2^10 * 2^3"
+          },
+          {
+            "label": "B",
+            "text": "2^10 * 2^8"
+          },
+          {
+            "label": "C",
+            "text": "2^8 * 10"
+          },
+          {
+            "label": "D",
+            "text": "10 * 8"
+          }
+        ],
+        "correct_answer": "A"
       }
     ]
   }
