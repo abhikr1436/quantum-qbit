@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Key, LogOut, FileText, Settings, Plus, Edit, Trash2, 
-  Check, AlertCircle, Trash, Eye, EyeOff, Save, X, Tag, Database
+  Check, AlertCircle, Trash, Eye, EyeOff, Save, X, Tag, Database, Award
 } from 'lucide-react';
 import { AiOfficeTab } from '../components/ai-office/AiOfficeTab';
 
@@ -18,6 +18,20 @@ interface BlogPost {
   imageGlow: string;
   created_at?: string;
   updated_at?: string;
+}
+
+interface MockTestAttempt {
+  id?: number;
+  session_id: string;
+  candidate_name: string;
+  roll_number: string;
+  test_name: string;
+  start_time: string;
+  submitted: boolean | number;
+  marks: number | null;
+  total_marks: number | null;
+  time_spent: string | null;
+  submitted_at: string | null;
 }
 
 interface AdminProps {
@@ -42,7 +56,7 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
   const [isLocalMode, setIsLocalMode] = useState<boolean>(false); // Fallback for local Vite dev server
   
   // Dashboard Tabs
-  const [activeTab, setActiveTab] = useState<'posts' | 'categories' | 'settings' | 'office'>('posts');
+  const [activeTab, setActiveTab] = useState<'posts' | 'categories' | 'settings' | 'office' | 'mock_tests'>('posts');
   
   // Blogs state
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -86,6 +100,12 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
   const [confirmPass, setConfirmPass] = useState<string>('');
   const [settingsSuccess, setSettingsSuccess] = useState<string>('');
   const [settingsError, setSettingsError] = useState<string>('');
+
+  // Mock test tracking state
+  const [attempts, setAttempts] = useState<MockTestAttempt[]>([]);
+  const [isAttemptsLoading, setIsAttemptsLoading] = useState<boolean>(false);
+  const [attemptsError, setAttemptsError] = useState<string>('');
+  const [attemptsSuccess, setAttemptsSuccess] = useState<string>('');
 
 
 
@@ -388,6 +408,102 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
       }
     }
   };
+
+  // Mock test attempts actions
+  const fetchAttempts = async () => {
+    setIsAttemptsLoading(true);
+    setAttemptsError('');
+    if (isLocalMode) {
+      const local = localStorage.getItem('quantum_mock_attempts');
+      if (local) {
+        setAttempts(JSON.parse(local));
+      } else {
+        setAttempts([]);
+      }
+      setIsAttemptsLoading(false);
+    } else {
+      try {
+        const response = await fetch('/api/mock_test_tracker.php?action=list');
+        if (response.ok) {
+          const data = await response.json();
+          setAttempts(data);
+        } else {
+          // Fallback to local storage
+          const local = localStorage.getItem('quantum_mock_attempts');
+          setAttempts(local ? JSON.parse(local) : []);
+        }
+      } catch (err) {
+        console.warn('API error fetching attempts, falling back:', err);
+        const local = localStorage.getItem('quantum_mock_attempts');
+        setAttempts(local ? JSON.parse(local) : []);
+      } finally {
+        setIsAttemptsLoading(false);
+      }
+    }
+  };
+
+  const handleDeleteAttempt = async (sessionId: string) => {
+    if (!window.confirm('Are you sure you want to delete this attempt record?')) return;
+    setAttemptsError('');
+    setAttemptsSuccess('');
+    
+    if (isLocalMode) {
+      const updated = attempts.filter(a => a.session_id !== sessionId);
+      localStorage.setItem('quantum_mock_attempts', JSON.stringify(updated));
+      setAttempts(updated);
+      setAttemptsSuccess('Attempt record deleted locally.');
+    } else {
+      try {
+        const response = await fetch(`/api/mock_test_tracker.php?action=delete&session_id=${encodeURIComponent(sessionId)}`, {
+          method: 'DELETE'
+        });
+        if (response.ok) {
+          setAttemptsSuccess('Attempt record deleted successfully.');
+          fetchAttempts();
+        } else {
+          const data = await response.json();
+          setAttemptsError(data.error || 'Failed to delete attempt record.');
+        }
+      } catch {
+        setAttemptsError('Network error. Deletion failed.');
+      }
+    }
+  };
+
+  const handleClearAllAttempts = async () => {
+    if (!window.confirm('WARNING: Are you sure you want to delete ALL mock test attempt records? This action cannot be undone.')) return;
+    setAttemptsError('');
+    setAttemptsSuccess('');
+    
+    if (isLocalMode) {
+      localStorage.setItem('quantum_mock_attempts', JSON.stringify([]));
+      setAttempts([]);
+      setAttemptsSuccess('All attempt records cleared locally.');
+    } else {
+      try {
+        const response = await fetch('/api/mock_test_tracker.php?action=clear_all');
+        if (response.ok) {
+          setAttemptsSuccess('All attempt records cleared successfully.');
+          fetchAttempts();
+        } else {
+          const data = await response.json();
+          setAttemptsError(data.error || 'Failed to clear attempts.');
+        }
+      } catch {
+        setAttemptsError('Network error. Failed to clear attempts.');
+      }
+    }
+  };
+
+  // Fetch attempts on tab change
+  useEffect(() => {
+    if (isLoggedIn && activeTab === 'mock_tests') {
+      Promise.resolve().then(() => {
+        fetchAttempts();
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, activeTab]);
 
   // Blog management actions
   const handleDeletePost = async (id: string) => {
@@ -813,6 +929,12 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
             className={`admin-tab-item ${activeTab === 'office' ? 'active' : ''}`}
           >
             <Database size={16} /> AI Virtual Office
+          </button>
+          <button 
+            onClick={() => setActiveTab('mock_tests')}
+            className={`admin-tab-item ${activeTab === 'mock_tests' ? 'active' : ''}`}
+          >
+            <Award size={16} /> Mock Test Attempts
           </button>
         </div>
 
@@ -1262,6 +1384,168 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
             <AiOfficeTab isLocalMode={isLocalMode} />
           </div>
         )}
+
+        {activeTab === 'mock_tests' && (
+          <div style={styles.tabContent}>
+            <div style={styles.actionRow}>
+              <h2 style={styles.sectionHeader}>Mock Test Attempts ({attempts.length})</h2>
+              <button 
+                className="btn-secondary" 
+                onClick={handleClearAllAttempts}
+                disabled={attempts.length === 0}
+                style={{ 
+                  borderColor: 'rgba(239, 68, 68, 0.3)', 
+                  color: '#ef4444',
+                  background: 'rgba(239, 68, 68, 0.02)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Trash2 size={15} /> Clear All Attempts
+              </button>
+            </div>
+
+            {attemptsError && (
+              <div style={styles.errorAlert}>
+                <AlertCircle size={16} />
+                <span>{attemptsError}</span>
+              </div>
+            )}
+
+            {attemptsSuccess && (
+              <div style={styles.successAlert}>
+                <Check size={16} />
+                <span>{attemptsSuccess}</span>
+              </div>
+            )}
+
+            {/* Statistics Widgets */}
+            <div style={styles.statsRow}>
+              <div className="glass-card" style={styles.statItem}>
+                <span style={{ fontSize: '1.8rem', fontWeight: 700, color: '#ffffff' }}>{attempts.length}</span>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Total Attempts</span>
+              </div>
+              <div className="glass-card" style={styles.statItem}>
+                <span style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--primary)' }}>
+                  {attempts.filter(a => !(Number(a.submitted) === 1 || a.submitted === true)).length}
+                </span>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Active / Started</span>
+              </div>
+              <div className="glass-card" style={styles.statItem}>
+                <span style={{ fontSize: '1.8rem', fontWeight: 700, color: '#10b981' }}>
+                  {attempts.filter(a => Number(a.submitted) === 1 || a.submitted === true).length}
+                </span>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Submitted / Finished</span>
+              </div>
+              <div className="glass-card" style={styles.statItem}>
+                <span style={{ fontSize: '1.8rem', fontWeight: 700, color: '#facc15' }}>
+                  {attempts.filter(a => Number(a.submitted) === 1 || a.submitted === true).length > 0 ? (
+                    (() => {
+                      const completed = attempts.filter(a => Number(a.submitted) === 1 || a.submitted === true);
+                      const totalAcc = completed.reduce((acc, a) => {
+                        const marks = a.marks || 0;
+                        const max = a.total_marks || 80;
+                        return acc + (marks / max);
+                      }, 0);
+                      return Math.round((totalAcc / completed.length) * 100) + '%';
+                    })()
+                  ) : 'N/A'}
+                </span>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Average Score</span>
+              </div>
+            </div>
+
+            {isAttemptsLoading ? (
+              <div style={styles.loadingState}>Loading attempts database...</div>
+            ) : attempts.length === 0 ? (
+              <div className="glass-card" style={styles.emptyCard}>
+                <p style={{ color: 'var(--text-secondary)' }}>No mock test attempts recorded yet.</p>
+              </div>
+            ) : (
+              <div className="glass-card" style={{ padding: '24px 0', border: '1px solid var(--border-glass)' }}>
+                <div style={styles.tableWrapper}>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={styles.th}>Candidate</th>
+                        <th style={styles.th}>Test Name</th>
+                        <th style={styles.th}>Started At</th>
+                        <th style={styles.th}>Status</th>
+                        <th style={styles.th}>Score</th>
+                        <th style={styles.th}>Time Spent</th>
+                        <th style={{ ...styles.th, textAlign: 'center' }}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {attempts.map((att) => {
+                        const isSubmitted = Number(att.submitted) === 1 || att.submitted === true;
+                        return (
+                          <tr key={att.session_id}>
+                            <td style={styles.td}>
+                              <span style={styles.candidateNameText}>{att.candidate_name}</span>
+                              <span style={styles.rollText}>Roll: {att.roll_number}</span>
+                            </td>
+                            <td style={styles.td}>{att.test_name}</td>
+                            <td style={styles.td}>
+                              {new Date(att.start_time.replace(' ', 'T')).toLocaleString(undefined, {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </td>
+                            <td style={styles.td}>
+                              {isSubmitted ? (
+                                <span style={styles.badgeSubmitted}>Submitted</span>
+                              ) : (
+                                <span style={styles.badgeActive}>In Progress</span>
+                              )}
+                            </td>
+                            <td style={styles.td}>
+                              {isSubmitted && att.marks !== null ? (
+                                <strong>{att.marks} / {att.total_marks || 80}</strong>
+                              ) : (
+                                <span style={{ color: 'var(--text-muted)' }}>—</span>
+                              )}
+                            </td>
+                            <td style={styles.td}>
+                              {isSubmitted && att.time_spent ? (
+                                <span>{att.time_spent}</span>
+                              ) : (
+                                <span style={{ color: 'var(--text-muted)' }}>—</span>
+                              )}
+                            </td>
+                            <td style={{ ...styles.td, textAlign: 'center' }}>
+                              <button
+                                onClick={() => handleDeleteAttempt(att.session_id)}
+                                style={{
+                                  background: 'transparent',
+                                  border: 'none',
+                                  color: '#ef4444',
+                                  cursor: 'pointer',
+                                  padding: '6px',
+                                  borderRadius: '4px',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  transition: 'background-color 0.2s'
+                                }}
+                                title="Delete Attempt Record"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1639,6 +1923,77 @@ const styles = {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '20px',
+  },
+  statsRow: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '20px',
+    marginBottom: '24px',
+  },
+  statItem: {
+    padding: '20px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    textAlign: 'center' as const,
+  },
+  tableWrapper: {
+    width: '100%',
+    overflowX: 'auto' as const,
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse' as const,
+    textAlign: 'left' as const,
+    fontSize: '0.92rem',
+  },
+  th: {
+    padding: '16px 12px',
+    borderBottom: '1px solid var(--border-glass)',
+    color: 'var(--text-muted)',
+    fontWeight: 600,
+    fontSize: '0.82rem',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
+  },
+  td: {
+    padding: '16px 12px',
+    borderBottom: '1px solid rgba(255,255,255,0.03)',
+    color: 'var(--text-secondary)',
+    verticalAlign: 'middle',
+  },
+  candidateNameText: {
+    fontWeight: 600,
+    color: '#ffffff',
+    display: 'block',
+  },
+  rollText: {
+    fontSize: '0.78rem',
+    color: 'var(--text-muted)',
+    display: 'block',
+    marginTop: '2px',
+  },
+  badgeSubmitted: {
+    display: 'inline-block',
+    padding: '3px 8px',
+    borderRadius: '4px',
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    background: 'rgba(16, 185, 129, 0.08)',
+    border: '1px solid rgba(16, 185, 129, 0.2)',
+    color: '#10b981',
+  },
+  badgeActive: {
+    display: 'inline-block',
+    padding: '3px 8px',
+    borderRadius: '4px',
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    background: 'rgba(0, 242, 254, 0.06)',
+    border: '1px solid rgba(0, 242, 254, 0.15)',
+    color: 'var(--primary)',
   },
 };
 

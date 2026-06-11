@@ -23,4 +23,19 @@ CREATE TABLE IF NOT EXISTS settings (
     `value` TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS mock_test_attempts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    session_id VARCHAR(100) UNIQUE NOT NULL,
+    candidate_name VARCHAR(100) NOT NULL,
+    roll_number VARCHAR(50) NOT NULL,
+    test_name VARCHAR(255) NOT NULL,
+    start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    submitted BOOLEAN DEFAULT FALSE,
+    marks INT DEFAULT NULL,
+    total_marks INT DEFAULT NULL,
+    time_spent VARCHAR(50) DEFAULT NULL,
+    submitted_at TIMESTAMP NULL DEFAULT NULL
+);
+
+
 

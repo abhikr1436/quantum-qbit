@@ -2,7 +2,7 @@ name: AI Office Background Runner
 
 on:
   schedule:
-    - cron: '0 * * * *' # Executes every 1 hour (hourly)
+    - cron: '0 */6 * * *' # Executes every 6 hours (automatically picks trending topics)
   workflow_dispatch:      # Allows manual trigger via web dashboard or GitHub UI
 
 permissions:
