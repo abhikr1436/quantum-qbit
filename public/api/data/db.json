@@ -6700,36 +6700,6 @@
   ],
   "systemLogs": [
     {
-      "timestamp": "2026-06-10T09:01:41.281Z",
-      "agent": "System",
-      "message": "=== Runner process started on GitHub Actions ==="
-    },
-    {
-      "timestamp": "2026-06-10T09:01:41.313Z",
-      "agent": "System",
-      "message": "Fetching boardroom directives and live chats from server..."
-    },
-    {
-      "timestamp": "2026-06-10T09:01:44.331Z",
-      "agent": "System",
-      "message": "Resuming pipeline: \"Write in-depth article about trending topic 'ईरान'\" [status: todo] — assigned to Mark."
-    },
-    {
-      "timestamp": "2026-06-10T09:01:44.331Z",
-      "agent": "System",
-      "message": "Deepseek client authorized successfully."
-    },
-    {
-      "timestamp": "2026-06-10T09:01:44.336Z",
-      "agent": "System",
-      "message": "[Cycle 1] Task queued: \"Write in-depth article about trending topic 'ईरान'\" — Assigning to Mark..."
-    },
-    {
-      "timestamp": "2026-06-10T09:01:44.344Z",
-      "agent": "System",
-      "message": "✍️ Mark started drafting: \"Write in-depth article about trending topic 'ईरान'\""
-    },
-    {
       "timestamp": "2026-06-10T09:02:02.470Z",
       "agent": "System",
       "message": "[Cycle 2] Alex (Manager) is reviewing draft for \"Write in-depth article about trending topic 'ईरान'\"..."
@@ -7446,6 +7416,36 @@
     },
     {
       "timestamp": "2026-06-12T10:19:43.898Z",
+      "agent": "System",
+      "message": "=== Runner completed all cycle steps and finished successfully ==="
+    },
+    {
+      "timestamp": "2026-06-12T15:21:49.776Z",
+      "agent": "System",
+      "message": "=== Runner process started on GitHub Actions ==="
+    },
+    {
+      "timestamp": "2026-06-12T15:21:49.808Z",
+      "agent": "System",
+      "message": "Fetching boardroom directives and live chats from server..."
+    },
+    {
+      "timestamp": "2026-06-12T15:21:50.706Z",
+      "agent": "System",
+      "message": "Running autonomous hourly brainstorm — checking live trends for new article topic..."
+    },
+    {
+      "timestamp": "2026-06-12T15:21:50.707Z",
+      "agent": "System",
+      "message": "Deepseek client authorized successfully."
+    },
+    {
+      "timestamp": "2026-06-12T15:21:50.715Z",
+      "agent": "System",
+      "message": "[Cycle 1] No pending tasks — brainstorming new topic from live trends..."
+    },
+    {
+      "timestamp": "2026-06-12T15:21:50.723Z",
       "agent": "System",
       "message": "=== Runner completed all cycle steps and finished successfully ==="
     }
