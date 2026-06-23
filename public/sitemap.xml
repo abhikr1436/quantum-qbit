@@ -691,4 +691,10 @@
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://quantumqbit.in/blogs/weather-mumbai-how-to-stay-updated-and-use-browser-tools-for-storm-ready-documents</loc>
+    <lastmod>2026-06-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
 </urlset>
