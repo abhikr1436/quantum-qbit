@@ -27,6 +27,13 @@ if (file_exists($blogsFile)) {
 
 if ($pdo) {
     try {
+        $stmt = $pdo->query("DESCRIBE blogs");
+        $fields = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo "\nTable description for blogs:\n";
+        foreach ($fields as $field) {
+            echo "  - Field: " . $field['Field'] . " | Type: " . $field['Type'] . " | Null: " . $field['Null'] . " | Key: " . $field['Key'] . "\n";
+        }
+
         $stmt = $pdo->query("SELECT id, title FROM blogs");
         $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
         echo "\nBlogs in MySQL database:\n";
