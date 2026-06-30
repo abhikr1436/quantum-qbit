@@ -171,7 +171,9 @@ def find_web_root_sftp(sftp):
     """
     # Hostinger shared hosting possible paths, ordered by priority
     candidate_paths = [
+        'domains/quantumqbit.in/public_html/dist',
         'domains/quantumqbit.in/public_html',
+        'public_html/dist',
         'public_html',
         'htdocs',
         '.',
@@ -221,7 +223,9 @@ def find_web_root_ftp(ftp):
     Returns True if successfully navigated.
     """
     candidate_paths = [
+        'domains/quantumqbit.in/public_html/dist',
         'domains/quantumqbit.in/public_html',
+        'public_html/dist',
         'public_html',
         'htdocs',
     ]
