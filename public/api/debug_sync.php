@@ -17,13 +17,25 @@ if (file_exists($blogsFile)) {
     echo "Blogs.json Size: " . strlen($content) . " bytes\n";
     $json = json_decode($content, true);
     echo "Blogs.json JSON valid: " . (is_array($json) ? "Yes" : "No") . "\n";
-    if (is_array($json)) {
-        echo "Blogs in JSON file:\n";
-        foreach ($json as $post) {
-            echo "  - ID: " . $post['id'] . " | Title: " . $post['title'] . "\n";
-        }
+}
+
+echo "\n=== DIRECTORY STRUCTURE ===\n";
+echo "Current __DIR__: " . __DIR__ . "\n";
+echo "Document Root: " . (isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] : "Not set") . "\n";
+$parent1 = realpath(__DIR__ . '/../');
+$parent2 = realpath(__DIR__ . '/../../');
+echo "Parent dir 1: " . $parent1 . "\n";
+echo "Parent dir 2: " . $parent2 . "\n";
+
+if ($parent2) {
+    echo "\nListing parent dir 2 contents:\n";
+    $files = scandir($parent2);
+    foreach ($files as $f) {
+        $full = $parent2 . '/' . $f;
+        echo "  - " . $f . " (" . (is_dir($full) ? "dir" : "file: " . filesize($full) . " bytes") . ")\n";
     }
 }
+
 
 if ($pdo) {
     try {
