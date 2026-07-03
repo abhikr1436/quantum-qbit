@@ -865,4 +865,16 @@
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://quantumqbit.in/blogs/prince-williams-new-heights-remarks-spark-global-debate-what-privacy-tools-reveal</loc>
+    <lastmod>2026-07-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://quantumqbit.in/blogs/nothing-phone-4b-rcb-edition-launch-how-to-compress-and-resize-your-wallpapers-for-free-offline</loc>
+    <lastmod>2026-07-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
 </urlset>
