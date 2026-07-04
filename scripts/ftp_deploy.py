@@ -30,7 +30,7 @@ def upload_dir_ftp(ftp, local_path, verbose=True):
     failed = 0
     
     is_github_actions = os.environ.get('GITHUB_ACTIONS') == 'true'
-    protected_files = ['keys.json', 'config.json', 'live_updates.json']
+    protected_files = ['keys.json', 'config.json', 'live_updates.json', 'app-ads.txt']
     if not is_github_actions:
         protected_files.append('db.json')
         
@@ -109,7 +109,7 @@ def upload_dir_sftp(sftp, local_path, remote_path, verbose=True):
     failed = 0
     
     is_github_actions = os.environ.get('GITHUB_ACTIONS') == 'true'
-    protected_files = ['keys.json', 'config.json', 'live_updates.json']
+    protected_files = ['keys.json', 'config.json', 'live_updates.json', 'app-ads.txt']
     if not is_github_actions:
         protected_files.append('db.json')
 

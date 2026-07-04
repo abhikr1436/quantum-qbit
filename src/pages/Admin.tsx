@@ -56,7 +56,20 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
   const [isLocalMode, setIsLocalMode] = useState<boolean>(false); // Fallback for local Vite dev server
   
   // Dashboard Tabs
-  const [activeTab, setActiveTab] = useState<'posts' | 'categories' | 'settings' | 'office' | 'mock_tests'>('posts');
+  const [activeTab, setActiveTab] = useState<'posts' | 'categories' | 'settings' | 'office' | 'mock_tests' | 'app_ads'>('posts');
+
+  // app-ads.txt state
+  const [adsContent, setAdsContent] = useState<string>('');
+  const [isAdsLoading, setIsAdsLoading] = useState<boolean>(false);
+  const [adsError, setAdsError] = useState<string>('');
+  const [adsSuccess, setAdsSuccess] = useState<string>('');
+  const [isSavingAds, setIsSavingAds] = useState<boolean>(false);
+  const [newAdLine, setNewAdLine] = useState({
+    domain: 'google.com',
+    pubId: 'pub-',
+    relationship: 'DIRECT' as 'DIRECT' | 'RESELLER',
+    certId: 'f08c47fec0942fa0'
+  });
   
   // Blogs state
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -495,12 +508,77 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
     }
   };
 
-  // Fetch attempts on tab change
+  const fetchAdsContent = async () => {
+    setIsAdsLoading(true);
+    setAdsError('');
+    if (isLocalMode) {
+      const local = localStorage.getItem('quantum_app_ads') || 'google.com, pub-6096598752695949, DIRECT, f08c47fec0942fa0';
+      setAdsContent(local);
+      setIsAdsLoading(false);
+    } else {
+      try {
+        const response = await fetch('/api/ads.php');
+        if (response.ok) {
+          const data = await response.json();
+          setAdsContent(data.content || '');
+        } else {
+          const local = localStorage.getItem('quantum_app_ads') || 'google.com, pub-6096598752695949, DIRECT, f08c47fec0942fa0';
+          setAdsContent(local);
+        }
+      } catch (err) {
+        console.warn('API error fetching app-ads, falling back:', err);
+        const local = localStorage.getItem('quantum_app_ads') || 'google.com, pub-6096598752695949, DIRECT, f08c47fec0942fa0';
+        setAdsContent(local);
+      } finally {
+        setIsAdsLoading(false);
+      }
+    }
+  };
+
+  const handleSaveAds = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdsError('');
+    setAdsSuccess('');
+    setIsSavingAds(true);
+
+    if (isLocalMode) {
+      localStorage.setItem('quantum_app_ads', adsContent);
+      setAdsSuccess('app-ads.txt saved locally in simulated dev environment.');
+      setIsSavingAds(false);
+    } else {
+      try {
+        const response = await fetch('/api/ads.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: adsContent })
+        });
+        if (response.ok) {
+          setAdsSuccess('app-ads.txt updated successfully on Hostinger server.');
+          localStorage.setItem('quantum_app_ads', adsContent);
+        } else {
+          const data = await response.json();
+          setAdsError(data.error || 'Failed to save app-ads.txt.');
+        }
+      } catch {
+        setAdsError('Network error. Failed to save app-ads.txt.');
+      } finally {
+        setIsSavingAds(false);
+      }
+    }
+  };
+
+  // Fetch attempts or app-ads on tab change
   useEffect(() => {
-    if (isLoggedIn && activeTab === 'mock_tests') {
-      Promise.resolve().then(() => {
-        fetchAttempts();
-      });
+    if (isLoggedIn) {
+      if (activeTab === 'mock_tests') {
+        Promise.resolve().then(() => {
+          fetchAttempts();
+        });
+      } else if (activeTab === 'app_ads') {
+        Promise.resolve().then(() => {
+          fetchAdsContent();
+        });
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, activeTab]);
@@ -935,6 +1013,12 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
             className={`admin-tab-item ${activeTab === 'mock_tests' ? 'active' : ''}`}
           >
             <Award size={16} /> Mock Test Attempts
+          </button>
+          <button 
+            onClick={() => setActiveTab('app_ads')}
+            className={`admin-tab-item ${activeTab === 'app_ads' ? 'active' : ''}`}
+          >
+            <FileText size={16} /> app-ads.txt
           </button>
         </div>
 
@@ -1541,6 +1625,155 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
                       })}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'app_ads' && (
+          <div style={styles.tabContent}>
+            <div className="glass-card" style={styles.settingsCard}>
+              <h2 style={styles.settingsTitle}>
+                <FileText size={20} style={{ color: 'var(--primary)' }} /> Manage app-ads.txt
+              </h2>
+              <p style={styles.settingsDesc}>
+                Configure developer verification for Google Play Console, App Store, and Google AdMob. This file is served at the root of the domain.
+              </p>
+
+              {adsSuccess && (
+                <div style={styles.successAlert}>
+                  <Check size={16} />
+                  <span>{adsSuccess}</span>
+                </div>
+              )}
+
+              {adsError && (
+                <div style={styles.errorAlert}>
+                  <AlertCircle size={16} />
+                  <span>{adsError}</span>
+                </div>
+              )}
+
+              {isAdsLoading ? (
+                <div style={styles.loadingState}>Loading app-ads.txt content...</div>
+              ) : (
+                <form onSubmit={handleSaveAds} style={styles.settingsForm}>
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="ads-textarea">File Content</label>
+                    <textarea
+                      id="ads-textarea"
+                      className="form-textarea"
+                      style={{ minHeight: '200px', fontFamily: 'monospace', fontSize: '0.9rem', lineHeight: '1.4' }}
+                      placeholder="google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0"
+                      value={adsContent}
+                      onChange={(e) => setAdsContent(e.target.value)}
+                      required
+                    />
+                    <p style={styles.hintText}>
+                      Each verification line should be: <code>domain, publisher_id, relationship, cert_authority_id</code>.
+                    </p>
+                  </div>
+
+                  <button type="submit" className="btn-primary" style={{ alignSelf: 'flex-start' }} disabled={isSavingAds}>
+                    {isSavingAds ? 'Saving...' : <><Save size={16} /> Save app-ads.txt</>}
+                  </button>
+                </form>
+              )}
+            </div>
+
+            {!isAdsLoading && (
+              <div className="glass-card" style={{ ...styles.settingsCard, marginTop: '0px' }}>
+                <h2 style={styles.settingsTitle}>
+                  <Plus size={20} style={{ color: 'var(--primary)' }} /> Quick Verification Line Helper
+                </h2>
+                <p style={styles.settingsDesc}>
+                  Fill in details to format and append a new line directly to the editor above.
+                </p>
+
+                <div style={styles.settingsForm}>
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="helper-domain">Ad Network Domain</label>
+                    <input
+                      id="helper-domain"
+                      type="text"
+                      className="form-input"
+                      value={newAdLine.domain}
+                      onChange={(e) => setNewAdLine({ ...newAdLine, domain: e.target.value })}
+                      placeholder="e.g. google.com"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="helper-pub-id">Publisher ID</label>
+                    <input
+                      id="helper-pub-id"
+                      type="text"
+                      className="form-input"
+                      value={newAdLine.pubId}
+                      onChange={(e) => setNewAdLine({ ...newAdLine, pubId: e.target.value })}
+                      placeholder="e.g. pub-6096598752695949"
+                    />
+                  </div>
+
+                  <div style={styles.formRow}>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label" htmlFor="helper-relationship">Relationship</label>
+                      <select
+                        id="helper-relationship"
+                        value={newAdLine.relationship}
+                        onChange={(e) => setNewAdLine({ ...newAdLine, relationship: e.target.value as 'DIRECT' | 'RESELLER' })}
+                        style={{
+                          width: '100%',
+                          padding: '10px 14px',
+                          borderRadius: '8px',
+                          border: '1px solid var(--border-glass)',
+                          background: 'rgba(255, 255, 255, 0.03)',
+                          color: '#ffffff',
+                          fontFamily: 'inherit'
+                        }}
+                      >
+                        <option value="DIRECT" style={{ background: '#1c1917', color: '#fff' }}>DIRECT</option>
+                        <option value="RESELLER" style={{ background: '#1c1917', color: '#fff' }}>RESELLER</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label" htmlFor="helper-cert-id">Cert Authority ID (Optional)</label>
+                      <input
+                        id="helper-cert-id"
+                        type="text"
+                        className="form-input"
+                        value={newAdLine.certId}
+                        onChange={(e) => setNewAdLine({ ...newAdLine, certId: e.target.value })}
+                        placeholder="e.g. f08c47fec0942fa0"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    style={{ alignSelf: 'flex-start', marginTop: '8px' }}
+                    onClick={() => {
+                      if (!newAdLine.domain.trim() || !newAdLine.pubId.trim()) {
+                        alert('Domain and Publisher ID are required.');
+                        return;
+                      }
+                      const formattedLine = `${newAdLine.domain.trim()}, ${newAdLine.pubId.trim()}, ${newAdLine.relationship}${newAdLine.certId.trim() ? `, ${newAdLine.certId.trim()}` : ''}`;
+                      const currentContent = adsContent.trim();
+                      const separator = currentContent ? '\n' : '';
+                      setAdsContent(currentContent + separator + formattedLine);
+                      setNewAdLine({
+                        domain: 'google.com',
+                        pubId: 'pub-',
+                        relationship: 'DIRECT',
+                        certId: 'f08c47fec0942fa0'
+                      });
+                    }}
+                  >
+                    <Plus size={15} /> Format & Append Line
+                  </button>
                 </div>
               </div>
             )}
