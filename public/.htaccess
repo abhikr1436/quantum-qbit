@@ -10,7 +10,7 @@
 # Cache-Control and Expires headers for Static Assets (PageSpeed optimization)
 <IfModule mod_expires.c>
   ExpiresActive On
-  ExpiresDefault "access plus 1 month"
+  # Do not use ExpiresDefault to prevent caching HTML/PHP/JSON files by default
   ExpiresByType image/x-icon "access plus 1 year"
   ExpiresByType image/png "access plus 1 year"
   ExpiresByType image/jpeg "access plus 1 year"
@@ -19,10 +19,20 @@
   ExpiresByType text/css "access plus 1 year"
   ExpiresByType application/javascript "access plus 1 year"
   ExpiresByType font/woff2 "access plus 1 year"
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType application/xhtml+xml "access plus 0 seconds"
+  ExpiresByType application/json "access plus 0 seconds"
 </IfModule>
 
 <IfModule mod_headers.c>
+  # Cache static assets for 1 year
   <FilesMatch "\.(ico|pdf|jpg|jpeg|png|gif|js|css|webp|svg|woff2)$">
     Header set Cache-Control "max-age=31536000, public"
+  </FilesMatch>
+  # Explicitly prevent caching of HTML, PHP, and JSON files to force dynamic updates
+  <FilesMatch "\.(html|htm|php|json)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires 0
   </FilesMatch>
 </IfModule>
