@@ -512,7 +512,7 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
     setIsAdsLoading(true);
     setAdsError('');
     if (isLocalMode) {
-      const local = localStorage.getItem('quantum_app_ads') || 'google.com, pub-6096598752695949, DIRECT, f08c47fec0942fa0';
+      const local = localStorage.getItem('quantum_app_ads') || 'google.com, pub-3643379306547907, DIRECT, f08c47fec0942fa0';
       setAdsContent(local);
       setIsAdsLoading(false);
     } else {
@@ -522,12 +522,12 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
           const data = await response.json();
           setAdsContent(data.content || '');
         } else {
-          const local = localStorage.getItem('quantum_app_ads') || 'google.com, pub-6096598752695949, DIRECT, f08c47fec0942fa0';
+          const local = localStorage.getItem('quantum_app_ads') || 'google.com, pub-3643379306547907, DIRECT, f08c47fec0942fa0';
           setAdsContent(local);
         }
       } catch (err) {
         console.warn('API error fetching app-ads, falling back:', err);
-        const local = localStorage.getItem('quantum_app_ads') || 'google.com, pub-6096598752695949, DIRECT, f08c47fec0942fa0';
+        const local = localStorage.getItem('quantum_app_ads') || 'google.com, pub-3643379306547907, DIRECT, f08c47fec0942fa0';
         setAdsContent(local);
       } finally {
         setIsAdsLoading(false);
@@ -1712,7 +1712,7 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
                       className="form-input"
                       value={newAdLine.pubId}
                       onChange={(e) => setNewAdLine({ ...newAdLine, pubId: e.target.value })}
-                      placeholder="e.g. pub-6096598752695949"
+                      placeholder="e.g. pub-3643379306547907"
                     />
                   </div>
 

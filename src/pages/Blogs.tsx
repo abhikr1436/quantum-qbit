@@ -56,7 +56,7 @@ const AdSenseUnit: React.FC<{ slot: string; format?: string; responsive?: string
       <ins
         className="adsbygoogle"
         style={style}
-        data-ad-client="ca-pub-6096598752695949"
+        data-ad-client="ca-pub-3643379306547907"
         data-ad-slot={slot}
         data-ad-format={format}
         data-full-width-responsive={responsive}

@@ -81,7 +81,7 @@ function App() {
       // 2. Load Google AdSense
       const adScript = document.createElement('script');
       adScript.async = true;
-      adScript.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6096598752695949";
+      adScript.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3643379306547907";
       adScript.crossOrigin = "anonymous";
       document.head.appendChild(adScript);
     };

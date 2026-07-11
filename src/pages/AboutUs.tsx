@@ -54,7 +54,7 @@ export const AboutUs: React.FC = () => {
               </div>
               <div style={styles.pointItem}>
                 <CheckCircle2 size={16} style={{ color: 'var(--primary)' }} />
-                <span>Completely ad-free professional workflow</span>
+                <span>Privacy-focused professional workspace</span>
               </div>
             </div>
           </div>
