@@ -1021,4 +1021,10 @@
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://quantumqbit.in/blogs/wordles-latest-obsession-nyts-hidden-changes-and-why-you-need-browser-only-processing</loc>
+    <lastmod>2026-07-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
 </urlset>
