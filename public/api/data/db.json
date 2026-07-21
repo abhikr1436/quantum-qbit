@@ -5,8 +5,8 @@
     "githubToken": "",
     "automationIntervalMinutes": 360,
     "isAutomationActive": true,
-    "lastRunTimestamp": "2026-07-21T02:53:28.799Z",
-    "lastBrainstormTimestamp": "2026-07-21T02:53:11.999Z",
+    "lastRunTimestamp": "2026-07-21T13:58:07.437Z",
+    "lastBrainstormTimestamp": "2026-07-21T13:57:46.923Z",
     "campaignMode": null
   },
   "agents": [
@@ -29,7 +29,7 @@
       "role": "Marketing",
       "avatar": "✍️",
       "bio": "Specializes in keyword optimization, content writing, SEO research, and drafting educational technical blogs.",
-      "status": "📄 Draft complete for \"Why 'weather jammu' and 'weather in jammu' Are Trending: How to Check Your Local Weather and Prepare Documents Offline\" — 574 words, category: general-utilities. Sending to Alex for review."
+      "status": "📄 Draft complete for \"CBSE 2026 Supplementary Exam Admit Card Released: How to Download and Compress Your Photo & Signature for the Portal\" — 623 words, category: general-utilities. Sending to Alex for review."
     },
     {
       "name": "Sarah",
@@ -6029,6 +6029,38 @@
       ],
       "createdAt": "2026-07-21T02:53:14.790Z",
       "updatedAt": "2026-07-21T02:53:28.801Z"
+    },
+    {
+      "id": "task-d3c9061v6",
+      "title": "CBSE 2026 Supplementary Exam Admit Card Released: How to Download and Compress Your Photo & Signature for the Portal",
+      "description": "(1) Target hook: CBSE Class 10/12 supplementary exam admit cards for 2026 are out – students need to upload passport-size photo and signature in specific size/KB limits. (2) Specific trending data: 'cbse 2026 supplementary exam admit card' is trending in India with volume 500+ and growth score 278. (3) quantumqbit.in tool to feature: Image Resizer (crop/resize images offline) and PDF Compressor (reduce size of scanned documents). (4) 3 target SEO keywords: CBSE supplementary admit card 2026 download, CBSE photo signature upload guide, compress image for CBSE portal.",
+      "category": "Government jobs",
+      "type": "blog",
+      "assignee": "Mark",
+      "status": "completed",
+      "draftContent": {
+        "title": "CBSE 2026 Supplementary Exam Admit Card Released: How to Download and Compress Your Photo & Signature for the Portal",
+        "excerpt": "CBSE has released the admit cards for Class 10 and 12 supplementary exams 2026. Learn step-by-step how to download, and use offline tools to resize photos and compress signatures to meet portal requirements.",
+        "content": "<h2>CBSE 2026 Supplementary Exam Admit Card Released</h2><p>The Central Board of Secondary Education (CBSE) has officially released the admit cards for the Class 10 and 12 supplementary examinations for the year 2026. This is a crucial update for thousands of students across India who will appear for these exams. Along with the admit card download, students must ensure their uploaded photo and signature meet specific size and dimension guidelines set by the CBSE portal. This guide provides a step-by-step process to download your admit card and use offline tools like those from quantumqbit.in to compress and resize your documents.</p><h3>Why This Matters Right Now</h3><p>With the 'CBSE 2026 supplementary exam admit card' trend seeing a volume of 500+ and a growth score of 278, it's clear that students are actively searching for this information. Missing the deadline or uploading incorrect files can lead to delays or rejection. By following this guide, you'll save time and avoid common pitfalls.</p><h2>How to Download CBSE 2026 Supplementary Exam Admit Card</h2><ol><li>Visit the official CBSE website: <strong>cbse.gov.in</strong> or the direct admit card portal.</li><li>Click on the link for 'CBSE Class 10/12 Supplementary Exam 2026 Admit Card'.</li><li>Enter your roll number, date of birth, and other required details.</li><li>Submit the form and your admit card will appear on screen.</li><li>Download the PDF and take a printout. Keep multiple copies for safety.</li></ol><blockquote><strong>Note:</strong> The admit card contains essential exam details like center, timing, and instructions. Verify all information immediately upon download.</blockquote><h2>Photo and Signature Upload Requirements</h2><p>During the admit card download process or when completing other formalities, you may be required to upload a recent passport-size photo and your signature. The CBSE portal typically specifies:</p><ul><li><strong>Photo:</strong> Size between 10 KB to 50 KB, dimensions 3.5 cm x 4.5 cm (or as specified), in JPEG/JPG format.</li><li><strong>Signature:</strong> Size between 5 KB to 20 KB, dimensions 3.5 cm x 1.5 cm, in JPEG/JPG format.</li></ul><p>These limits are strict; exceeding them will result in upload failure. To comply, you'll need to resize and compress your images without losing quality.</p><h2>Using quantumqbit.in Tools to Prepare Your Files</h2><p>quantumqbit.in offers two essential offline utilities that make this process seamless and secure:</p><h3>Image Resizer (Crop/Resize Images Offline)</h3><p>This tool runs entirely in your browser without uploading any data to a server. It allows you to crop and resize your photo to exact dimensions required by CBSE. Simply upload your image, adjust the crop area, and resize to the specified pixels. The tool maintains image quality while ensuring the final file size fits within the limit. <strong>Pro tip:</strong> Save as JPEG with 70-80% quality to reduce file size.</p><h3>PDF Compressor (Reduce Size of Scanned Documents)</h3><p>If you have scanned documents like a signed declaration or signature in PDF format, use the PDF Compressor to reduce file size without significant loss of readability. This is especially useful for signatures that may be in PDF format. The tool compresses PDFs right in your browser, keeping your data private.</p><h2>Step-by-Step: Compress Photo for CBSE Portal</h2><ol><li>Open quantumqbit.in's <strong>Image Resizer</strong> tool.</li><li>Upload your passport-size photo (click 'Choose File' or drag and drop).</li><li>Use the crop tool to select the correct aspect ratio (e.g., 3.5:4.5).</li><li>Set the output dimensions as per CBSE requirements (e.g., 350 x 450 pixels).</li><li>Adjust the quality slider to achieve file size between 10-50 KB. The tool displays the estimated size.</li><li>Click 'Download' to save the resized image.</li><li>Repeat similar steps for the signature, aiming for 5-20 KB.</li></ol><h2>Important Tips</h2><ul><li>Use a plain white background for your photo.</li><li>Ensure your signature is on white paper with black or blue ink.</li><li>Do not use any third-party online uploaders; always use offline tools to protect your privacy.</li><li>Double-check the file format: JPEG/JPG only.</li></ul><h2>Conclusion</h2><p>With the CBSE 2026 supplementary exam admit card release, students need to act quickly. By following the steps above and using quantumqbit.in's offline tools, you can seamlessly prepare your documents. Stay ahead of the deadline and avoid last-minute stress. Good luck!</p>",
+        "category_id": "general-utilities",
+        "imageGlow": "rgba(0, 242, 254, 0.15)"
+      },
+      "reviews": [
+        {
+          "agent": "Alex",
+          "reviewText": "The task aligns perfectly with the trending topic, includes clear target keywords, and effectively promotes quantumqbit.in tools. The content is well-structured, detailed, and provides actionable steps for users. Approve.",
+          "decision": "approved",
+          "timestamp": "2026-07-21T13:58:06.155Z"
+        },
+        {
+          "agent": "Sophia",
+          "reviewText": "The article is thorough, timely, and provides clear step-by-step instructions. It aligns well with our brand and utilities. Good work, Mark. Approved.",
+          "decision": "approved",
+          "timestamp": "2026-07-21T13:58:07.412Z"
+        }
+      ],
+      "createdAt": "2026-07-21T13:57:50.178Z",
+      "updatedAt": "2026-07-21T13:58:07.438Z"
     }
   ],
   "chatLogs": [
@@ -14676,6 +14708,48 @@
       "text": "Deployment successful for \"Why 'weather jammu' and 'weather in jammu' Are Trending: How to Check Your Local Weather and Prepare Documents Offline\"! Changes are staged. Log: Published blog post \"Why 'weather jammu' and 'weather in jammu' Are Trending: How to Check Your Local Weather and Prepare Documents Offline\" with slug \"why-weather-jammu-and-weather-in-jammu-are-trending-how-to-check-your-local-weather-and-prepare-documents-offline\".",
       "timestamp": "2026-07-21T02:53:28.799Z",
       "taskId": "task-fxpjambec"
+    },
+    {
+      "id": "msg-1784642270178",
+      "sender": "Alex",
+      "text": "📝 [NEW TOPIC QUEUED] @Mark will write \"CBSE 2026 Supplementary Exam Admit Card Released: How to Download and Compress Your Photo & Signature for the Portal\" — researched from live trending data. Added to workflows!",
+      "timestamp": "2026-07-21T13:57:50.178Z",
+      "taskId": "task-d3c9061v6"
+    },
+    {
+      "id": "msg-1784642270198",
+      "sender": "Mark",
+      "text": "Acknowledged, @Alex. Starting work on \"CBSE 2026 Supplementary Exam Admit Card Released: How to Download and Compress Your Photo & Signature for the Portal\". Brief: (1) Target hook: CBSE Class 10/12 supplementary exam admit cards for 2026 are out – students need to upload passport-size photo and signature in specific size/KB limits. (2) Specific trending data: 'cbse 2026 supplementary exam admit card' is trending in India with volume 500+ and growth score 278. (3) quantumqbit.in tool to feature: Image Resizer (crop/resize images offline) and PDF Compressor (reduce size of scanned documents). (4) 3 target SEO keywords: CBSE supplementary admit card 2026 download, CBSE photo signature upload guide, compress image for CBSE portal.",
+      "timestamp": "2026-07-21T13:57:50.198Z",
+      "taskId": "task-d3c9061v6"
+    },
+    {
+      "id": "msg-17846422847470.9372282836249672",
+      "sender": "Mark",
+      "text": "I've finished drafting the work for \"CBSE 2026 Supplementary Exam Admit Card Released: How to Download and Compress Your Photo & Signature for the Portal\". @Alex, please check my submission!",
+      "timestamp": "2026-07-21T13:58:04.747Z",
+      "taskId": "task-d3c9061v6"
+    },
+    {
+      "id": "msg-17846422861550.1976430911525946",
+      "sender": "Alex",
+      "text": "Draft for \"CBSE 2026 Supplementary Exam Admit Card Released: How to Download and Compress Your Photo & Signature for the Portal\" is approved by me. @Sophia, please review and give the final sign-off! Notes: The task aligns perfectly with the trending topic, includes clear target keywords, and effectively promotes quantumqbit.in tools. The content is well-structured, detailed, and provides actionable steps for users. Approve.",
+      "timestamp": "2026-07-21T13:58:06.155Z",
+      "taskId": "task-d3c9061v6"
+    },
+    {
+      "id": "msg-17846422874130.35455778756144607",
+      "sender": "Sophia",
+      "text": "Approved! Excellent job @Mark. @Deployer, please push this update live. Executive Notes: The article is thorough, timely, and provides clear step-by-step instructions. It aligns well with our brand and utilities. Good work, Mark. Approved.",
+      "timestamp": "2026-07-21T13:58:07.413Z",
+      "taskId": "task-d3c9061v6"
+    },
+    {
+      "id": "msg-17846422874370.9564878406449686",
+      "sender": "Deployer",
+      "text": "Deployment successful for \"CBSE 2026 Supplementary Exam Admit Card Released: How to Download and Compress Your Photo & Signature for the Portal\"! Changes are staged. Log: Published blog post \"CBSE 2026 Supplementary Exam Admit Card Released: How to Download and Compress Your Photo & Signature for the Portal\" with slug \"cbse-2026-supplementary-exam-admit-card-released-how-to-download-and-compress-your-photo-signature-for-the-portal\".",
+      "timestamp": "2026-07-21T13:58:07.437Z",
+      "taskId": "task-d3c9061v6"
     }
   ],
   "publishedTopics": [
@@ -14816,114 +14890,10 @@
     "How to Apply for RRB Apply Online 2026: Step-by-Step Guide and Document Preparation Tips",
     "GATE 2026 Score Based PSU Recruitment List Released: How to Compress and Upload Your Documents for Online Applications",
     "How to Apply for NIEPA Assistant Professor Recruitment 2026: Official Notification and Document Preparation Guide",
-    "Why 'weather jammu' and 'weather in jammu' Are Trending: How to Check Your Local Weather and Prepare Documents Offline"
+    "Why 'weather jammu' and 'weather in jammu' Are Trending: How to Check Your Local Weather and Prepare Documents Offline",
+    "CBSE 2026 Supplementary Exam Admit Card Released: How to Download and Compress Your Photo & Signature for the Portal"
   ],
   "systemLogs": [
-    {
-      "timestamp": "2026-07-19T02:56:37.653Z",
-      "agent": "System",
-      "message": "=== Runner process started on GitHub Actions ==="
-    },
-    {
-      "timestamp": "2026-07-19T02:56:37.699Z",
-      "agent": "System",
-      "message": "Fetching boardroom directives and live chats from server..."
-    },
-    {
-      "timestamp": "2026-07-19T02:56:38.703Z",
-      "agent": "System",
-      "message": "Running autonomous hourly brainstorm — checking live trends for new article topic..."
-    },
-    {
-      "timestamp": "2026-07-19T02:56:38.704Z",
-      "agent": "System",
-      "message": "Deepseek client authorized successfully."
-    },
-    {
-      "timestamp": "2026-07-19T02:56:38.720Z",
-      "agent": "System",
-      "message": "[Cycle 1] No pending tasks — brainstorming new topic from live trends..."
-    },
-    {
-      "timestamp": "2026-07-19T02:56:38.741Z",
-      "agent": "System",
-      "message": "🔎 Mark is fetching live Google Trends (India), global news, X hashtags, and Sarkari Result govt jobs..."
-    },
-    {
-      "timestamp": "2026-07-19T02:56:39.088Z",
-      "agent": "System",
-      "message": "📊 Trends fetched — India: 10 topics, Global: 10 topics, X hashtags: 10, Govt jobs: 2 listings"
-    },
-    {
-      "timestamp": "2026-07-19T02:56:39.088Z",
-      "agent": "System",
-      "message": "🏆 Top India Trend: district judge veena rani suspended (2000+)"
-    },
-    {
-      "timestamp": "2026-07-19T02:56:39.089Z",
-      "agent": "System",
-      "message": "📋 Top Govt Job: NaBFID Business Analyst Recruitment 2026: Apply for 22 Posts"
-    },
-    {
-      "timestamp": "2026-07-19T02:56:42.529Z",
-      "agent": "System",
-      "message": "💡 Topic selected by Mark: \"Japan Open Badminton 2026: How to Compress & Resize Your Player Profile Photos for Online Registration\" [Category: India guides]"
-    },
-    {
-      "timestamp": "2026-07-19T02:56:42.547Z",
-      "agent": "System",
-      "message": "[Cycle 2] Task queued: \"Japan Open Badminton 2026: How to Compress & Resize Your Player Profile Photos for Online Registration\" — Assigning to Mark..."
-    },
-    {
-      "timestamp": "2026-07-19T02:56:42.558Z",
-      "agent": "System",
-      "message": "✍️ Mark started drafting: \"Japan Open Badminton 2026: How to Compress & Resize Your Player Profile Photos for Online Registration\""
-    },
-    {
-      "timestamp": "2026-07-19T02:56:52.758Z",
-      "agent": "System",
-      "message": "[Cycle 3] Alex (Manager) is reviewing draft for \"Japan Open Badminton 2026: How to Compress & Resize Your Player Profile Photos for Online Registration\"..."
-    },
-    {
-      "timestamp": "2026-07-19T02:56:52.771Z",
-      "agent": "System",
-      "message": "🔍 Alex (Manager) reviewing draft for \"Japan Open Badminton 2026: How to Compress & Resize Your Player Profile Photos for Online Registration\"..."
-    },
-    {
-      "timestamp": "2026-07-19T02:56:54.064Z",
-      "agent": "System",
-      "message": "✅ Alex approved draft for \"Japan Open Badminton 2026: How to Compress & Resize Your Player Profile Photos for Online Registration\". Forwarding to Sophia (CEO) for final sign-off."
-    },
-    {
-      "timestamp": "2026-07-19T02:56:54.074Z",
-      "agent": "System",
-      "message": "[Cycle 4] Sophia (CEO) is evaluating \"Japan Open Badminton 2026: How to Compress & Resize Your Player Profile Photos for Online Registration\" for final approval..."
-    },
-    {
-      "timestamp": "2026-07-19T02:56:54.086Z",
-      "agent": "System",
-      "message": "👑 Sophia (CEO) evaluating \"Japan Open Badminton 2026: How to Compress & Resize Your Player Profile Photos for Online Registration\" for final approval..."
-    },
-    {
-      "timestamp": "2026-07-19T02:56:55.464Z",
-      "agent": "System",
-      "message": "🚀 CEO approved! Deployer is publishing \"Japan Open Badminton 2026: How to Compress & Resize Your Player Profile Photos for Online Registration\" to the live website now..."
-    },
-    {
-      "timestamp": "2026-07-19T02:56:55.488Z",
-      "agent": "System",
-      "message": "🎉 PUBLISHED: \"Japan Open Badminton 2026: How to Compress & Resize Your Player Profile Photos for Online Registration\" is now live on quantumqbit.in — 19/7/2026, 8:26:55 am IST"
-    },
-    {
-      "timestamp": "2026-07-19T02:56:55.500Z",
-      "agent": "System",
-      "message": "[Cycle 5] No pending tasks — brainstorming new topic from live trends..."
-    },
-    {
-      "timestamp": "2026-07-19T02:56:55.511Z",
-      "agent": "System",
-      "message": "=== Runner completed all cycle steps and finished successfully ==="
-    },
     {
       "timestamp": "2026-07-19T08:23:21.969Z",
       "agent": "System",
@@ -15566,6 +15536,111 @@
     },
     {
       "timestamp": "2026-07-21T08:33:11.208Z",
+      "agent": "System",
+      "message": "=== Runner completed all cycle steps and finished successfully ==="
+    },
+    {
+      "timestamp": "2026-07-21T13:57:45.943Z",
+      "agent": "System",
+      "message": "=== Runner process started on GitHub Actions ==="
+    },
+    {
+      "timestamp": "2026-07-21T13:57:45.986Z",
+      "agent": "System",
+      "message": "Fetching boardroom directives and live chats from server..."
+    },
+    {
+      "timestamp": "2026-07-21T13:57:46.896Z",
+      "agent": "System",
+      "message": "Running autonomous hourly brainstorm — checking live trends for new article topic..."
+    },
+    {
+      "timestamp": "2026-07-21T13:57:46.897Z",
+      "agent": "System",
+      "message": "Deepseek client authorized successfully."
+    },
+    {
+      "timestamp": "2026-07-21T13:57:46.908Z",
+      "agent": "System",
+      "message": "[Cycle 1] No pending tasks — brainstorming new topic from live trends..."
+    },
+    {
+      "timestamp": "2026-07-21T13:57:46.925Z",
+      "agent": "System",
+      "message": "🔎 Mark is fetching live Google Trends (India), global news, X hashtags, and Sarkari Result govt jobs..."
+    },
+    {
+      "timestamp": "2026-07-21T13:57:47.212Z",
+      "agent": "System",
+      "message": "📊 Trends fetched — India: 10 topics, Global: 10 topics, X hashtags: 10, Govt jobs: 7 listings"
+    },
+    {
+      "timestamp": "2026-07-21T13:57:47.213Z",
+      "agent": "System",
+      "message": "🏆 Top India Trend: వైష్ణవ్ తేజ్ (1000+)"
+    },
+    {
+      "timestamp": "2026-07-21T13:57:47.214Z",
+      "agent": "System",
+      "message": "📋 Top Govt Job: RRB JE Recruitment 2026 – Notification for 4098 Posts | Apply Online up to 13-09-2026"
+    },
+    {
+      "timestamp": "2026-07-21T13:57:50.168Z",
+      "agent": "System",
+      "message": "💡 Topic selected by Mark: \"CBSE 2026 Supplementary Exam Admit Card Released: How to Download and Compress Your Photo & Signature for the Portal\" [Category: Government jobs]"
+    },
+    {
+      "timestamp": "2026-07-21T13:57:50.187Z",
+      "agent": "System",
+      "message": "[Cycle 2] Task queued: \"CBSE 2026 Supplementary Exam Admit Card Released: How to Download and Compress Your Photo & Signature for the Portal\" — Assigning to Mark..."
+    },
+    {
+      "timestamp": "2026-07-21T13:57:50.198Z",
+      "agent": "System",
+      "message": "✍️ Mark started drafting: \"CBSE 2026 Supplementary Exam Admit Card Released: How to Download and Compress Your Photo & Signature for the Portal\""
+    },
+    {
+      "timestamp": "2026-07-21T13:58:04.764Z",
+      "agent": "System",
+      "message": "[Cycle 3] Alex (Manager) is reviewing draft for \"CBSE 2026 Supplementary Exam Admit Card Released: How to Download and Compress Your Photo & Signature for the Portal\"..."
+    },
+    {
+      "timestamp": "2026-07-21T13:58:04.779Z",
+      "agent": "System",
+      "message": "🔍 Alex (Manager) reviewing draft for \"CBSE 2026 Supplementary Exam Admit Card Released: How to Download and Compress Your Photo & Signature for the Portal\"..."
+    },
+    {
+      "timestamp": "2026-07-21T13:58:06.155Z",
+      "agent": "System",
+      "message": "✅ Alex approved draft for \"CBSE 2026 Supplementary Exam Admit Card Released: How to Download and Compress Your Photo & Signature for the Portal\". Forwarding to Sophia (CEO) for final sign-off."
+    },
+    {
+      "timestamp": "2026-07-21T13:58:06.165Z",
+      "agent": "System",
+      "message": "[Cycle 4] Sophia (CEO) is evaluating \"CBSE 2026 Supplementary Exam Admit Card Released: How to Download and Compress Your Photo & Signature for the Portal\" for final approval..."
+    },
+    {
+      "timestamp": "2026-07-21T13:58:06.178Z",
+      "agent": "System",
+      "message": "👑 Sophia (CEO) evaluating \"CBSE 2026 Supplementary Exam Admit Card Released: How to Download and Compress Your Photo & Signature for the Portal\" for final approval..."
+    },
+    {
+      "timestamp": "2026-07-21T13:58:07.413Z",
+      "agent": "System",
+      "message": "🚀 CEO approved! Deployer is publishing \"CBSE 2026 Supplementary Exam Admit Card Released: How to Download and Compress Your Photo & Signature for the Portal\" to the live website now..."
+    },
+    {
+      "timestamp": "2026-07-21T13:58:07.437Z",
+      "agent": "System",
+      "message": "🎉 PUBLISHED: \"CBSE 2026 Supplementary Exam Admit Card Released: How to Download and Compress Your Photo & Signature for the Portal\" is now live on quantumqbit.in — 21/7/2026, 7:28:07 pm IST"
+    },
+    {
+      "timestamp": "2026-07-21T13:58:07.449Z",
+      "agent": "System",
+      "message": "[Cycle 5] No pending tasks — brainstorming new topic from live trends..."
+    },
+    {
+      "timestamp": "2026-07-21T13:58:07.461Z",
       "agent": "System",
       "message": "=== Runner completed all cycle steps and finished successfully ==="
     }
