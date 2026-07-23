@@ -2832,6 +2832,150 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
           </div>
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* Educational Guide, Features & FAQ Section (AdSense Rich Value Content)     */}
+      {/* ========================================================================= */}
+      <section style={{ marginTop: '60px', borderTop: '1px solid var(--border-glass)', paddingTop: '40px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+          <span style={{ fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--primary)', fontWeight: 600 }}>Educational Resource</span>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 700, marginTop: '8px', color: 'var(--text-primary)' }}>
+            Browser-Side Image Studio Guide &amp; Technical Reference
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.96rem', maxWidth: '750px', margin: '8px auto 0 auto', lineHeight: 1.6 }}>
+            Learn how browser-based Canvas acceleration processes photographs, resizes dimensions, manages DPI parameters, and protects your privacy without remote server uploads.
+          </p>
+        </div>
+
+        {/* 3-Column Feature Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '40px' }}>
+          <div className="glass-card" style={{ padding: '24px' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '10px' }}>
+              🔒 100% Data Security & Privacy
+            </h3>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              Unlike online cloud converters that upload your personal photos to unknown remote servers, Quantum Qbit processes every image locally inside your browser memory using HTML5 Canvas APIs. Your photos never leave your device.
+            </p>
+          </div>
+          <div className="glass-card" style={{ padding: '24px' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--secondary)', marginBottom: '10px' }}>
+              ⚡ Sub-Second GPU & CPU Processing
+            </h3>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              By utilizing client-side hardware acceleration and native JavaScript pixel manipulations, adjustments like brightness tuning, aspect ratio cropping, and background transparentizing execute instantly with zero network delay.
+            </p>
+          </div>
+          <div className="glass-card" style={{ padding: '24px' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '10px' }}>
+              🎯 Print-Ready DPI Control
+            </h3>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              Inject customized JFIF/EXIF resolution density tags (72 DPI for web graphics, 300 DPI for high-definition print publication) directly into the image header metadata.
+            </p>
+          </div>
+        </div>
+
+        {/* Step-by-Step Usage Guide */}
+        <div className="glass-card" style={{ padding: '32px', marginBottom: '40px' }}>
+          <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>
+            How to Use Quantum Qbit Image Studio Step-by-Step
+          </h3>
+          <ol style={{ paddingLeft: '20px', color: 'var(--text-secondary)', lineHeight: 1.8, fontSize: '0.94rem' }}>
+            <li><strong>Select or Drag an Image:</strong> Upload any PNG, JPG, WEBP, or BMP file. The app loads the binary buffer into local browser memory.</li>
+            <li><strong>Apply Visual Filters:</strong> Fine-tune Brightness, Contrast, Saturation, Grayscale, Blur, and Hue Rotation using precision control sliders.</li>
+            <li><strong>Crop & Scale Dimensions:</strong> Choose standard aspect ratios (1:1, 16:9, 4:3, 9:16) or input custom pixel widths and heights while preserving original proportions.</li>
+            <li><strong>Remove Image Backgrounds:</strong> Use our color-key transparentizer tool with custom tolerance and edge-feathering sliders to remove solid background colors.</li>
+            <li><strong>Select Target Format & Quality:</strong> Choose between WEBP (for minimal web load times), PNG (for lossless transparency), or JPEG (for photo compression).</li>
+            <li><strong>Download Processed Asset:</strong> Click <em>"Render & Download Image"</em> to save the edited output directly to your computer.</li>
+          </ol>
+        </div>
+
+        {/* Image Format Technical Guide Table */}
+        <div className="glass-card" style={{ padding: '32px', marginBottom: '40px' }}>
+          <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>
+            Understanding Image Formats: WEBP vs PNG vs JPEG vs BMP
+          </h3>
+          <div className="responsive-table-wrapper" style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border-glass)', color: 'var(--primary)' }}>
+                  <th style={{ padding: '12px' }}>Format</th>
+                  <th style={{ padding: '12px' }}>Compression Type</th>
+                  <th style={{ padding: '12px' }}>Transparency Support</th>
+                  <th style={{ padding: '12px' }}>Best Use Case</th>
+                </tr>
+              </thead>
+              <tbody style={{ color: 'var(--text-secondary)' }}>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <td style={{ padding: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>WEBP</td>
+                  <td style={{ padding: '12px' }}>Lossy &amp; Lossless</td>
+                  <td style={{ padding: '12px' }}>Yes (Alpha Channel)</td>
+                  <td style={{ padding: '12px' }}>Modern websites, app assets, fast page loading</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <td style={{ padding: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>PNG</td>
+                  <td style={{ padding: '12px' }}>Lossless (DEFLATE)</td>
+                  <td style={{ padding: '12px' }}>Yes (Full 8-bit Alpha)</td>
+                  <td style={{ padding: '12px' }}>Logos, icons, screenshots, graphics with sharp text</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <td style={{ padding: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>JPEG / JPG</td>
+                  <td style={{ padding: '12px' }}>Lossy (DCT Discrete Cosine)</td>
+                  <td style={{ padding: '12px' }}>No (Solid Background)</td>
+                  <td style={{ padding: '12px' }}>Complex photography, realistic scenery, printable photos</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>BMP</td>
+                  <td style={{ padding: '12px' }}>Uncompressed Raster</td>
+                  <td style={{ padding: '12px' }}>Limited</td>
+                  <td style={{ padding: '12px' }}>Legacy graphics, raw bitmap processing</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Frequently Asked Questions (FAQs) */}
+        <div className="glass-card" style={{ padding: '32px', marginBottom: '20px' }}>
+          <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '20px' }}>
+            Frequently Asked Questions (Image Editing FAQ)
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ borderBottom: '1px solid var(--border-glass)', paddingBottom: '14px' }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                Q: Are my uploaded photos safe from data breaches?
+              </h4>
+              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                Yes, 100%. Quantum Qbit does not upload your files to any remote server or cloud database. All image filters, crops, and compression tasks run completely inside your local browser runtime.
+              </p>
+            </div>
+            <div style={{ borderBottom: '1px solid var(--border-glass)', paddingBottom: '14px' }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                Q: How does client-side image compression reduce file size?
+              </h4>
+              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                Our compressor draws your image onto an HTML5 Canvas element and exports it via the <code>toDataURL()</code> method with controlled quality parameters (e.g. 0.85 quality ratio for WebP/JPEG). This eliminates redundant metadata and optimizes quantization tables locally.
+              </p>
+            </div>
+            <div style={{ borderBottom: '1px solid var(--border-glass)', paddingBottom: '14px' }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                Q: Can I change image DPI for printing purposes?
+              </h4>
+              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                Yes! You can use our DPI tool to change resolution density from standard web 72 DPI up to 300 DPI or higher for crisp physical printing.
+              </p>
+            </div>
+            <div>
+              <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                Q: Can I use this image editor offline?
+              </h4>
+              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                Yes! Once the page is loaded into your browser cache, all features operate without requiring an active internet connection.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };

@@ -34,45 +34,57 @@ export const LandingPage: React.FC = () => {
       }
     };
 
+    const loadDefaultBlogs = () => {
+      const defaultPosts: BlogPost[] = [
+        {
+          id: 'browser-privacy',
+          title: "Why Browser-Only Tools Are the Future of Web Utility Apps",
+          excerpt: "In an era of rising security concerns, running calculations, converting PDFs, and editing photos locally protects user data from server hazards.",
+          author: "Quantum Engineering Team",
+          date: "May 18, 2026",
+          readTime: "4 min read",
+          category: "Privacy & Security",
+          imageGlow: 'rgba(0, 242, 254, 0.1)'
+        },
+        {
+          id: 'base-math',
+          title: "The Logic Behind Real-Time Cross-Input Number Base Conversions",
+          excerpt: "Understanding how computers translate binary, octal, decimal, and hexadecimal representations under the hood to optimize data structures.",
+          author: "Dr. Clara Chen",
+          date: "May 10, 2026",
+          readTime: "5 min read",
+          category: "Computer Science",
+          imageGlow: 'rgba(157, 78, 221, 0.1)'
+        },
+        {
+          id: 'image-optimization',
+          title: "Image Formats Decoded: Choosing Between JPG, PNG, WEBP, and BMP",
+          excerpt: "A deep dive into compression algorithms and when to use each format to achieve visual clarity while keeping load times minimal.",
+          author: "Marcus Vance",
+          date: "May 02, 2026",
+          readTime: "4 min read",
+          category: "Creative Tech",
+          imageGlow: 'rgba(0, 242, 254, 0.1)'
+        }
+      ];
+      setPosts(defaultPosts);
+    };
+
     const loadFallbackBlogs = () => {
       const local = localStorage.getItem('quantum_blogs');
       if (local) {
-        setPosts(JSON.parse(local));
-      } else {
-        const defaultPosts: BlogPost[] = [
-          {
-            id: 'browser-privacy',
-            title: "Why Browser-Only Tools Are the Future of Web Utility Apps",
-            excerpt: "In an era of rising security concerns, running calculations, converting PDFs, and editing photos locally protects user data from server hazards.",
-            author: "Quantum Engineering Team",
-            date: "May 18, 2026",
-            readTime: "4 min read",
-            category: "Privacy & Security",
-            imageGlow: 'rgba(0, 242, 254, 0.1)'
-          },
-          {
-            id: 'base-math',
-            title: "The Logic Behind Real-Time Cross-Input Number Base Conversions",
-            excerpt: "Understanding how computers translate binary, octal, decimal, and hexadecimal representations under the hood to optimize data structures.",
-            author: "Dr. Clara Chen",
-            date: "May 10, 2026",
-            readTime: "5 min read",
-            category: "Computer Science",
-            imageGlow: 'rgba(157, 78, 221, 0.1)'
-          },
-          {
-            id: 'image-optimization',
-            title: "Image Formats Decoded: Choosing Between JPG, PNG, and WEBP",
-            excerpt: "A deep dive into compression algorithms and when to use each format to achieve visual clarity while keeping load times minimal.",
-            author: "Marcus Vance",
-            date: "May 02, 2026",
-            readTime: "3 min read",
-            category: "Creative Tech",
-            imageGlow: 'rgba(0, 242, 254, 0.1)'
+        try {
+          const parsed = JSON.parse(local);
+          if (Array.isArray(parsed) && parsed.length >= 8) {
+            setPosts(parsed.slice(0, 3));
+          } else {
+            loadDefaultBlogs();
           }
-        ];
-        localStorage.setItem('quantum_blogs', JSON.stringify(defaultPosts));
-        setPosts(defaultPosts);
+        } catch {
+          loadDefaultBlogs();
+        }
+      } else {
+        loadDefaultBlogs();
       }
     };
 

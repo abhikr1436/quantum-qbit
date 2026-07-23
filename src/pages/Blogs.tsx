@@ -136,59 +136,151 @@ export const Blogs: React.FC<BlogsProps> = ({
 
     const loadFallbackBlogs = () => {
       const local = localStorage.getItem('quantum_blogs');
+      const defaultPosts: BlogPost[] = [
+        {
+          id: 'browser-privacy',
+          title: "Why Browser-Only Tools Are the Future of Web Utility Apps",
+          excerpt: "In an era of rising security concerns, running calculations, converting PDFs, and editing photos locally protects user data from server hazards.",
+          author: "Quantum Engineering Team",
+          date: "May 18, 2026 12:00:00",
+          readTime: "4 min read",
+          category: "Privacy & Security",
+          imageGlow: 'rgba(0, 242, 254, 0.1)',
+          content: [
+            "In the early days of the web, performing complex file manipulations—like resizing high-resolution images or compiling documents—required powerful servers. Files were uploaded, processed remotely, and then sent back. While this worked, it introduced two major pain points: server network latency and privacy vulnerabilities.",
+            "Today, modern web browser standards have changed the game. Technologies like WebAssembly, HTML5 Canvas, and File System APIs allow modern browsers to execute high-performance desktop-grade code directly on the user's CPU.",
+            "By keeping operations 100% client-side, utility applications ensure that private photos and intellectual document drafts never touch a server database. There are no data leaks, no server costs to pass down as paywalls, and execution is sub-second, running completely offline.",
+            "At Quantum Qbit, our entire architectural design centers on local-first processing. When you convert images to PDF or apply canvas color filters in our Image Studio, all computations happen inside your browser memory cache. It is safe, clean, and instant."
+          ]
+        },
+        {
+          id: 'base-math',
+          title: "The Logic Behind Real-Time Cross-Input Number Base Conversions",
+          excerpt: "Understanding how computers translate binary, octal, decimal, and hexadecimal representations under the hood to optimize data structures.",
+          author: "Dr. Clara Chen",
+          date: "May 10, 2026 12:00:00",
+          readTime: "5 min read",
+          category: "Computer Science",
+          imageGlow: 'rgba(157, 78, 221, 0.1)',
+          content: [
+            "To humans, numbers are decimal (base 10). To transistors, numbers are binary (base 2). To developers analyzing memory offsets or color palettes, numbers are hexadecimal (base 16). How do we bridge these bases without cognitive friction?",
+            "A base converter relies on positional notation. Each digit in a number represents a coefficient multiplied by the base raised to the power of its position index. For example, the binary sequence 1011 equates to (1 × 2³) + (0 × 2²) + (1 × 2¹) + (1 × 2⁰) = 11 in decimal.",
+            "Cross-input real-time conversion requires a reactive state tree. By standardizing any input base to a common central format (typically a standard base-10 JavaScript floating-point integer), we can instantly derive and output the other bases using native conversion algorithms.",
+            "For example, JavaScript's Number.toString(base) simplifies base translation in our Math Workbench. Typing in any text box updates the central decimal state, which immediately re-renders the remaining inputs, making base translation effortless and educational."
+          ]
+        },
+        {
+          id: 'image-optimization',
+          title: "Image Formats Decoded: Choosing Between JPG, PNG, WEBP, and BMP",
+          excerpt: "A deep dive into compression algorithms and when to use each format to achieve visual clarity while keeping load times minimal.",
+          author: "Marcus Vance",
+          date: "May 02, 2026 12:00:00",
+          readTime: "4 min read",
+          category: "Creative Tech",
+          imageGlow: 'rgba(0, 242, 254, 0.1)',
+          content: [
+            "Web optimization depends heavily on visual assets. An unoptimized image can slow a web page to a crawl, harming SEO rankings and driving visitors away. Choosing the correct file format is the first line of defense.",
+            "JPEG (Joint Photographic Experts Group) uses lossy compression. It discards minor color data to compress natural scenery and photography into small file sizes, though it lacks transparency support.",
+            "PNG (Portable Network Graphics) uses lossless compression. It preserves every single pixel, making it ideal for logos, screenshots, and graphics requiring transparent backgrounds (alpha channel), albeit at the cost of larger file sizes.",
+            "WEBP, developed by Google, represents the modern standard. It provides both lossy and lossless compression, rendering files up to 30% smaller than JPEGs and PNGs while retaining comparable quality and alpha transparency. When using Quantum Qbit's Image Studio, saving as PNG is excellent for details, while converting to WEBP ensures your web app runs blazing fast."
+          ]
+        },
+        {
+          id: 'pdf-architecture',
+          title: "Demystifying PDF Document Structure: Client-Side Parsing with WebAssembly",
+          excerpt: "How PDF objects, catalog dictionaries, and page streams are parsed directly in the web browser using pdf-lib and WebAssembly.",
+          author: "Quantum Engineering Team",
+          date: "May 25, 2026 14:30:00",
+          readTime: "6 min read",
+          category: "Computer Science",
+          imageGlow: 'rgba(157, 78, 221, 0.1)',
+          content: [
+            "Portable Document Format (PDF) files are fundamentally binary trees consisting of indirect objects, cross-reference (xref) tables, and compressed stream buffers. Unlike plain text files, a PDF defines explicit positioning vectors for every character, path, and embedded raster image.",
+            "When uploading a PDF to traditional online tools, server-side PDF engines (like Ghostscript or Poppler) extract page objects on remote Linux instances. However, modern client-side libraries like pdf-lib and PDF.js allow browsers to parse PDF object streams directly in JavaScript memory.",
+            "By leveraging WebAssembly (WASM) and typed byte arrays (Uint8Array), browser runtimes can decrypt xref tables, decompress FlateDecode streams, and recombine pages into new merged PDF documents in fractions of a second.",
+            "This client-side architecture guarantees that document signatures, financial figures, and personal information never leave your local device workspace."
+          ]
+        },
+        {
+          id: 'function-plotting-canvas',
+          title: "Understanding Function Plotting & Cartesian Coordinate Systems in HTML5 Canvas",
+          excerpt: "An architectural guide to mapping mathematical equations to screen pixel viewports with high-resolution canvas rendering.",
+          author: "Dr. Clara Chen",
+          date: "June 01, 2026 10:15:00",
+          readTime: "5 min read",
+          category: "General Utilities",
+          imageGlow: 'rgba(0, 242, 254, 0.1)',
+          content: [
+            "Plotting mathematical functions requires transforming continuous mathematical space into discrete screen pixel space. In a standard Cartesian coordinate system, the origin (0,0) sits at the center, with the positive Y-axis pointing upward.",
+            "However, in HTML5 Canvas elements, the coordinate origin (0,0) resides at the top-left corner, and Y values increase downward. Translating mathematical curves like y = sin(x) or quadratic parabolas requires a linear transformation matrix.",
+            "To map a mathematical coordinate (x_math, y_math) to a canvas pixel (x_pixel, y_pixel), we compute: x_pixel = (x_math - x_min) / (x_max - x_min) * canvas_width, and y_pixel = canvas_height - (y_math - y_min) / (y_max - y_min) * canvas_height.",
+            "In Quantum Qbit's Math Workbench, we continuously compute these pixel projections, rendering smooth anti-aliased mathematical curves with real-time coordinate tracking under the cursor."
+          ]
+        },
+        {
+          id: 'serverless-data-privacy',
+          title: "Data Privacy in 2026: Why Serverless Client-Side Processing is Essential for Security",
+          excerpt: "Exploring the shift towards local-first software architecture and why zero data uploads represent the highest standard of user trust.",
+          author: "Quantum Security Group",
+          date: "June 12, 2026 09:00:00",
+          readTime: "5 min read",
+          category: "Privacy & Security",
+          imageGlow: 'rgba(0, 242, 254, 0.1)',
+          content: [
+            "Data breaches and server compromises continue to affect millions of internet users every year. When users upload sensitive documents, ID cards, or financial spreadsheets to online conversion websites, their files are stored temporarily or permanently on cloud storage buckets.",
+            "Serverless client-side computing eliminates this vulnerability completely. By executing all data manipulations inside the web browser's local sandbox, no file data is ever transmitted across network protocols.",
+            "At Quantum Qbit, our architectural philosophy is strictly 'Zero Uploads'. Whether you are extracting text via Optical Character Recognition (OCR), resizing high-resolution photographs, or converting base values, your data remains strictly on your device.",
+            "As browser standards evolve, local computing empowers users with full ownership, sub-second execution speeds, and complete offline availability."
+          ]
+        },
+        {
+          id: 'isro-ta-exam-strategy',
+          title: "Mastering ISRO TA Computer Science & Technical Exams: Effective PYQ Preparation Guide",
+          excerpt: "Proven strategies for tackling Indian Space Research Organisation Technical Assistant Computer Science PYQ papers and CBT mock tests.",
+          author: "Quantum Academic Team",
+          date: "June 20, 2026 16:45:00",
+          readTime: "7 min read",
+          category: "Computer Science",
+          imageGlow: 'rgba(157, 78, 221, 0.1)',
+          content: [
+            "Preparing for competitive technical examinations like the ISRO Technical Assistant (TA) Computer Science recruitment test requires a targeted approach focused on core subjects: Data Structures, Computer Networks, Operating Systems, Digital Logic, and Database Management.",
+            "Practicing Previous Year Question (PYQ) mock tests in an authentic Computer Based Test (CBT) environment builds time-management skills and minimizes exam-day fatigue.",
+            "Key strategies for ISRO TA CS preparation include: 1) Thoroughly solving binary logic and bitwise math questions; 2) Reviewing TCP/IP header formats and subnetting calculations; 3) Practicing SQL query optimizations and normalization forms; and 4) Analyzing step-by-step solutions for incorrect attempts.",
+            "Quantum Qbit's Mock Test portal offers real-time scoring, interactive question navigation, and detailed answer explanations to streamline your exam preparation."
+          ]
+        },
+        {
+          id: 'floating-point-math',
+          title: "The Math Behind Scientific Calculators: Floating-Point Precision and Trigonometric Ratios",
+          excerpt: "Exploring IEEE 754 floating-point standards, Taylor series expansions, and CORDIC algorithms used in digital calculation engines.",
+          author: "Dr. Clara Chen",
+          date: "July 05, 2026 11:30:00",
+          readTime: "6 min read",
+          category: "Computer Science",
+          imageGlow: 'rgba(0, 242, 254, 0.1)',
+          content: [
+            "Computers approximate real numbers using the IEEE 754 floating-point standard, representing numbers in sign, exponent, and mantissa components. While this enables representing vast numerical ranges, it can introduce binary rounding anomalies like 0.1 + 0.2 = 0.30000000000000004.",
+            "To evaluate transcendental functions like sin(x), cos(x), and ln(x), scientific calculators utilize polynomial approximations (such as Taylor series expansions and Chebyshev polynomials) or CORDIC (Coordinate Rotation Digital Computer) algorithms.",
+            "CORDIC algorithms compute trigonometric, hyperbolic, and logarithmic functions using shift-and-add bitwise operations, enabling rapid calculation without requiring hardware multipliers.",
+            "In Quantum Qbit's Scientific Calculator, we combine custom precision rounding with sanitized JavaScript Function evaluators to deliver crisp, accurate mathematical answers."
+          ]
+        }
+      ];
+
       if (local) {
-        setPosts(JSON.parse(local));
-      } else {
-        const defaultPosts: BlogPost[] = [
-          {
-            id: 'browser-privacy',
-            title: "Why Browser-Only Tools Are the Future of Web Utility Apps",
-            excerpt: "In an era of rising security concerns, running calculations, converting PDFs, and editing photos locally protects user data from server hazards.",
-            author: "Quantum Engineering Team",
-            date: "May 18, 2026 12:00:00",
-            readTime: "4 min read",
-            category: "Privacy & Security",
-            imageGlow: 'rgba(0, 242, 254, 0.1)',
-            content: [
-              "In the early days of the web, performing complex file manipulations—like resizing high-resolution images or compiling documents—required powerful servers. Files were uploaded, processed remotely, and then sent back. While this worked, it introduced two major pain points: server network latency and privacy vulnerabilities.",
-              "Today, modern web browser standards have changed the game. Technologies like WebAssembly, HTML5 Canvas, and File System APIs allow modern browsers to execute high-performance desktop-grade code directly on the user's CPU.",
-              "By keeping operations 100% client-side, utility applications ensure that private photos and intellectual document drafts never touch a server database. There are no data leaks, no server costs to pass down as paywalls, and execution is sub-second, running completely offline.",
-              "At Quantum Qbit, our entire architectural design centers on local-first processing. When you convert images to PDF or apply canvas color filters in our Image Studio, all computations happen inside your browser memory cache. It is safe, clean, and instant."
-            ]
-          },
-          {
-            id: 'base-math',
-            title: "The Logic Behind Real-Time Cross-Input Number Base Conversions",
-            excerpt: "Understanding how computers translate binary, octal, decimal, and hexadecimal representations under the hood to optimize data structures.",
-            author: "Dr. Clara Chen",
-            date: "May 10, 2026 12:00:00",
-            readTime: "5 min read",
-            category: "Computer Science",
-            imageGlow: 'rgba(157, 78, 221, 0.1)',
-            content: [
-              "To humans, numbers are decimal (base 10). To transistors, numbers are binary (base 2). To developers analyzing memory offsets or color palettes, numbers are hexadecimal (base 16). How do we bridge these bases without cognitive friction?",
-              "A base converter relies on positional notation. Each digit in a number represents a coefficient multiplied by the base raised to the power of its position index. For example, the binary sequence 1011 equates to (1 × 2³) + (0 × 2²) + (1 × 2¹) + (1 × 2⁰) = 11 in decimal.",
-              "Cross-input real-time conversion requires a reactive state tree. By standardizing any input base to a common central format (typically a standard base-10 JavaScript floating-point integer), we can instantly derive and output the other bases using native conversion algorithms.",
-              "For example, JavaScript's Number.toString(base) simplifies base translation in our Math Workbench. Typing in any text box updates the central decimal state, which immediately re-renders the remaining inputs, making base translation effortless and educational."
-            ]
-          },
-          {
-            id: 'image-optimization',
-            title: "Image Formats Decoded: Choosing Between JPG, PNG, and WEBP",
-            excerpt: "A deep dive into compression algorithms and when to use each format to achieve visual clarity while keeping load times minimal.",
-            author: "Marcus Vance",
-            date: "May 02, 2026 12:00:00",
-            readTime: "3 min read",
-            category: "Creative Tech",
-            imageGlow: 'rgba(0, 242, 254, 0.1)',
-            content: [
-              "Web optimization depends heavily on visual assets. An unoptimized image can slow a web page to a crawl, harming SEO rankings and driving visitors away. Choosing the correct file format is the first line of defense.",
-              "JPEG (Joint Photographic Experts Group) uses lossy compression. It discards minor color data to compress natural scenery and photography into small file sizes, though it lacks transparency support.",
-              "PNG (Portable Network Graphics) uses lossless compression. It preserves every single pixel, making it ideal for logos, screenshots, and graphics requiring transparent backgrounds (alpha channel), albeit at the cost of larger file sizes.",
-              "WEBP, developed by Google, represents the modern standard. It provides both lossy and lossless compression, rendering files up to 30% smaller than JPEGs and PNGs while retaining comparable quality and alpha transparency. When using Quantum Qbit's Image Studio, saving as PNG is excellent for details, while converting to WEBP ensures your web app runs blazing fast."
-            ]
+        try {
+          const parsed = JSON.parse(local);
+          if (Array.isArray(parsed) && parsed.length >= 8) {
+            setPosts(parsed);
+          } else {
+            localStorage.setItem('quantum_blogs', JSON.stringify(defaultPosts));
+            setPosts(defaultPosts);
           }
-        ];
+        } catch {
+          localStorage.setItem('quantum_blogs', JSON.stringify(defaultPosts));
+          setPosts(defaultPosts);
+        }
+      } else {
         localStorage.setItem('quantum_blogs', JSON.stringify(defaultPosts));
         setPosts(defaultPosts);
       }

@@ -2128,6 +2128,114 @@ export const MathCalculators: React.FC<MathCalculatorsProps> = ({ defaultTab }) 
           </div>
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* Educational Guide, Mathematical Explanations & FAQ Section (AdSense Value) */}
+      {/* ========================================================================= */}
+      <section style={{ marginTop: '60px', borderTop: '1px solid var(--border-glass)', paddingTop: '40px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+          <span style={{ fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--primary)', fontWeight: 600 }}>Mathematics & Computational Engineering Guide</span>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 700, marginTop: '8px', color: 'var(--text-primary)' }}>
+            Math Workbench Technical Guide & Reference Manual
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.96rem', maxWidth: '750px', margin: '8px auto 0 auto', lineHeight: 1.6 }}>
+            Understand the mathematical formulas, binary positional notation, trigonometric modes, and numerical parsing algorithms that power Quantum Qbit calculators.
+          </p>
+        </div>
+
+        {/* 4 Feature Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px', marginBottom: '40px' }}>
+          <div className="glass-card" style={{ padding: '24px' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '10px' }}>
+              📐 Scientific Trigonometry &amp; Logarithms
+            </h3>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              Toggle dynamically between Degree (0° – 360°) and Radian (0 – 2π) angular modes. Computes transcendental functions, natural logarithms (ln), square roots, and exponentiation with IEEE 754 double-precision floating-point accuracy.
+            </p>
+          </div>
+          <div className="glass-card" style={{ padding: '24px' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--secondary)', marginBottom: '10px' }}>
+              🔢 Live Bitwise Base Translator
+            </h3>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              Seamlessly translate values across Binary (Base-2), Octal (Base-8), Decimal (Base-10), and Hexadecimal (Base-16) in real-time without refreshing or manual conversion steps.
+            </p>
+          </div>
+          <div className="glass-card" style={{ padding: '24px' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '10px' }}>
+              ⚖️ Precision Unit Adapter
+            </h3>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              Convert metric and imperial units across Length (meters, feet, inches, kilometers, miles), Mass (kilograms, pounds, ounces, grams), and Temperature (Celsius, Fahrenheit, Kelvin).
+            </p>
+          </div>
+          <div className="glass-card" style={{ padding: '24px' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--secondary)', marginBottom: '10px' }}>
+              📊 Interactive 2D Function Plotter
+            </h3>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              Render algebraic curves and linear regression scatter plots directly on an interactive HTML5 Cartesian grid with custom axis limits and coordinate inspection tools.
+            </p>
+          </div>
+        </div>
+
+        {/* Detailed Number Base Conversion Guide */}
+        <div className="glass-card" style={{ padding: '32px', marginBottom: '40px' }}>
+          <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>
+            Understanding Number Systems: Binary, Octal, Decimal &amp; Hexadecimal
+          </h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.94rem', lineHeight: 1.7, marginBottom: '16px' }}>
+            Positional numeral systems represent numbers using a specific base <em>b</em>. The position of each digit determines its multiplication weight by <em>b<sup>n</sup></em>:
+          </p>
+          <ul style={{ paddingLeft: '20px', color: 'var(--text-secondary)', lineHeight: 1.8, fontSize: '0.92rem' }}>
+            <li><strong>Binary (Base-2):</strong> Uses digits <code>0</code> and <code>1</code>. Fundamental to computer digital logic circuits, memory registers, and machine instructions.</li>
+            <li><strong>Octal (Base-8):</strong> Uses digits <code>0–7</code>. Groups 3 binary bits into a single character, frequently used in Unix file permission modes (e.g. <code>chmod 755</code>).</li>
+            <li><strong>Decimal (Base-10):</strong> Uses digits <code>0–9</code>. The standard human base system based on powers of ten.</li>
+            <li><strong>Hexadecimal (Base-16):</strong> Uses digits <code>0–9</code> and letters <code>A–F</code> (representing 10 through 15). Compact representation of 4 binary bits (one nibble), widely used in web color codes (e.g., <code>#00F2FE</code>), memory addresses, and byte arrays.</li>
+          </ul>
+        </div>
+
+        {/* Math FAQ Section */}
+        <div className="glass-card" style={{ padding: '32px', marginBottom: '20px' }}>
+          <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '20px' }}>
+            Frequently Asked Questions (Math Workbench FAQ)
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ borderBottom: '1px solid var(--border-glass)', paddingBottom: '14px' }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                Q: How does the scientific calculator handle order of operations (PEMDAS)?
+              </h4>
+              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                The calculator evaluates mathematical expressions using standard mathematical precedence (Parentheses, Exponents, Multiplication/Division, Addition/Subtraction). Expression strings are parsed into an Abstract Syntax Tree (AST) before execution to prevent evaluation errors.
+              </p>
+            </div>
+            <div style={{ borderBottom: '1px solid var(--border-glass)', paddingBottom: '14px' }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                Q: What is the difference between Degree and Radian modes in trigonometric calculations?
+              </h4>
+              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                Degree mode measures angles based on a 360° circle, commonly used in navigation and elementary geometry. Radian mode measures angles based on the arc length along a unit circle (where 2π radians equal 360°), essential for calculus, physics, and Fourier analysis.
+              </p>
+            </div>
+            <div style={{ borderBottom: '1px solid var(--border-glass)', paddingBottom: '14px' }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                Q: Can I solve quadratic equations with negative discriminants?
+              </h4>
+              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                Yes! When the discriminant <code>b² - 4ac &lt; 0</code>, our equation solver automatically calculates and displays the complex conjugate roots in standard <code>a ± bi</code> imaginary form.
+              </p>
+            </div>
+            <div>
+              <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                Q: How are graphs rendered in the function plotter?
+              </h4>
+              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                The function plotter samples continuous <em>x</em> values across your specified domain, transforms Cartesian coordinates to HTML5 Canvas viewport coordinates, and draws high-resolution anti-aliased path vectors.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };

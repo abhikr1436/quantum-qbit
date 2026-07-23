@@ -95,6 +95,24 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ setCurrentPage }) 
               If you contact us directly via email (e.g., at <a href="mailto:contactus@quantumqbit.in" style={{ color: 'var(--primary)' }}>contactus@quantumqbit.in</a>) or through our contact page, we receive the details you choose to share (such as your name, email address, and inquiry content). We use this information solely to respond to your request and never share it with third-party advertisers.
             </p>
           </div>
+
+          <div className="glass-card" style={styles.sectionCard}>
+            <h3 style={styles.sectionTitle}>
+              <Eye size={18} style={styles.icon} />
+              5. Google AdSense & Third-Party Advertising Disclosures
+            </h3>
+            <p style={styles.text}>
+              Quantum Qbit uses Google AdSense to display advertisements on selected pages to support free hosting and software development. In accordance with Google AdSense Publisher Program Policies, we disclose the following:
+            </p>
+            <ul style={styles.list}>
+              <li><strong>Third-Party Advertising:</strong> Third-party vendors, including Google, use cookies to serve ads based on a user's prior visits to Quantum Qbit or other websites on the Internet.</li>
+              <li><strong>Advertising Cookies (DART Cookies):</strong> Google's use of advertising cookies enables it and its partners to serve targeted ads to our users based on their visit to our site and/or other sites on the web.</li>
+              <li><strong>Personalized Ads Opt-Out:</strong> Users may opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>Google Ads Settings</a>. Alternatively, users can opt out of third-party vendors' use of cookies for personalized advertising by visiting <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>www.aboutads.info</a>.</li>
+            </ul>
+            <p style={styles.text}>
+              Please note that opting out of personalized advertising does not prevent advertisements from displaying; it simply ensures that displayed ads will not be customized based on your past browsing behavior.
+            </p>
+          </div>
         </div>
 
         {/* Back Button */}
