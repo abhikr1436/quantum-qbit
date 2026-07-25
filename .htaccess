@@ -2,6 +2,10 @@
   RewriteEngine On
   RewriteBase /
 
+  # 301 Redirect www.quantumqbit.in to quantumqbit.in (Canonical Domain)
+  RewriteCond %{HTTP_HOST} ^www\.quantumqbit\.in$ [NC]
+  RewriteRule ^(.*)$ https://quantumqbit.in/$1 [R=301,L]
+
   # Redirect old ISRO PYQ URL to new SEO-friendly URL
   RewriteRule ^isro-pyq(.*)$ /isro-ta-computer-science-pyq$1 [R=301,L]
 
@@ -38,6 +42,10 @@
 </IfModule>
 
 <IfModule mod_headers.c>
+  # Unset X-Powered-By header for security and clean SEO headers
+  Header unset X-Powered-By
+  Header always unset X-Powered-By
+
   # Cache static assets for 1 year
   <FilesMatch "\.(ico|pdf|jpg|jpeg|png|gif|js|css|webp|svg|woff2)$">
     Header set Cache-Control "max-age=31536000, public"

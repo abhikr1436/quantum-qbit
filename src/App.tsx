@@ -230,8 +230,8 @@ function App() {
   useEffect(() => {
     if (page === 'landing') {
       updateSEO(
-        "Quantum Qbit - Free Client-Side Web Utility Tools",
-        "Free, offline-first developer, designer, and student productivity tools. PDF editor, image compressor, Base/Math converters, and unit utilities. 100% private.",
+        "Quantum Qbit | Privacy-First Web Utilities & Developer Tools",
+        "Quantum Qbit offers free, privacy-first web utilities. Edit photos, convert PDFs, and solve math formulas 100% locally in your browser with sub-second speed.",
         "/",
         {
           "@context": "https://schema.org",
@@ -241,7 +241,21 @@ function App() {
               "@id": "https://quantumqbit.in/#website",
               "url": "https://quantumqbit.in/",
               "name": "Quantum Qbit",
-              "description": "Free Client-Side Web Utility Tools"
+              "description": "Privacy-First Web Utilities & Developer Tools"
+            },
+            {
+              "@type": "WebApplication",
+              "@id": "https://quantumqbit.in/#webapp",
+              "url": "https://quantumqbit.in/",
+              "name": "Quantum Qbit Web Utilities",
+              "applicationCategory": "UtilitiesApplication, DeveloperApplication",
+              "operatingSystem": "All",
+              "browserRequirements": "Requires HTML5 Canvas and JavaScript enabled.",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+              }
             },
             {
               "@type": "Organization",
