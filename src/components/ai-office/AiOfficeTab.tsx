@@ -388,25 +388,35 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
   };
 
   // Local simulated execution state machine
-  const executeLocalSimulation = (type: 'trends' | 'jobs') => {
+  const executeLocalSimulation = (type: 'trends' | 'jobs' | 'boardroom', customTopic?: string) => {
     setIsRunning(true);
-    setActiveTask(type === 'trends' ? 'Trending Content Campaign' : 'Job Vacancy Poster');
-    setStatusMessage(type === 'trends' ? 'Researching Google Trends...' : 'Checking Government Portals...');
-    setStatusColor('var(--primary, #00f2fe)');
+    const cleanTopic = customTopic ? extractCleanTopic(customTopic) : (type === 'trends' ? 'Trending Content Campaign' : 'Job Vacancy Poster');
+    setActiveTask(type === 'boardroom' ? `Boardroom Priority: ${cleanTopic.slice(0, 30)}...` : (type === 'trends' ? 'Trending Content Campaign' : 'Job Vacancy Poster'));
+    setStatusMessage(type === 'boardroom' ? 'Deep Research & Focus Mode Active...' : (type === 'trends' ? 'Researching Google Trends...' : 'Checking Government Portals...'));
+    setStatusColor(type === 'boardroom' ? '#f59e0b' : 'var(--primary, #00f2fe)');
     setTerminalLogs([]);
 
-    const steps = type === 'trends' ? [
+    const steps = type === 'boardroom' ? [
+      { text: `🚨 BOARDROOM DIRECTIVE RECEIVED: Initiating 30-min priority focus mode for topic: "${cleanTopic}"...`, agent: 'System', delay: 800 },
+      { text: `Alex (Manager) cleared all routine tasks. Diverting 100% agent focus to "${cleanTopic}".`, agent: 'Alex', delay: 1000 },
+      { text: `Mark (Marketing) conducting deep Google News research on "${cleanTopic}"...`, agent: 'Mark', delay: 1500 },
+      { text: `Found top news articles and key chronological timeline events for "${cleanTopic}".`, agent: 'Mark', delay: 1200 },
+      { text: `Drafting in-depth news article with chronological timeline of events and background analysis...`, agent: 'Mark', delay: 2000 },
+      { text: `Sophia (CEO) audited article structure and approved publication for "${cleanTopic}".`, agent: 'Sophia', delay: 1000 },
+      { text: `Deployer (DevOps) compiled project assets and published article live.`, agent: 'Deployer', delay: 1000 },
+      { text: `Success! Boardroom priority article "${cleanTopic}: Key Timeline & Full Analysis" is now live.`, agent: 'System', delay: 500 }
+    ] : (type === 'trends' ? [
       { text: 'Initiating local simulation for Google Trends content campaign...', agent: 'System', delay: 1000 },
       { text: 'Querying Google Trends Daily RSS for region: India (IN)...', agent: 'Mark', delay: 1200 },
-      { text: 'Found Google Trends query: "UPSSSC Lower PCS Graduate Level 2026" (Growth score: 166,667 searches/hour)', agent: 'Mark', delay: 1500 },
-      { text: 'Selecting highest growth rate topic: "UPSSSC Lower PCS Graduate Level Recruitment 2026"', agent: 'Mark', delay: 1200 },
+      { text: 'Found Google Trends query: "Latest AI & Tech Innovation 2026"', agent: 'Mark', delay: 1500 },
+      { text: 'Selecting top growth topic: "Browser-Only AI Utilities Trend 2026"', agent: 'Mark', delay: 1200 },
       { text: 'Alex (Manager) parsed search context and formulated writer directive.', agent: 'Alex', delay: 1000 },
       { text: 'Drafting structured HTML blog post with trending context and quantumqbit.in tool highlights...', agent: 'Mark', delay: 2000 },
-      { text: 'Content draft complete. Excerpt generated: "Apply online for UPSSSC Lower PCS Advt No 07-Exam/2026..."', agent: 'Mark', delay: 1000 },
-      { text: 'Sophia (CEO) performed quality audit. Draft meets 600-word criteria. Approved.', agent: 'Sophia', delay: 1200 },
+      { text: 'Content draft complete. Excerpt generated: "Explore latest tech developments..."', agent: 'Mark', delay: 1000 },
+      { text: 'Sophia (CEO) performed quality audit. Approved.', agent: 'Sophia', delay: 1200 },
       { text: 'Deployer (DevOps) compiled project builds and verified index files.', agent: 'Deployer', delay: 1500 },
       { text: 'Deploying article locally and updating index logs...', agent: 'Deployer', delay: 1000 },
-      { text: 'Success! Trending article "UPSSSC Lower PCS Graduate Level Recruitment 2026" is now published.', agent: 'System', delay: 500 }
+      { text: 'Success! Article published.', agent: 'System', delay: 500 }
     ] : [
       { text: 'Initiating local simulation for Job Vacancy publisher...', agent: 'System', delay: 1000 },
       { text: 'Querying Sarkari Result and Government recruitment notifications...', agent: 'Mark', delay: 1500 },
@@ -419,7 +429,7 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
       { text: 'Deployer (DevOps) staging files and compiling index.js...', agent: 'Deployer', delay: 1500 },
       { text: 'Writing details table to local database fallback...', agent: 'Deployer', delay: 1000 },
       { text: 'Success! Job Vacancy table for "UPSSSC Lower PCS Graduate Level 2285 Posts" is now published.', agent: 'System', delay: 500 }
-    ];
+    ]);
 
     let currentStep = 0;
 
@@ -431,10 +441,11 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
         setStatusColor('#10b981');
         
         // Actually publish the post
-        const title = type === 'trends' 
-          ? 'UPSSSC Lower PCS Graduate Level Recruitment 2026' 
-          : 'UPSSSC Lower PCS Graduate Level 2285 Posts Job Vacancy';
-        publishBlogLocally(title, type === 'jobs');
+        const titleToPublish = type === 'boardroom' 
+          ? (customTopic || 'Latest Boardroom Directive')
+          : (type === 'trends' ? 'Latest AI & Tech Innovation 2026' : 'UPSSSC Lower PCS Graduate Level 2285 Posts Job Vacancy');
+        
+        publishBlogLocally(titleToPublish, type === 'jobs');
         
         const localDBStr = localStorage.getItem('quantum_office_db');
         if (localDBStr) {
@@ -601,7 +612,7 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
         localStorage.setItem('quantum_office_db', JSON.stringify(parsed));
       }
       fetchDashboardData();
-      executeLocalSimulation('trends');
+      executeLocalSimulation('boardroom', text);
       return;
     }
 

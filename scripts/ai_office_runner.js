@@ -710,7 +710,38 @@ Select the top growth topic. State which topic you chose, its search volume, and
         }
       }
 
-      prompt = `You are ${assignee}, the Marketing specialist for quantumqbit.in — a privacy-first browser utilities website popular in India.
+      if (task.isEmergency || task.directiveTopic) {
+        const cleanTopic = extractCleanTopic(task.directiveTopic || task.title);
+        prompt = `You are ${assignee}, the Marketing specialist for quantumqbit.in.
+The Board of Directors has issued a HIGH-PRIORITY DIRECTIVE TOPIC:
+"${cleanTopic}"
+
+DEEP RESEARCH DOSSIER & GOOGLE NEWS FINDINGS:
+${task.description || liveResearchContext}
+
+YOUR MISSION:
+Write a comprehensive, high-quality, 800+ word news and deep-research article focusing EXCLUSIVELY on "${cleanTopic}".
+
+STRICT RULES:
+1. The TITLE in your output JSON must be a professional news headline for the article (e.g., "${cleanTopic}: Key Timeline & In-Depth Analysis"). You MUST NEVER include prompt instruction words like "Write an article about", "Draft a blog post", "Official Notification", or "Recruitment Details" in the title!
+2. The CONTENT must be 100% focused on "${cleanTopic}". Include:
+   - An Introduction outlining the background and significance of the event.
+   - A "Chronological Timeline of Events" section using an HTML list (<ul><li>...</li></ul>).
+   - Detailed analysis of key statements, official reactions, and public implications.
+   - A brief concluding note on how privacy-first local tools on quantumqbit.in help citizens process news documents securely.
+3. DO NOT output job notification tables, recruitment fees, or Sarkari Result tables under ANY circumstances.
+4. Content MUST be clean, valid HTML structure (<h2>, <h3>, <p>, <ul>, <li>, <strong>, <blockquote>). NO markdown code fences.
+
+Respond with a JSON object with EXACTLY these keys:
+{
+  "title": "${cleanTopic}: Key Timeline & In-Depth Analysis",
+  "excerpt": "Compelling 2-3 sentence summary of the news topic and timeline",
+  "content": "Full HTML blog article",
+  "category_id": "privacy-security" | "computer-science" | "creative-tech" | "general-utilities",
+  "imageGlow": "rgba(0, 242, 254, 0.15)"
+}`;
+      } else {
+        prompt = `You are ${assignee}, the Marketing specialist for quantumqbit.in — a privacy-first browser utilities website popular in India.
 Your task is to write a highly informative, news-driven, and timely blog post.
 Title hint: "${task.title}"
 Research context & background: "${liveResearchContext}"
@@ -724,7 +755,7 @@ IMPORTANT RULES:
 6. Naturally weave in how quantumqbit.in's browser utilities (like offline PDF compressor, image cropper, base calculators) solve a specific problem related to this topic.
 7. Add a catchy EXCERPT (2-3 sentences) that summarizes the news and compels the reader to read the full article.
 8. Pick the MOST RELEVANT category: "privacy-security" | "computer-science" | "creative-tech" | "general-utilities".
-9. If this is a job update, exam notification, or hiring announcement (e.g. category is "Government jobs" or "Private sector jobs" or if the title contains terms like "recruitment", "exam", "bharti", "job", "vacancy"):
+9. IF AND ONLY IF this is a specific Sarkari Job / Vacancy / Recruitment posting (e.g. category is "Government jobs" or title specifically contains terms like "recruitment", "vacancy", "bharti", "upsssc"):
    - You MUST format the core details of the job (Important Dates, Application Fees, Age Limit, Vacancy Details, and Useful Links) in a clean, highly structured HTML table with the class "job-details-table".
    - Place "Important Dates" (e.g. Application Begin, Last Date, Correction, Exam Date) in one column (td), and "Application Fee" (e.g. General, OBC, SC, ST fees, and payment modes) in the adjacent column (td) in the same row.
    - Use other rows or nested structures for "Age Limit as on [Date]" and "Vacancy Details / Eligibility".
@@ -740,6 +771,7 @@ Respond with a JSON object with EXACTLY these keys:
   "category_id": "privacy-security" | "computer-science" | "creative-tech" | "general-utilities",
   "imageGlow": "CSS RGBA glow color e.g. 'rgba(0, 242, 254, 0.15)'"
 }`;
+      }
     } else if (task.type === 'social') {
       prompt = `You are ${assignee}, the Social Media specialist. Create a promotional social media campaign for:
 Title: "${task.title}"
