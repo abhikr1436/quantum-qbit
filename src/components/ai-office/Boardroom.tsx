@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Sparkles, AlertCircle, RefreshCw, Terminal } from 'lucide-react';
+import { Send, Sparkles, AlertCircle, RefreshCw, Terminal, Clock } from 'lucide-react';
 
 interface SystemLog {
   timestamp: string;
@@ -39,6 +39,9 @@ interface OfficeTask {
   type: string;
   assignee: string;
   status: string;
+  isEmergency?: boolean;
+  directiveTopic?: string;
+  deadline?: string;
   draftContent: DraftContent | string | null;
   reviews: TaskReview[];
   createdAt: string;
@@ -57,6 +60,98 @@ interface BoardroomProps {
   onTriggerAgentLoop?: () => Promise<void>;
   preFilledText?: string;
 }
+
+const EmergencyBoardroomBanner: React.FC<{ activeTask: OfficeTask }> = ({ activeTask }) => {
+  const [secondsLeft, setSecondsLeft] = useState<number>(() => {
+    if (activeTask.deadline) {
+      const ms = new Date(activeTask.deadline).getTime() - Date.now();
+      return Math.max(0, Math.floor(ms / 1000));
+    }
+    const createdMs = activeTask.createdAt ? new Date(activeTask.createdAt).getTime() : Date.now();
+    const deadlineMs = createdMs + 30 * 60 * 1000;
+    return Math.max(0, Math.floor((deadlineMs - Date.now()) / 1000));
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSecondsLeft(prev => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const mins = Math.floor(secondsLeft / 60);
+  const secs = secondsLeft % 60;
+  const formattedTime = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  const isCompleted = activeTask.status === 'completed';
+
+  return (
+    <div style={{
+      background: isCompleted 
+        ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.05))'
+        : 'linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(245, 158, 11, 0.08))',
+      border: isCompleted ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(239, 68, 68, 0.5)',
+      borderRadius: '12px',
+      padding: '20px 24px',
+      marginBottom: '20px',
+      boxShadow: isCompleted ? '0 4px 20px rgba(16, 185, 129, 0.15)' : '0 4px 25px rgba(239, 68, 68, 0.2)',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '14px'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '1.4rem' }}>{isCompleted ? '✅' : '🚨'}</span>
+          <div>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: isCompleted ? '#10b981' : '#f87171', letterSpacing: '0.5px' }}>
+              {isCompleted ? 'BOARDROOM TOPIC PUBLISHED' : '🔥 EMERGENCY BOARDROOM FOCUS MODE ACTIVE'}
+            </div>
+            <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', marginTop: '2px' }}>
+              {isCompleted 
+                ? 'Deep research and article writing finished successfully!' 
+                : 'All routine AI operations stopped. Diverting 100% agent resources to deep research & 30-min article delivery.'}
+            </div>
+          </div>
+        </div>
+
+        {!isCompleted && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            background: 'rgba(0,0,0,0.4)',
+            padding: '8px 16px',
+            borderRadius: '8px',
+            border: '1px solid rgba(239, 68, 68, 0.4)'
+          }}>
+            <Clock size={20} style={{ color: '#f87171' }} />
+            <div>
+              <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: '#fca5a5', letterSpacing: '1px' }}>
+                30-Min Target Clock
+              </div>
+              <div style={{ fontSize: '1.3rem', fontWeight: 800, fontFamily: 'monospace', color: secondsLeft < 300 ? '#ef4444' : '#fbbf24' }}>
+                {formattedTime}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div style={{
+        background: 'rgba(0,0,0,0.25)',
+        padding: '10px 14px',
+        borderRadius: '6px',
+        fontSize: '0.88rem',
+        color: 'rgba(255,255,255,0.9)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px'
+      }}>
+        <span style={{ color: '#38bdf8', fontWeight: 600 }}>Topic:</span>
+        <span style={{ fontStyle: 'italic', color: '#e0f2fe' }}>"{activeTask.directiveTopic || activeTask.title}"</span>
+      </div>
+    </div>
+  );
+};
 
 export const Boardroom: React.FC<BoardroomProps> = ({ 
   onSendDirective, 
@@ -164,7 +259,11 @@ export const Boardroom: React.FC<BoardroomProps> = ({
     const isStalled = timeLeft === 'Overdue / Stalled';
 
     return (
-      <div style={styles.campaignCard}>
+      <>
+        {(activeTask.isEmergency || activeTask.id.includes('boardroom') || activeTask.directiveTopic) && (
+          <EmergencyBoardroomBanner activeTask={activeTask} />
+        )}
+        <div style={styles.campaignCard}>
         <div style={styles.campaignHeader}>
           <div style={styles.campaignTitle}>
             <Sparkles size={18} style={{ color: isTaskCompleted ? '#10b981' : 'var(--primary, #00f2fe)' }} />
@@ -276,7 +375,8 @@ export const Boardroom: React.FC<BoardroomProps> = ({
           </div>
         )}
       </div>
-    );
+    </>
+  );
   };
 
   return (

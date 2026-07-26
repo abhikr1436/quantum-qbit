@@ -185,9 +185,17 @@ async function syncLiveUpdates(db) {
   }
 }
 
-// Directives Parser
+// Directives Parser - Emergency Focus Mode
 async function parseBoardroomDirective(db, directive) {
-  // 1. Extract URLs and scrape content
+  // 1. STOP ALL OTHER AI WORK: Clear any pending or in-progress tasks
+  const activeTasks = (db.tasks || []).filter(t => t.status !== 'completed');
+  if (activeTasks.length > 0) {
+    console.log(`Boardroom topic override: Cancelling ${activeTasks.length} active/pending task(s).`);
+    db.tasks = (db.tasks || []).filter(t => t.status === 'completed');
+    setAgentStatus(db, 'System', 'Active', `🚨 BOARDROOM EMERGENCY DIRECTIVE: Stopped all ${activeTasks.length} pending task(s). Diverting 100% agent focus to boardroom topic.`);
+  }
+
+  // 2. Extract URLs and scrape content + fetch Google News deep research
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   const urls = directive.match(urlRegex) || [];
   let scrapedInfo = '';
@@ -196,37 +204,50 @@ async function parseBoardroomDirective(db, directive) {
     const scrapedText = await scrapeWebpage(cleanUrl);
     scrapedInfo += `\n\n--- Source Webpage Content (${cleanUrl}) ---\n${scrapedText}\n`;
   }
-  const finalDirective = directive + scrapedInfo;
+
+  // Deep research using Google News RSS search
+  setAgentStatus(db, 'Alex', 'Conducting deep Google News research...');
+  setAgentStatus(db, 'System', 'Active', `🔎 Alex conducting deep research on Google News for topic: "${directive.slice(0, 50)}..."`);
+  const newsResults = await fetchGoogleNews(directive);
+  let googleNewsResearch = '';
+  if (newsResults.length > 0) {
+    googleNewsResearch = `\n\n--- GOOGLE NEWS DEEP RESEARCH FINDINGS ---\n` +
+      newsResults.map((item, i) => `#${i+1}: ${item.title}\nSource: ${item.source} (${item.pubDate})\nSnippet: ${item.description}\nLink: ${item.link}`).join('\n\n');
+  }
+
+  const finalDirective = `${directive}${scrapedInfo}${googleNewsResearch}`;
+  const deadlineMs = Date.now() + 30 * 60 * 1000;
+  const deadlineIso = new Date(deadlineMs).toISOString();
 
   const openai = getDeepseekClient(db.config);
   
   if (!openai) {
-    await simulateMockBoardroomParsing(db, directive);
+    await simulateMockBoardroomParsing(db, directive, finalDirective, deadlineIso);
     return;
   }
 
-  setAgentStatus(db, 'Alex', 'Analyzing boardroom directive');
+  setAgentStatus(db, 'Alex', 'Formulating emergency article briefing');
   try {
     const prompt = `You are Alex, the AI Manager of Quantum Qbit Virtual Company.
-The Board of Directors (the user) has given the following directive:
-"${finalDirective}"
+The Board of Directors has issued an EMERGENCY HIGH-PRIORITY DIRECTIVE:
+"${directive}"
 
-Your job is to parse this directive and decide what operational task(s) should be created to fulfill it.
-You can assign tasks to one of these specialist agents:
-- Mark (Marketing) for writing blogs, articles, SEO audits, keyword research.
-- Sarah (Social Media) for drafting Twitter posts/threads or LinkedIn content.
-- Codey (IT Developer) for creating app features, fixing UI layouts, writing code.
-- Harper (HR) for drafting job postings, personnel notices.
-- Deployer (DevOps) for running builds, compiling, verifying systems.
+DEEP RESEARCH SOURCE DOSSIER:
+${finalDirective}
 
-Respond ONLY with a JSON array representing the new tasks to create. Do not include any introductory or concluding text, only the JSON block. Each task in the array must follow this schema:
+ALL OTHER WORK IS STOPPED. The team MUST complete deep research and publish a full, comprehensive, high-quality article about this topic within 30 MINUTES.
+
+Respond ONLY with a JSON object with a single key "tasks" containing an array of 1 task to assign to Mark (or specialist):
 {
-  "title": "Clear short task title",
-  "description": "Detailed description of what the agent needs to do",
-  "type": "blog" | "social" | "feature" | "seo" | "job",
-  "assignee": "Mark" | "Sarah" | "Codey" | "Harper" | "Deployer"
-}
-Ensure the tasks cover the user's directive fully.`;
+  "tasks": [
+    {
+      "title": "In-Depth Article: ${directive.slice(0, 50)}",
+      "description": "DEEP RESEARCH ARTICLE BRIEF:\n1. Topic: ${directive}\n2. Target Deadline: 30 minutes.\n3. Detailed Source Material & Deep Research:\n${finalDirective}\n4. Requirements: Write a comprehensive 800+ word article detailing all aspects of this news topic.",
+      "type": "blog",
+      "assignee": "Mark"
+    }
+  ]
+}`;
 
     const response = await openai.chat.completions.create({
       model: 'deepseek-chat',
@@ -239,20 +260,18 @@ Ensure the tasks cover the user's directive fully.`;
 
     setAgentStatus(db, 'Alex', 'Idle');
 
-    for (const t of tasks) {
-      if (t.title && t.assignee) {
-        let desc = t.description || '';
-        if (scrapedInfo && t.assignee === 'Mark') {
-          desc += `\n\nUse the following scraped source material to rewrite the article in your own words:\n${scrapedInfo}`;
-        }
-        
+    if (tasks.length > 0) {
+      for (const t of tasks) {
         const newTask = {
-          id: 'task-' + Math.random().toString(36).substr(2, 9),
-          title: t.title,
-          description: desc,
+          id: 'task-boardroom-' + Math.random().toString(36).substr(2, 9),
+          title: t.title || `Article: ${directive.slice(0, 50)}`,
+          description: t.description || finalDirective,
           type: t.type || 'blog',
-          assignee: t.assignee,
+          assignee: t.assignee || 'Mark',
           status: 'todo',
+          isEmergency: true,
+          directiveTopic: directive,
+          deadline: deadlineIso,
           draftContent: '',
           reviews: [],
           createdAt: new Date().toISOString(),
@@ -263,62 +282,38 @@ Ensure the tasks cover the user's directive fully.`;
         db.chatLogs.push({
           id: 'msg-' + Date.now() + Math.random(),
           sender: 'Alex',
-          text: `Board directive received. I've created task "${newTask.title}" and assigned it to @${newTask.assignee}.`,
+          text: `🚨 BOARDROOM DIRECTIVE RECEIVED! All AI operations stopped. I've conducted deep research and assigned task "${newTask.title}" to @${newTask.assignee} (30-minute target deadline).`,
           timestamp: new Date().toISOString(),
           taskId: newTask.id
         });
+
+        setAgentStatus(db, 'System', 'Active', `🔥 30-MINUTE EMERGENCY FOCUS: @${newTask.assignee} assigned to draft article on "${newTask.title}". Target deadline: 30 mins.`);
       }
+    } else {
+      await simulateMockBoardroomParsing(db, directive, finalDirective, deadlineIso);
     }
   } catch (err) {
     console.error("Deepseek boardroom parsing error:", err.message);
     setAgentStatus(db, 'Alex', 'Idle');
-    await simulateMockBoardroomParsing(db, directive);
+    await simulateMockBoardroomParsing(db, directive, finalDirective, deadlineIso);
   }
 }
 
-async function simulateMockBoardroomParsing(db, directive) {
-  // Extract URLs and scrape content
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const urls = directive.match(urlRegex) || [];
-  let scrapedInfo = '';
-  for (const url of urls) {
-    const cleanUrl = url.replace(/[.,;:!?)]+$/, '');
-    const scrapedText = await scrapeWebpage(cleanUrl);
-    scrapedInfo += `\n\n--- Source Webpage Content (${cleanUrl}) ---\n${scrapedText}\n`;
-  }
-
-  let mockTask = null;
-  const key = directive.toLowerCase();
-  if (key.includes('blog') || key.includes('article') || key.includes('write')) {
-    mockTask = {
-      title: "Rewrite Article from Webpage",
-      description: "Draft a fresh blog post rewriting the source material in our own words.\n" + scrapedInfo,
-      type: "blog",
-      assignee: "Mark"
-    };
-  } else if (key.includes('social') || key.includes('twitter') || key.includes('post')) {
-    mockTask = {
-      title: "Draft Social Campaign promoting quantumqbit.in",
-      description: "Write Twitter and LinkedIn messages to share our browser-only processing speeds.",
-      type: "social",
-      assignee: "Sarah"
-    };
-  } else {
-    mockTask = {
-      title: "Perform On-Page SEO Review",
-      description: "Examine heading ranks and metadata structures.",
-      type: "seo",
-      assignee: "Mark"
-    };
+async function simulateMockBoardroomParsing(db, directive, finalDirective = '', deadlineIso = null) {
+  if (!deadlineIso) {
+    deadlineIso = new Date(Date.now() + 30 * 60 * 1000).toISOString();
   }
 
   const newTask = {
-    id: 'task-' + Math.random().toString(36).substr(2, 9),
-    title: mockTask.title,
-    description: mockTask.description,
-    type: mockTask.type,
-    assignee: mockTask.assignee,
+    id: 'task-boardroom-' + Math.random().toString(36).substr(2, 9),
+    title: `In-Depth Analysis: ${directive.length > 45 ? directive.slice(0, 45) + '...' : directive}`,
+    description: `BOARDROOM HIGH-PRIORITY DIRECTIVE (30-Min Deadline):\nTopic: ${directive}\n\nDeep Research Context:\n${finalDirective || directive}`,
+    type: 'blog',
+    assignee: 'Mark',
     status: 'todo',
+    isEmergency: true,
+    directiveTopic: directive,
+    deadline: deadlineIso,
     draftContent: '',
     reviews: [],
     createdAt: new Date().toISOString(),
@@ -329,10 +324,12 @@ async function simulateMockBoardroomParsing(db, directive) {
   db.chatLogs.push({
     id: 'msg-' + Date.now(),
     sender: 'Alex',
-    text: `Board directive received. I've scheduled task "${newTask.title}" for @${newTask.assignee}. (Simulated parsing)`,
+    text: `🚨 Boardroom topic received! All current work stopped. @Mark is starting deep research & drafting for "${newTask.title}" (30-minute deadline).`,
     timestamp: new Date().toISOString(),
     taskId: newTask.id
   });
+
+  setAgentStatus(db, 'System', 'Active', `🔥 30-MINUTE EMERGENCY FOCUS MODE ACTIVE: Mark drafting article on "${newTask.title}".`);
 }
 
 // ─── WEBPAGE SCRAPER ──────────────────────────────────────────────────────────
@@ -399,6 +396,46 @@ function getMockTrendsFallback(geo = 'IN') {
       { title: 'ChatGPT Search Chrome Extension', traffic: '200K+', trafficNumeric: 200000, pubDate: new Date(Date.now() - 2 * 3600000).toUTCString(), hoursSinceStart: 2, growthScore: 66667, newsTitle: 'OpenAI rolls out official browser search integration', newsUrl: 'https://openai.com', picture: '' },
       { title: 'GitHub Actions Security Policy', traffic: '100K+', trafficNumeric: 100000, pubDate: new Date(Date.now() - 6 * 3600000).toUTCString(), hoursSinceStart: 6, growthScore: 14286, newsTitle: 'GitHub updates rules on workflow dispatches and branch permissions', newsUrl: 'https://github.com', picture: '' }
     ];
+  }
+}
+
+async function fetchGoogleNews(query = '') {
+  let url = 'https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en';
+  if (query && query.trim()) {
+    url = `https://news.google.com/rss/search?q=${encodeURIComponent(query.trim())}&hl=en-IN&gl=IN&ceid=IN:en`;
+  }
+
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      },
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!res.ok) return [];
+    const xml = await res.text();
+    const matches = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/gi)];
+    
+    const articles = [];
+    matches.forEach(m => {
+      const itemXml = m[1];
+      let title = (itemXml.match(/<title>([^<]+)<\/title>/i) || [])[1] || '';
+      title = title.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
+      let link = (itemXml.match(/<link>([^<]+)<\/link>/i) || [])[1] || '';
+      let pubDate = (itemXml.match(/<pubDate>([^<]+)<\/pubDate>/i) || [])[1] || '';
+      let source = (itemXml.match(/<source[^>]*>([^<]+)<\/source>/i) || [])[1] || 'Google News';
+      let description = (itemXml.match(/<description>([\s\S]*?)<\/description>/i) || [])[1] || '';
+      description = description.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
+      if (title) {
+        articles.push({ title, link, pubDate, source, description });
+      }
+    });
+
+    return articles.slice(0, 10);
+  } catch (err) {
+    console.error(`Error fetching Google News (${query}):`, err.message);
+    return [];
   }
 }
 
@@ -988,11 +1025,12 @@ async function handleAutoBrainstorm(db, openai) {
   }
 
   console.log("Marketing agent Mark is gathering live trending data to brainstorm...");
-  setAgentStatus(db, 'Mark', 'Researching trending topics...');
-  setAgentStatus(db, 'System', 'Active', '🔎 Mark is fetching live Google Trends (India), global news, X hashtags, and Sarkari Result govt jobs...');
+  setAgentStatus(db, 'Mark', 'Researching Google News and trending topics...');
+  setAgentStatus(db, 'System', 'Active', '🔎 Mark is fetching Google News top headlines, Google Trends (India), global news, X hashtags, and Sarkari Result govt jobs...');
   writeDB(db);
   
-  const [trendsIndia, trendsGlobal, xTrends, govtJobs] = await Promise.all([
+  const [googleNews, trendsIndia, trendsGlobal, xTrends, govtJobs] = await Promise.all([
+    fetchGoogleNews(''),
     fetchGoogleTrends('IN'),
     fetchGoogleTrends('US'),
     fetchXTrends(),
@@ -1000,18 +1038,19 @@ async function handleAutoBrainstorm(db, openai) {
   ]);
 
   setAgentStatus(db, 'System', 'Active', 
-    `📊 Trends fetched — India: ${trendsIndia.length} topics, Global: ${trendsGlobal.length} topics, X hashtags: ${xTrends.length}, Govt jobs: ${govtJobs.length} listings`
+    `📊 Live Data fetched — Google News: ${googleNews.length} articles, Trends India: ${trendsIndia.length}, Global: ${trendsGlobal.length}, Govt jobs: ${govtJobs.length}`
   );
-  if (trendsIndia.length > 0) {
-    setAgentStatus(db, 'System', 'Active', `🏆 Top India Trend: ${trendsIndia[0].title} (${trendsIndia[0].traffic})`);
-  }
-  if (govtJobs.length > 0) {
-    setAgentStatus(db, 'System', 'Active', `📋 Top Govt Job: ${govtJobs[0]}`);
+  if (googleNews.length > 0) {
+    setAgentStatus(db, 'System', 'Active', `📰 Top Google News: "${googleNews[0].title}" [Source: ${googleNews[0].source}]`);
   }
   writeDB(db);
 
   const existingTitles = getExistingBlogTitles();
-  console.log(`Gathered trends. Spawning brainstorm prompt...`);
+  console.log(`Gathered Google News & trends. Spawning brainstorm prompt...`);
+
+  const googleNewsText = googleNews.slice(0, 8).map((n, i) =>
+    `#${i+1}: ${n.title} (Source: ${n.source}, Date: ${n.pubDate})\n   Snippet: ${n.description}`
+  ).join('\n');
 
   const trendsIndiaText = trendsIndia.slice(0, 8).map((t, i) => 
     `#${i+1}: ${t.title} (Volume: ${t.traffic}, Started: ${t.hoursSinceStart}h ago, Growth Score: ${t.growthScore})`
@@ -1026,6 +1065,9 @@ async function handleAutoBrainstorm(db, openai) {
 We provide offline-first browser utilities (PDF compressor, image cropper/resizer, base calculators, unit converter).
 
 === LIVE RESEARCH DATA ===
+LATEST GOOGLE NEWS HEADLINES:
+${googleNewsText}
+
 GOOGLE TRENDS (INDIA):
 ${trendsIndiaText}
 

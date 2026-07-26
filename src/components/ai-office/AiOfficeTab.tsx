@@ -41,6 +41,9 @@ interface OfficeTask {
   type: string;
   assignee: string;
   status: string;
+  isEmergency?: boolean;
+  directiveTopic?: string;
+  deadline?: string;
   draftContent: any;
   reviews: any[];
   createdAt: string;
@@ -558,13 +561,17 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
   // Subcomponents Handler wrappers
   const handleSendDirective = async (text: string) => {
     if (isLocalMode) {
+      const deadlineIso = new Date(Date.now() + 30 * 60 * 1000).toISOString();
       const newTask: OfficeTask = {
-        id: 'task-' + Date.now(),
-        title: text.length > 30 ? text.slice(0, 30) + '...' : text,
-        description: text,
+        id: 'task-boardroom-' + Date.now(),
+        title: `In-Depth Analysis: ${text.length > 35 ? text.slice(0, 35) + '...' : text}`,
+        description: `BOARDROOM HIGH-PRIORITY DIRECTIVE (30-Min Target Deadline):\nTopic: ${text}`,
         type: 'blog',
         assignee: 'Mark',
         status: 'todo',
+        isEmergency: true,
+        directiveTopic: text,
+        deadline: deadlineIso,
         draftContent: null,
         reviews: [],
         createdAt: new Date().toISOString(),
@@ -573,15 +580,18 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
       const local = localStorage.getItem('quantum_office_db');
       if (local) {
         const parsed = JSON.parse(local);
+        // Clear all non-completed tasks (Boardroom topic override)
+        parsed.tasks = (parsed.tasks || []).filter((t: any) => t.status === 'completed');
         parsed.tasks.push(newTask);
         parsed.systemLogs.push({
           timestamp: new Date().toISOString(),
-          agent: 'Alex',
-          message: `Board directive received. Created task "${newTask.title}".`
+          agent: 'System',
+          message: `🚨 BOARDROOM DIRECTIVE RECEIVED: All active AI work stopped. Diverting 100% agent focus to topic deep research & article creation: "${text}" (30-min target deadline).`
         });
         localStorage.setItem('quantum_office_db', JSON.stringify(parsed));
       }
       fetchDashboardData();
+      executeLocalSimulation('trends');
       return;
     }
 

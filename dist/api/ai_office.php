@@ -367,6 +367,65 @@ function getPHPGoogleMockTrends($geo) {
     }
 }
 
+function fetchPHPGoogleNews($query = '') {
+    $url = 'https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en';
+    if (!empty($query)) {
+        $url = 'https://news.google.com/rss/search?q=' . urlencode($query) . '&hl=en-IN&gl=IN&ceid=IN:en';
+    }
+    
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    curl_setopt($ch, CURLOPT_TIMEOUT, 8);
+    $xml = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    if ($httpCode !== 200 || !$xml) {
+        return [];
+    }
+    
+    preg_match_all('/<item>(.*?)<\/item>/is', $xml, $matches);
+    $articles = [];
+    
+    foreach ($matches[1] as $itemXml) {
+        $title = '';
+        $link = '';
+        $pubDate = '';
+        $source = 'Google News';
+        $description = '';
+        
+        if (preg_match('/<title>(.*?)<\/title>/is', $itemXml, $m)) {
+            $title = html_entity_decode(trim($m[1]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }
+        if (preg_match('/<link>(.*?)<\/link>/is', $itemXml, $m)) {
+            $link = trim($m[1]);
+        }
+        if (preg_match('/<pubDate>(.*?)<\/pubDate>/is', $itemXml, $m)) {
+            $pubDate = trim($m[1]);
+        }
+        if (preg_match('/<source[^>]*>(.*?)<\/source>/is', $itemXml, $m)) {
+            $source = html_entity_decode(trim($m[1]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }
+        if (preg_match('/<description>(.*?)<\/description>/is', $itemXml, $m)) {
+            $description = trim(strip_tags(html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+        }
+        
+        if (!empty($title)) {
+            $articles[] = [
+                'title' => $title,
+                'link' => $link,
+                'pubDate' => $pubDate,
+                'source' => $source,
+                'description' => $description
+            ];
+        }
+    }
+    
+    return array_slice($articles, 0, 10);
+}
+
 // Extract request action
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 $input = json_decode(file_get_contents('php://input'), true);
@@ -604,6 +663,12 @@ switch ($action) {
         echo json_encode($trends);
         exit;
         
+    case 'get_live_news':
+        $q = isset($_GET['q']) ? trim($_GET['q']) : '';
+        $news = fetchPHPGoogleNews($q);
+        echo json_encode($news);
+        exit;
+        
     case 'save_config':
         $db = getAIDB($dbFile);
         $newConfig = $input;
@@ -665,6 +730,13 @@ switch ($action) {
             break;
         }
         
+        // Boardroom Override: Cancel/Clear all existing incomplete tasks so agents focus 100% on boardroom topic
+        if (isset($db['tasks']) && is_array($db['tasks'])) {
+            $db['tasks'] = array_values(array_filter($db['tasks'], function($t) {
+                return isset($t['status']) && $t['status'] === 'completed';
+            }));
+        }
+
         // Add message from Board
         $boardMsg = [
             'id' => 'msg-' . time() . '-' . rand(100, 999),
@@ -673,11 +745,20 @@ switch ($action) {
             'timestamp' => date(DATE_ATOM)
         ];
         $db['chatLogs'][] = $boardMsg;
+
+        if (!isset($db['systemLogs'])) {
+            $db['systemLogs'] = [];
+        }
+        $db['systemLogs'][] = [
+            'timestamp' => date(DATE_ATOM),
+            'agent' => 'System',
+            'message' => "🚨 BOARDROOM DIRECTIVE RECEIVED: All active AI work stopped. Diverting 100% agent focus to topic deep research & article creation: \"$directive\" (30-min target deadline)."
+        ];
         
         // Update manager status
         foreach ($db['agents'] as &$agent) {
             if ($agent['name'] === 'Alex') {
-                $agent['status'] = 'Analyzing boardroom directive';
+                $agent['status'] = 'Deep Research & Formulating Directive Briefing';
             }
         }
         
