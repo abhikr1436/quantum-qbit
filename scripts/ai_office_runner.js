@@ -185,14 +185,30 @@ async function syncLiveUpdates(db) {
   }
 }
 
+function extractCleanTopic(directive) {
+  if (!directive) return 'Latest News & Analysis';
+  let clean = String(directive)
+    .replace(/^write\s+(?:an?\s+)?(?:in-depth\s+)?(?:blog\s+)?(?:post\s+)?(?:article\s+)?(?:about|on|for|regarding)?\s*/i, '')
+    .replace(/^draft\s+(?:an?\s+)?(?:blog\s+)?(?:post\s+)?(?:article\s+)?(?:about|on|for|regarding)?\s*/i, '')
+    .replace(/^create\s+(?:an?\s+)?(?:blog\s+)?(?:post\s+)?(?:article\s+)?(?:about|on|for|regarding)?\s*/i, '')
+    .replace(/^perform\s+(?:a\s+)?(?:deep\s+)?(?:research\s+)?(?:on|about)?\s*/i, '')
+    .replace(/^(?:please\s+)?(?:write|draft|create|generate|research|publish)\s+/i, '')
+    .trim();
+
+  if (!clean) clean = String(directive).trim();
+  return clean.charAt(0).toUpperCase() + clean.slice(1);
+}
+
 // Directives Parser - Emergency Focus Mode
 async function parseBoardroomDirective(db, directive) {
+  const cleanTopic = extractCleanTopic(directive);
+
   // 1. STOP ALL OTHER AI WORK: Clear any pending or in-progress tasks
   const activeTasks = (db.tasks || []).filter(t => t.status !== 'completed');
   if (activeTasks.length > 0) {
     console.log(`Boardroom topic override: Cancelling ${activeTasks.length} active/pending task(s).`);
     db.tasks = (db.tasks || []).filter(t => t.status === 'completed');
-    setAgentStatus(db, 'System', 'Active', `🚨 BOARDROOM EMERGENCY DIRECTIVE: Stopped all ${activeTasks.length} pending task(s). Diverting 100% agent focus to boardroom topic.`);
+    setAgentStatus(db, 'System', 'Active', `🚨 BOARDROOM EMERGENCY DIRECTIVE: Stopped all ${activeTasks.length} pending task(s). Diverting 100% agent focus to boardroom topic: "${cleanTopic}".`);
   }
 
   // 2. Extract URLs and scrape content + fetch Google News deep research
@@ -207,19 +223,20 @@ async function parseBoardroomDirective(db, directive) {
 
   // Deep research using Google News RSS search
   setAgentStatus(db, 'Alex', 'Conducting deep Google News research...');
-  setAgentStatus(db, 'System', 'Active', `🔎 Alex conducting deep research on Google News for topic: "${directive.slice(0, 50)}..."`);
-  const newsResults = await fetchGoogleNews(directive);
+  setAgentStatus(db, 'System', 'Active', `🔎 Alex conducting deep research on Google News for topic: "${cleanTopic.slice(0, 50)}..."`);
+  const newsResults = await fetchGoogleNews(cleanTopic);
   let googleNewsResearch = '';
   if (newsResults.length > 0) {
     googleNewsResearch = `\n\n--- GOOGLE NEWS DEEP RESEARCH FINDINGS ---\n` +
       newsResults.map((item, i) => `#${i+1}: ${item.title}\nSource: ${item.source} (${item.pubDate})\nSnippet: ${item.description}\nLink: ${item.link}`).join('\n\n');
   }
 
-  const finalDirective = `${directive}${scrapedInfo}${googleNewsResearch}`;
+  const finalDirective = `TOPIC: ${cleanTopic}\nOriginal Directive: ${directive}${scrapedInfo}${googleNewsResearch}`;
   const deadlineMs = Date.now() + 30 * 60 * 1000;
   const deadlineIso = new Date(deadlineMs).toISOString();
 
   const openai = getDeepseekClient(db.config);
+  const headline = `${cleanTopic}: Timeline & In-Depth Analysis`;
   
   if (!openai) {
     await simulateMockBoardroomParsing(db, directive, finalDirective, deadlineIso);
@@ -230,19 +247,22 @@ async function parseBoardroomDirective(db, directive) {
   try {
     const prompt = `You are Alex, the AI Manager of Quantum Qbit Virtual Company.
 The Board of Directors has issued an EMERGENCY HIGH-PRIORITY DIRECTIVE:
-"${directive}"
+Subject/Topic: "${cleanTopic}"
+Raw User Prompt: "${directive}"
 
 DEEP RESEARCH SOURCE DOSSIER:
 ${finalDirective}
 
 ALL OTHER WORK IS STOPPED. The team MUST complete deep research and publish a full, comprehensive, high-quality article about this topic within 30 MINUTES.
 
-Respond ONLY with a JSON object with a single key "tasks" containing an array of 1 task to assign to Mark (or specialist):
+IMPORTANT TITLE RULE: The task title MUST be a publishable headline (e.g. "${headline}"). DO NOT include words like "Write an article about" or "Draft a blog on" in the title.
+
+Respond ONLY with a JSON object:
 {
   "tasks": [
     {
-      "title": "In-Depth Article: ${directive.slice(0, 50)}",
-      "description": "DEEP RESEARCH ARTICLE BRIEF:\n1. Topic: ${directive}\n2. Target Deadline: 30 minutes.\n3. Detailed Source Material & Deep Research:\n${finalDirective}\n4. Requirements: Write a comprehensive 800+ word article detailing all aspects of this news topic.",
+      "title": "${headline}",
+      "description": "DEEP RESEARCH ARTICLE BRIEF:\n1. Topic: ${cleanTopic}\n2. Target Deadline: 30 minutes.\n3. Detailed Source Material & Deep Research:\n${finalDirective}\n4. Requirements: Write a comprehensive 800+ word article detailing key timeline of events, background facts, and major developments.",
       "type": "blog",
       "assignee": "Mark"
     }
@@ -264,13 +284,13 @@ Respond ONLY with a JSON object with a single key "tasks" containing an array of
       for (const t of tasks) {
         const newTask = {
           id: 'task-boardroom-' + Math.random().toString(36).substr(2, 9),
-          title: t.title || `Article: ${directive.slice(0, 50)}`,
+          title: t.title || headline,
           description: t.description || finalDirective,
           type: t.type || 'blog',
           assignee: t.assignee || 'Mark',
           status: 'todo',
           isEmergency: true,
-          directiveTopic: directive,
+          directiveTopic: cleanTopic,
           deadline: deadlineIso,
           draftContent: '',
           reviews: [],
@@ -282,7 +302,7 @@ Respond ONLY with a JSON object with a single key "tasks" containing an array of
         db.chatLogs.push({
           id: 'msg-' + Date.now() + Math.random(),
           sender: 'Alex',
-          text: `🚨 BOARDROOM DIRECTIVE RECEIVED! All AI operations stopped. I've conducted deep research and assigned task "${newTask.title}" to @${newTask.assignee} (30-minute target deadline).`,
+          text: `🚨 BOARDROOM DIRECTIVE RECEIVED! All AI operations stopped. Conducted deep research and assigned task "${newTask.title}" to @${newTask.assignee} (30-minute deadline).`,
           timestamp: new Date().toISOString(),
           taskId: newTask.id
         });
@@ -304,15 +324,18 @@ async function simulateMockBoardroomParsing(db, directive, finalDirective = '', 
     deadlineIso = new Date(Date.now() + 30 * 60 * 1000).toISOString();
   }
 
+  const cleanTopic = extractCleanTopic(directive);
+  const headline = `${cleanTopic}: Timeline & In-Depth Analysis`;
+
   const newTask = {
     id: 'task-boardroom-' + Math.random().toString(36).substr(2, 9),
-    title: `In-Depth Analysis: ${directive.length > 45 ? directive.slice(0, 45) + '...' : directive}`,
-    description: `BOARDROOM HIGH-PRIORITY DIRECTIVE (30-Min Deadline):\nTopic: ${directive}\n\nDeep Research Context:\n${finalDirective || directive}`,
+    title: headline,
+    description: `BOARDROOM HIGH-PRIORITY DIRECTIVE (30-Min Deadline):\nTopic: ${cleanTopic}\n\nDeep Research Context:\n${finalDirective || directive}`,
     type: 'blog',
     assignee: 'Mark',
     status: 'todo',
     isEmergency: true,
-    directiveTopic: directive,
+    directiveTopic: cleanTopic,
     deadline: deadlineIso,
     draftContent: '',
     reviews: [],
@@ -1143,6 +1166,9 @@ Respond ONLY with a JSON object:
 }
 
 function getMockDraftContent(task) {
+  const rawTopic = task.directiveTopic || task.title || '';
+  const cleanTitle = extractCleanTopic(rawTopic);
+
   const isJob = task.title.toLowerCase().includes('job') || 
                 task.title.toLowerCase().includes('recruitment') || 
                 task.title.toLowerCase().includes('vacancy') || 
@@ -1157,10 +1183,10 @@ function getMockDraftContent(task) {
                 
   if (isJob) {
     return {
-      title: task.title,
-      excerpt: `Latest recruitment notification for ${task.title}. Apply online, check eligibility, age limit, selection criteria, important dates and fees.`,
-      content: `<h2>${task.title} Notification</h2>
-<p>Here are the complete notification details, important dates, and eligibility criteria for ${task.title}. Candidates can apply online through the official portal before the deadline. Make sure to prepare your documents and compress photo/signature files to correct upload size using browser-only local compression tools before submitting the form.</p>
+      title: `${cleanTitle}: Official Notification & Details`,
+      excerpt: `Latest recruitment notification for ${cleanTitle}. Apply online, check eligibility, age limit, selection criteria, important dates and fees.`,
+      content: `<h2>${cleanTitle} Notification</h2>
+<p>Here are the complete notification details, important dates, and eligibility criteria for ${cleanTitle}. Candidates can apply online through the official portal before the deadline. Make sure to prepare your documents and compress photo/signature files to correct upload size using browser-only local compression tools before submitting the form.</p>
 <table class="job-details-table">
   <tr>
     <td colspan="2" class="table-header-main">
@@ -1236,11 +1262,33 @@ function getMockDraftContent(task) {
     };
   }
 
+  const topicLower = cleanTitle.toLowerCase();
+  const headline = `${cleanTitle}: Key Timeline & Full Analysis`;
+  const excerpt = `An in-depth report on ${cleanTitle}. Key background facts, full timeline of events, official statements, and major public implications.`;
+
+  const content = `<h2>${cleanTitle}: Complete Overview & Analysis</h2>
+<p>Recent developments regarding <strong>${cleanTitle}</strong> have drawn significant nationwide attention across administrative, public, and policy circles. Below is a detailed breakdown of the background facts, official statements, and the full timeline of events leading up to this point.</p>
+
+<h3>Chronological Timeline of Events</h3>
+<ul>
+  <li><strong>Initial Inquiries & Public Pressure:</strong> Following widespread discussions and regulatory reviews regarding administrative policies, questions were raised in parliamentary sessions and public forums.</li>
+  <li><strong>Official High-Level Meetings:</strong> Ministerial briefings and review panels convened to audit operational guidelines and examine key compliance factors.</li>
+  <li><strong>Resignation & Administrative Transition:</strong> Formal resignation announcements and executive handovers were finalized to facilitate restructuring and transparent policy audits.</li>
+</ul>
+
+<h3>Key Background Context & Factors</h3>
+<p>Understanding the broader context of <strong>${cleanTitle}</strong> requires examining recent policy shifts, ministerial reports, and public representations. Industry analysts point to key systemic challenges that necessitated immediate executive intervention.</p>
+
+<h3>Public Impact & Next Steps</h3>
+<p>As oversight committees continue their evaluation, stakeholders and citizens are tracking official announcements regarding upcoming appointments and structural reforms.</p>
+
+<p><em>Note: Citizens and researchers reviewing news briefs and official documentation can utilize client-side tools on <strong>quantumqbit.in</strong> to process, crop, and convert files locally with 100% user data privacy.</em>`;
+
   return {
-    title: task.title,
-    excerpt: "In a digital-first era, client-side browser calculations protect user private data.",
-    content: `<h2>The Security of Client-Side Web Processing</h2><p>In standard web applications, every document upload, picture conversion, or password check is pushed to a remote server. While simple, it exposes sensitive user assets to database vulnerabilities and third-party leaks.</p><p>By utilizing modern HTML5 File APIs and client-side scripts, tools like those on <strong>quantumqbit.in</strong> process bytes entirely in the browser memory cache. Photos are modified on canvas, conversions happen locally, and no records ever leak to host registers. It's instant, costs zero bandwidth, and stays 100% private.</p>`,
-    category_id: "privacy-security",
+    title: headline,
+    excerpt: excerpt,
+    content: content,
+    category_id: topicLower.includes('privacy') || topicLower.includes('security') ? 'privacy-security' : 'general-utilities',
     imageGlow: "rgba(0, 242, 254, 0.12)"
   };
 }

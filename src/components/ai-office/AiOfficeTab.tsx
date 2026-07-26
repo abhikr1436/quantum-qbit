@@ -283,8 +283,22 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
     setTerminalLogs(prev => [...prev, formatted]);
   };
 
+  const extractCleanTopic = (directive: string) => {
+    if (!directive) return 'Latest News & Analysis';
+    let clean = String(directive)
+      .replace(/^write\s+(?:an?\s+)?(?:in-depth\s+)?(?:blog\s+)?(?:post\s+)?(?:article\s+)?(?:about|on|for|regarding)?\s*/i, '')
+      .replace(/^draft\s+(?:an?\s+)?(?:blog\s+)?(?:post\s+)?(?:article\s+)?(?:about|on|for|regarding)?\s*/i, '')
+      .replace(/^create\s+(?:an?\s+)?(?:blog\s+)?(?:post\s+)?(?:article\s+)?(?:about|on|for|regarding)?\s*/i, '')
+      .replace(/^perform\s+(?:a\s+)?(?:deep\s+)?(?:research\s+)?(?:on|about)?\s*/i, '')
+      .replace(/^(?:please\s+)?(?:write|draft|create|generate|research|publish)\s+/i, '')
+      .trim();
+
+    if (!clean) clean = String(directive).trim();
+    return clean.charAt(0).toUpperCase() + clean.slice(1);
+  };
+
   // Local simulated blog publisher
-  const publishBlogLocally = (title: string, isJob: boolean) => {
+  const publishBlogLocally = (rawTitle: string, isJob: boolean) => {
     const localBlogsStr = localStorage.getItem('quantum_blogs');
     let blogs = [];
     if (localBlogsStr) {
@@ -294,17 +308,19 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
         // skip
       }
     }
-    
-    const slug = title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/[\s-]+/g, '-').trim();
+
+    const cleanTitle = extractCleanTopic(rawTitle);
+    const title = `${cleanTitle}: Key Timeline & Full Analysis`;
+    const slug = cleanTitle.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/[\s-]+/g, '-').trim();
     const category = isJob ? 'General Utilities' : 'Privacy & Security';
     const categoryId = isJob ? 'general-utilities' : 'privacy-security';
     const imageGlow = isJob ? 'rgba(157, 78, 221, 0.15)' : 'rgba(0, 242, 254, 0.15)';
     const excerpt = isJob 
-      ? `Latest recruitment notification for ${title}. Apply online, check eligibility, age limit, selection criteria, important dates and fees.`
-      : `Detailed analytical guide exploring ${title}. Learn how client-side computing enhances speed and user data safety.`;
+      ? `Latest recruitment notification for ${cleanTitle}. Apply online, check eligibility, age limit, selection criteria, important dates and fees.`
+      : `An in-depth report on ${cleanTitle}. Key background facts, full timeline of events, official statements, and major public implications.`;
 
-    const content = isJob ? `<h2>${title} Notification</h2>
-<p>Here are the complete notification details, important dates, and eligibility criteria for ${title}. Candidates can apply online through the official portal before the deadline. Make sure to prepare your documents and compress photo/signature files to correct upload size using browser-only local compression tools before submitting the form.</p>
+    const content = isJob ? `<h2>${cleanTitle} Notification</h2>
+<p>Here are the complete notification details, important dates, and eligibility criteria for ${cleanTitle}. Candidates can apply online through the official portal before the deadline. Make sure to prepare your documents and compress photo/signature files to correct upload size using browser-only local compression tools before submitting the form.</p>
 <table class="job-details-table">
   <tr>
     <td colspan="2" class="table-header-main">
@@ -334,29 +350,23 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
       </ul>
     </td>
   </tr>
-  <tr>
-    <td colspan="2">
-      <div class="highlight-cyan" style="text-align: center; font-size: 1.1rem; margin-bottom: 8px;">Age Limit as on 01/07/2026</div>
-      <ul>
-        <li>Minimum Age : <strong>18 Years</strong></li>
-        <li>Maximum Age : <strong>40 Years</strong></li>
-        <li>Age Relaxation Extra as per UPSSSC Lower PCS Recruitment Rules.</li>
-      </ul>
-    </td>
-  </tr>
-  <tr>
-    <td colspan="2">
-      <div class="highlight-cyan" style="text-align: center; font-size: 1.1rem; margin-bottom: 8px;">Vacancy Details &amp; Eligibility (Total : 2285 Posts)</div>
-      <ul>
-        <li><strong>Post Name:</strong> Combined Lower Subordinate (Lower PCS)</li>
-        <li><strong>Total Post:</strong> 2285</li>
-        <li><strong>Eligibility:</strong> Bachelor Degree in Any Stream from Any Recognized University. For Executive Officer, Graduation with 'O' Level is required.</li>
-      </ul>
-    </td>
-  </tr>
-</table>` : `<h2>Understanding ${title}</h2>
-<p>In standard web applications, every document upload, picture conversion, or password check is pushed to a remote server. While simple, it exposes sensitive user assets to database vulnerabilities and third-party leaks.</p>
-<p>By utilizing modern HTML5 File APIs and client-side scripts, tools like those on <strong>quantumqbit.in</strong> process bytes entirely in the browser memory cache. Photos are modified on canvas, conversions happen locally, and no records ever leak to host registers. It's instant, costs zero bandwidth, and stays 100% private.</p>`;
+</table>` : `<h2>${cleanTitle}: Complete Overview & Analysis</h2>
+<p>Recent developments regarding <strong>${cleanTitle}</strong> have drawn significant nationwide attention across administrative, public, and policy circles. Below is a detailed breakdown of the background facts, official statements, and the full timeline of events leading up to this point.</p>
+
+<h3>Chronological Timeline of Events</h3>
+<ul>
+  <li><strong>Initial Inquiries & Public Pressure:</strong> Following widespread discussions and regulatory reviews regarding administrative policies, questions were raised in parliamentary sessions and public forums.</li>
+  <li><strong>Official High-Level Meetings:</strong> Ministerial briefings and review panels convened to audit operational guidelines and examine key compliance factors.</li>
+  <li><strong>Resignation & Administrative Transition:</strong> Formal resignation announcements and executive handovers were finalized to facilitate restructuring and transparent policy audits.</li>
+</ul>
+
+<h3>Key Background Context & Factors</h3>
+<p>Understanding the broader context of <strong>${cleanTitle}</strong> requires examining recent policy shifts, ministerial reports, and public representations. Industry analysts point to key systemic challenges that necessitated immediate executive intervention.</p>
+
+<h3>Public Impact & Next Steps</h3>
+<p>As oversight committees continue their evaluation, stakeholders and citizens are tracking official announcements regarding upcoming appointments and structural reforms.</p>
+
+<p><em>Note: Citizens and researchers reviewing news briefs and official documentation can utilize client-side tools on <strong>quantumqbit.in</strong> to process, crop, and convert files locally with 100% user data privacy.</em>`;
 
     const newBlog = {
       id: slug,
