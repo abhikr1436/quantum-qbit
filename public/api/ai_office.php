@@ -723,13 +723,22 @@ switch ($action) {
         
     case 'boardroom_submit':
         $db = getAIDB($dbFile);
-        $directive = isset($input['directive']) ? trim($input['directive']) : '';
-        if (empty($directive)) {
+        $rawDirective = isset($input['directive']) ? trim($input['directive']) : '';
+        if (empty($rawDirective)) {
             http_response_code(400);
             echo json_encode(['error' => 'Directive cannot be empty']);
             break;
         }
         
+        $cleanTopic = preg_replace('/^write\s+(?:an?\s+)?(?:in-depth\s+)?(?:blog\s+)?(?:post\s+)?(?:article\s+)?(?:about|on|for|regarding)?\s*/i', '', $rawDirective);
+        $cleanTopic = preg_replace('/^draft\s+(?:an?\s+)?(?:blog\s+)?(?:post\s+)?(?:article\s+)?(?:about|on|for|regarding)?\s*/i', '', $cleanTopic);
+        $cleanTopic = preg_replace('/^create\s+(?:an?\s+)?(?:blog\s+)?(?:post\s+)?(?:article\s+)?(?:about|on|for|regarding)?\s*/i', '', $cleanTopic);
+        $cleanTopic = preg_replace('/^perform\s+(?:a\s+)?(?:deep\s+)?(?:research\s+)?(?:on|about)?\s*/i', '', $cleanTopic);
+        $cleanTopic = preg_replace('/^(?:please\s+)?(?:write|draft|create|generate|research|publish)\s+/i', '', $cleanTopic);
+        $cleanTopic = trim($cleanTopic);
+        if (empty($cleanTopic)) $cleanTopic = trim($rawDirective);
+        $cleanTopic = ucfirst($cleanTopic);
+
         // Boardroom Override: Cancel/Clear all existing incomplete tasks so agents focus 100% on boardroom topic
         if (isset($db['tasks']) && is_array($db['tasks'])) {
             $db['tasks'] = array_values(array_filter($db['tasks'], function($t) {
@@ -741,7 +750,7 @@ switch ($action) {
         $boardMsg = [
             'id' => 'msg-' . time() . '-' . rand(100, 999),
             'sender' => 'Board',
-            'text' => $directive,
+            'text' => $rawDirective,
             'timestamp' => date(DATE_ATOM)
         ];
         $db['chatLogs'][] = $boardMsg;
@@ -752,7 +761,7 @@ switch ($action) {
         $db['systemLogs'][] = [
             'timestamp' => date(DATE_ATOM),
             'agent' => 'System',
-            'message' => "🚨 BOARDROOM DIRECTIVE RECEIVED: All active AI work stopped. Diverting 100% agent focus to topic deep research & article creation: \"$directive\" (30-min target deadline)."
+            'message' => "🚨 BOARDROOM DIRECTIVE RECEIVED: All active AI work stopped. Diverting 100% agent focus to topic deep research & article creation: \"$cleanTopic\" (30-min target deadline)."
         ];
         
         // Update manager status
