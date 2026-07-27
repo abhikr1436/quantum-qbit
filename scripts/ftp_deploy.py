@@ -8,6 +8,7 @@ import ftplib
 import os
 import sys
 import io
+import time
 
 def get_env(key):
     val = os.environ.get(key, '').strip()
@@ -23,6 +24,21 @@ def clean_host(raw):
         h = h.split('//')[-1]
     h = h.split(':')[0].strip('/')
     return h
+
+def get_candidate_hosts(host):
+    """Return list of candidate hostnames/IPs to try in case primary is blocked/timing out"""
+    hosts = [host]
+    if host == '82.180.143.80':
+        hosts.extend(['ftp.quantumqbit.in', 'quantumqbit.in'])
+    elif host not in ('82.180.143.80', 'ftp.quantumqbit.in'):
+        hosts.extend(['82.180.143.80', 'ftp.quantumqbit.in'])
+    seen = set()
+    result = []
+    for h in hosts:
+        if h and h not in seen:
+            seen.add(h)
+            result.append(h)
+    return result
 
 def upload_dir_ftp(ftp, local_path, verbose=True):
     """Upload all files from local_path to current FTP directory"""
@@ -169,7 +185,6 @@ def find_web_root_sftp(sftp):
     marker file (index.html) or standard Hostinger layouts.
     Returns the absolute path to the web root.
     """
-    # Hostinger shared hosting possible paths, ordered by priority
     candidate_paths = [
         'domains/quantumqbit.in/public_html/dist',
         'domains/quantumqbit.in/public_html',
@@ -191,18 +206,15 @@ def find_web_root_sftp(sftp):
             files = sftp.listdir('.')
             print(f"  Path '{p}' -> cwd={cwd}, files={files[:10]}")
             
-            # Prefer the path that already has index.html or index.php (our web app)
             if 'index.html' in files or 'index.php' in files:
                 print(f"  *** MATCH: Found index.html/index.php in '{p}' — this is the web root!")
                 best_match = (p, cwd)
                 break
             elif best_match is None:
-                # Track first accessible path as fallback
                 best_match = (p, cwd)
         except Exception as e:
             print(f"  Path '{p}' not accessible: {e}")
 
-    # Reset to original
     try:
         sftp.chdir(original_dir)
     except:
@@ -231,7 +243,6 @@ def find_web_root_ftp(ftp):
     ]
 
     print("\n=== DETECTING FTP WEB ROOT ===")
-    # Show root listing
     root_lines = []
     try:
         ftp.retrlines('LIST', root_lines.append)
@@ -245,7 +256,6 @@ def find_web_root_ftp(ftp):
         try:
             ftp.cwd(p)
             cwd = ftp.pwd()
-            # List files to probe
             listing = []
             try:
                 ftp.retrlines('NLST', listing.append)
@@ -274,23 +284,31 @@ def deploy_sftp(host, user, password, dist_path):
         return False
 
     print("\n=== TRYING SFTP DEPLOYMENT ===")
+    candidate_hosts = get_candidate_hosts(host)
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     
     connected = False
-    # Try Hostinger SSH port 65002 first, then standard port 22
-    for port in (65002, 22):
-        try:
-            print(f"Connecting to {host}:{port} via SFTP...")
-            ssh.connect(host, port=port, username=user, password=password, timeout=15)
-            print("SFTP Login successful!")
-            connected = True
+    for current_host in candidate_hosts:
+        print(f"Trying host: {current_host}")
+        for port in (65002, 22):
+            for attempt in range(1, 3):
+                try:
+                    print(f"  [Attempt {attempt}] Connecting to {current_host}:{port} via SFTP...")
+                    ssh.connect(current_host, port=port, username=user, password=password, timeout=20)
+                    print("  SFTP Login successful!")
+                    connected = True
+                    break
+                except Exception as e:
+                    print(f"  SFTP Connection failed on {current_host}:{port}: {e}")
+                    time.sleep(3)
+            if connected:
+                break
+        if connected:
             break
-        except Exception as e:
-            print(f"SFTP Connection failed on port {port}: {e}")
             
     if not connected:
-        print("SFTP Connection could not be established.")
+        print("SFTP Connection could not be established on any host/port.")
         return False
         
     try:
@@ -324,22 +342,36 @@ def deploy_sftp(host, user, password, dist_path):
 
 def deploy_ftp(host, user, password, dist_path):
     print("\n=== FALLING BACK TO FTP DEPLOYMENT ===")
-    print(f"Host:    {host}")
-    print(f"User:    {user}")
-    print(f"Port:    21")
-    print()
+    candidate_hosts = get_candidate_hosts(host)
+    
+    ftp = None
+    connected = False
+    
+    for current_host in candidate_hosts:
+        print(f"Trying FTP Host: {current_host}:21")
+        for attempt in range(1, 4):
+            try:
+                print(f"  [Attempt {attempt}] Connecting to FTP server {current_host}...")
+                ftp = ftplib.FTP()
+                ftp.connect(current_host, 21, timeout=30)
+                print(f"  Connected: {ftp.getwelcome()}")
 
-    # Connect
-    print("Connecting to FTP server...")
+                ftp.login(user, password)
+                print("  Login successful!")
+                ftp.set_pasv(True)
+                connected = True
+                break
+            except Exception as e:
+                print(f"  FTP Connection error on {current_host} (attempt {attempt}): {e}")
+                time.sleep(5)
+        if connected:
+            break
+
+    if not connected or not ftp:
+        print("FTP Connection failed on all candidate hosts.")
+        return False
+
     try:
-        ftp = ftplib.FTP()
-        ftp.connect(host, 21, timeout=30)
-        print(f"Connected: {ftp.getwelcome()}")
-
-        ftp.login(user, password)
-        print("Login successful!")
-        ftp.set_pasv(True)
-
         find_web_root_ftp(ftp)
 
         print("\n=== FTP CURRENT FILES ===")
@@ -378,13 +410,11 @@ def main():
         print(f"ERROR: dist/ directory not found at {dist_path}")
         sys.exit(1)
 
-    # 1. Try SFTP first
     sftp_success = deploy_sftp(host, user, password, dist_path)
     if sftp_success:
         print("Deployment completed successfully via SFTP!")
         return
 
-    # 2. Fallback to FTP
     ftp_success = deploy_ftp(host, user, password, dist_path)
     if ftp_success:
         print("Deployment completed successfully via FTP!")
