@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Key, LogOut, FileText, Settings, Plus, Edit, Trash2, 
-  Check, AlertCircle, Trash, Eye, EyeOff, Save, X, Tag, Database, Award
+  Check, AlertCircle, Trash, Eye, EyeOff, Save, X, Tag, Database, Award, Sparkles
 } from 'lucide-react';
+import { AiOfficeTab } from '../components/ai-office/AiOfficeTab';
 
 interface BlogPost {
   id: string;
@@ -55,7 +56,7 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
   const [isLocalMode, setIsLocalMode] = useState<boolean>(false); // Fallback for local Vite dev server
   
   // Dashboard Tabs
-  const [activeTab, setActiveTab] = useState<'posts' | 'categories' | 'settings' | 'mock_tests' | 'app_ads'>('posts');
+  const [activeTab, setActiveTab] = useState<'posts' | 'categories' | 'settings' | 'office' | 'mock_tests' | 'app_ads'>('posts');
 
   // app-ads.txt state
   const [adsContent, setAdsContent] = useState<string>('');
@@ -1002,6 +1003,12 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
             <Settings size={16} /> Admin Settings
           </button>
           <button 
+            onClick={() => setActiveTab('office')}
+            className={`admin-tab-item ${activeTab === 'office' ? 'active' : ''}`}
+          >
+            <Sparkles size={16} /> AI Studio
+          </button>
+          <button 
             onClick={() => setActiveTab('mock_tests')}
             className={`admin-tab-item ${activeTab === 'mock_tests' ? 'active' : ''}`}
           >
@@ -1456,6 +1463,12 @@ export const Admin: React.FC<AdminProps> = ({ setCurrentPage }) => {
           </div>
         )}
 
+
+        {activeTab === 'office' && (
+          <div style={styles.tabContent}>
+            <AiOfficeTab isLocalMode={isLocalMode} />
+          </div>
+        )}
 
         {activeTab === 'mock_tests' && (
           <div style={styles.tabContent}>
