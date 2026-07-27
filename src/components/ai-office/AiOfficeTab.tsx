@@ -134,7 +134,7 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
 
       if (lowerPrompt.includes('education') || lowerPrompt.includes('minister') || lowerPrompt.includes('india')) {
         detectedEntity = 'Ministry of Education (Government of India) & Dharmendra Pradhan';
-        categoryId = 'privacy-security'; // maps to policy & governance
+        categoryId = 'privacy-security';
         categoryName = 'Governance & Policy';
       } else if (lowerPrompt.includes('quantum') || lowerPrompt.includes('computing')) {
         detectedEntity = 'Quantum Information Science & Hardware';
@@ -262,7 +262,7 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
           <h2>3. Fostering Innovation in Higher Education</h2>
           <p>To position India as a global research powerhouse, the government launched the <em>Anusandhan National Research Foundation (ANRF)</em>. With targeted grants, university incubator programs, and industry collaboration models, Indian academic institutions are accelerating research in artificial intelligence, clean energy, and quantum physics.</p>
 
-          <div style="background: rgba(0, 242, 254, 0.05); border: 1px solid rgba(0, 242, 254, 0.2); padding: 16px; border-radius: 12px; margin-top: 24px;">
+          <div style="background: rgba(0, 242, 254, 0.05); border: 1px solid rgba(0, 242, 254, 0.2); padding: 18px; border-radius: 12px; margin-top: 24px;">
             <h3 style="color: #00f2fe; margin-top: 0;">Key Takeaways for Students & Educators</h3>
             <ul style="margin-bottom: 0; padding-left: 20px;">
               <li>Integration of vocational education starting from Class 6.</li>
@@ -285,7 +285,7 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
           <h2>2. Real-World Applications Across Industries</h2>
           <p>Pharmaceutical developers are utilizing Variational Quantum Eigensolvers (VQE) to simulate molecular bonds at an atomic scale, reducing drug discovery timelines from years to weeks. Simultaneously, logistics and financial networks rely on quantum optimization to solve complex route allocation and portfolio risk models.</p>
 
-          <div style="background: rgba(157, 78, 221, 0.05); border: 1px solid rgba(157, 78, 221, 0.2); padding: 16px; border-radius: 12px; margin-top: 24px;">
+          <div style="background: rgba(157, 78, 221, 0.05); border: 1px solid rgba(157, 78, 221, 0.2); padding: 18px; border-radius: 12px; margin-top: 24px;">
             <h3 style="color: #9d4edd; margin-top: 0;">Key Technological Milestones</h3>
             <ul style="margin-bottom: 0; padding-left: 20px;">
               <li>Post-Quantum Cryptography (PQC) algorithm standardization.</li>
@@ -371,7 +371,6 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
 
     try {
       if (isLocalMode) {
-        // Local storage fallback for dev server
         const existingStr = localStorage.getItem('quantum_blogs_db');
         let existingPosts = [];
         if (existingStr) {
@@ -383,7 +382,6 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
         localStorage.setItem('quantum_blogs_db', JSON.stringify(existingPosts));
         setPublishSuccess('Article successfully published to local storage database!');
       } else {
-        // Send to backend API
         const response = await fetch('/api/blogs.php', {
           method: 'POST',
           headers: {
@@ -396,7 +394,6 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
           const data = await response.json();
           setPublishSuccess('Article successfully published to Quantum Qbit Blog database!');
         } else {
-          // Fallback message if session auth required
           setPublishSuccess('Article draft created! (Session sync complete)');
         }
       }
@@ -409,44 +406,43 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 p-4 md:p-6 text-slate-100">
+    <div className="ai-studio-wrapper">
       {/* Studio Banner */}
-      <div className="bg-gradient-to-r from-cyan-950 via-slate-900 to-purple-950 border border-cyan-500/20 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
-        <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+      <div className="ai-studio-hero">
+        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem', position: 'relative', zIndex: 2 }}>
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-3">
-              <Sparkles className="w-3.5 h-3.5" /> AI Editorial & Research Studio
+            <div className="ai-studio-badge">
+              <Sparkles size={14} /> AI Editorial & Research Studio
             </div>
-            <h1 className="text-2xl md:text-4xl font-extrabold text-white tracking-tight">
+            <h1 className="ai-studio-title">
               Autonomous Article Creation
             </h1>
-            <p className="text-slate-300 text-sm md:text-base mt-2 max-w-2xl leading-relaxed">
+            <p className="ai-studio-subtitle">
               Enter any topic or question. The AI performs live fact research, constructs a professional journalistic title and outline, drafts rich prose, and prepares a publish-ready article.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3 text-center">
-              <div className="text-xl font-bold text-cyan-400">100%</div>
-              <div className="text-[10px] text-slate-400 uppercase">Factual Research</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ background: 'rgba(5, 10, 25, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '12px 18px', borderRadius: '12px', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#00f2fe' }}>100%</div>
+              <div style={{ fontSize: '0.68rem', color: '#94a3b8', textTransform: 'uppercase' }}>Factual Research</div>
             </div>
-            <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3 text-center">
-              <div className="text-xl font-bold text-purple-400">Live</div>
-              <div className="text-[10px] text-slate-400 uppercase">Process Visibility</div>
+            <div style={{ background: 'rgba(5, 10, 25, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '12px 18px', borderRadius: '12px', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#9d4edd' }}>Live</div>
+              <div style={{ fontSize: '0.68rem', color: '#94a3b8', textTransform: 'uppercase' }}>Process Visibility</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Prompt Input Form Workspace */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
-        <div>
-          <label className="block text-sm font-bold text-slate-200 mb-2 flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <Lightbulb className="w-4 h-4 text-amber-400" /> Article Prompt / Topic Directive
+      <div className="ai-card">
+        <div className="ai-form-group">
+          <label className="ai-label">
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Lightbulb size={16} style={{ color: '#fbbf24' }} /> Article Prompt / Topic Directive
             </span>
-            <span className="text-xs text-slate-400 font-normal">
+            <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>
               Be as specific or open as you like
             </span>
           </label>
@@ -455,20 +451,20 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="e.g. Write an article about New Education minister of India..."
-            className="w-full bg-slate-950 border border-slate-700/80 rounded-xl p-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-medium"
+            className="ai-prompt-textarea"
           />
         </div>
 
         {/* Quick Presets */}
-        <div>
-          <span className="block text-xs font-semibold text-slate-400 mb-2">Try Quick Prompt Examples:</span>
-          <div className="flex flex-wrap gap-2">
+        <div style={{ marginBottom: '1.25rem' }}>
+          <span style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#94a3b8', marginBottom: '6px' }}>Try Quick Prompt Examples:</span>
+          <div className="ai-presets-row">
             {PRESET_PROMPTS.map((preset, idx) => (
               <button
                 key={idx}
                 type="button"
                 onClick={() => setPrompt(preset)}
-                className="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-xs text-slate-300 transition-colors text-left flex items-center gap-1.5"
+                className="ai-preset-chip"
               >
                 <span>💡</span>
                 <span>{preset}</span>
@@ -478,13 +474,13 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
         </div>
 
         {/* Advanced Configuration Settings */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-slate-800">
+        <div className="ai-controls-grid">
           <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1.5">Editorial Tone</label>
+            <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#94a3b8', marginBottom: '6px' }}>Editorial Tone</label>
             <select
               value={tone}
               onChange={(e) => setTone(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
+              className="ai-select"
             >
               <option value="Professional Editorial">Professional Editorial</option>
               <option value="Investigative Tech">Investigative Tech</option>
@@ -494,11 +490,11 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1.5">Article Depth</label>
+            <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#94a3b8', marginBottom: '6px' }}>Article Depth</label>
             <select
               value={depth}
               onChange={(e) => setDepth(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
+              className="ai-select"
             >
               <option value="Comprehensive">Comprehensive (800 - 1200 words)</option>
               <option value="Deep Dive">Deep Dive (1500+ words)</option>
@@ -507,11 +503,11 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1.5">Target Category</label>
+            <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#94a3b8', marginBottom: '6px' }}>Target Category</label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
+              className="ai-select"
             >
               <option value="Auto Detect">Auto Detect</option>
               <option value="Governance & Policy">Governance & Policy</option>
@@ -524,20 +520,20 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
         </div>
 
         {/* Generate Trigger Button */}
-        <div className="flex items-center justify-end pt-2">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '1.25rem' }}>
           <button
             onClick={handleGenerate}
             disabled={isGenerating || !prompt.trim()}
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-sm font-bold text-white shadow-xl shadow-cyan-500/20 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="ai-btn-primary"
           >
             {isGenerating ? (
               <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
+                <RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} />
                 <span>AI Executing & Researching...</span>
               </>
             ) : (
               <>
-                <Sparkles className="w-4 h-4" />
+                <Sparkles size={16} />
                 <span>Start Research & Article Creation</span>
               </>
             )}

@@ -23,125 +23,105 @@ export const ProcessStepper: React.FC<ProcessStepperProps> = ({
   isGenerating,
   totalTimeSeconds = 0,
 }) => {
-  const getStepIcon = (step: ProcessStep, index: number) => {
+  const getStepIcon = (step: ProcessStep) => {
     if (step.status === 'completed') {
-      return <CheckCircle2 className="w-5 h-5 text-emerald-400" />;
+      return <CheckCircle2 size={18} style={{ color: '#34d399' }} />;
     }
     if (step.status === 'active') {
-      return <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />;
+      return <Loader2 size={18} style={{ color: '#00f2fe', animation: 'spin 1s linear infinite' }} />;
     }
     if (step.status === 'error') {
-      return <AlertCircle className="w-5 h-5 text-rose-400" />;
+      return <AlertCircle size={18} style={{ color: '#f87171' }} />;
     }
 
     switch (step.id) {
       case 'analyze':
-        return <Sparkles className="w-4 h-4 text-slate-400" />;
+        return <Sparkles size={16} style={{ color: '#94a3b8' }} />;
       case 'research':
-        return <Search className="w-4 h-4 text-slate-400" />;
+        return <Search size={16} style={{ color: '#94a3b8' }} />;
       case 'outline':
-        return <Terminal className="w-4 h-4 text-slate-400" />;
+        return <Terminal size={16} style={{ color: '#94a3b8' }} />;
       case 'draft':
-        return <FileText className="w-4 h-4 text-slate-400" />;
+        return <FileText size={16} style={{ color: '#94a3b8' }} />;
       case 'audit':
-        return <ShieldCheck className="w-4 h-4 text-slate-400" />;
+        return <ShieldCheck size={16} style={{ color: '#94a3b8' }} />;
       default:
-        return <Circle className="w-4 h-4 text-slate-500" />;
+        return <Circle size={16} style={{ color: '#64748b' }} />;
     }
   };
 
   const activeStep = steps[currentStepIndex] || steps[steps.length - 1];
 
   return (
-    <div className="bg-slate-900/90 border border-cyan-500/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+    <div className="ai-card" style={{ padding: '1.5rem' }}>
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="w-3 h-3 rounded-full bg-cyan-400 animate-ping absolute inset-0" />
-            <div className="w-3 h-3 rounded-full bg-cyan-500 relative" />
-          </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '1rem', marginBottom: '1.25rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#00f2fe', boxShadow: '0 0 10px #00f2fe' }} />
           <div>
-            <h3 className="text-lg font-bold text-white tracking-wide">
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff', margin: 0 }}>
               {isGenerating ? 'AI Autonomous Agent Execution' : 'Execution Pipeline'}
             </h3>
-            <p className="text-xs text-slate-400">
+            <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0 }}>
               {isGenerating ? 'Real-time research, reasoning, and drafting stream' : 'Pipeline idle'}
             </p>
           </div>
         </div>
         {totalTimeSeconds > 0 && (
-          <div className="px-3 py-1 bg-slate-800 border border-slate-700 rounded-full text-xs font-mono text-cyan-300">
+          <div style={{ padding: '4px 12px', background: 'rgba(0, 242, 254, 0.1)', border: '1px solid rgba(0, 242, 254, 0.3)', borderRadius: '20px', fontSize: '0.78rem', color: '#00f2fe', fontFamily: 'monospace' }}>
             Elapsed: {totalTimeSeconds}s
           </div>
         )}
       </div>
 
       {/* Stepper Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-6">
+      <div className="ai-stepper-grid">
         {steps.map((step, idx) => {
           const isActive = idx === currentStepIndex;
           const isDone = step.status === 'completed';
+          const isErr = step.status === 'error';
+
+          let cardClass = 'ai-step-card';
+          if (isActive) cardClass += ' active';
+          else if (isDone) cardClass += ' completed';
+          else if (isErr) cardClass += ' error';
 
           return (
-            <div
-              key={step.id}
-              className={`p-3 rounded-xl border transition-all duration-300 ${
-                isActive
-                  ? 'bg-cyan-950/40 border-cyan-500/50 shadow-lg shadow-cyan-500/10'
-                  : isDone
-                  ? 'bg-slate-800/40 border-emerald-500/30'
-                  : 'bg-slate-950/30 border-slate-800 opacity-60'
-              }`}
-            >
-              <div className="flex items-center gap-2 mb-1.5">
-                <div className="flex-shrink-0">{getStepIcon(step, idx)}</div>
-                <span className="text-xs font-semibold text-slate-200 truncate">
-                  {step.title}
-                </span>
+            <div key={step.id} className={cardClass}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                {getStepIcon(step)}
+                <span className="ai-step-title">{step.title}</span>
               </div>
-              <p className="text-[11px] text-slate-400 line-clamp-1">
-                {step.subtitle}
-              </p>
+              <div className="ai-step-sub">{step.subtitle}</div>
             </div>
           );
         })}
       </div>
 
       {/* Live Terminal Log Box */}
-      <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs shadow-inner">
-        <div className="flex items-center justify-between text-slate-400 mb-2 pb-2 border-b border-slate-800">
-          <div className="flex items-center gap-2">
-            <Terminal className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="font-semibold text-slate-300">Agent Reasoning Log</span>
+      <div className="ai-terminal">
+        <div className="ai-terminal-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Terminal size={14} style={{ color: '#00f2fe' }} />
+            <span style={{ fontWeight: 600, color: '#e2e8f0' }}>Agent Reasoning Log</span>
           </div>
-          <span className="text-[10px] text-slate-500 uppercase tracking-widest">
+          <span style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             {activeStep ? activeStep.title : 'Live Feed'}
           </span>
         </div>
 
-        <div className="h-40 overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-slate-800 pr-2">
+        <div className="ai-terminal-logs">
           {steps.flatMap(s => s.logs).length === 0 ? (
-            <div className="text-slate-500 italic text-center py-10">
+            <div style={{ color: '#64748b', fontStyle: 'italic', textAlign: 'center', paddingTop: '3rem' }}>
               Awaiting prompt execution request...
             </div>
           ) : (
             steps.map(s => (
               <React.Fragment key={s.id}>
                 {s.logs.map((log, logIdx) => (
-                  <div key={`${s.id}-${logIdx}`} className="flex items-start gap-2 leading-relaxed">
-                    <span className="text-slate-600 select-none">&gt;</span>
-                    <span
-                      className={
-                        s.status === 'active'
-                          ? 'text-cyan-300'
-                          : s.status === 'completed'
-                          ? 'text-slate-300'
-                          : 'text-slate-400'
-                      }
-                    >
-                      {log}
-                    </span>
+                  <div key={`${s.id}-${logIdx}`} className={`ai-log-line ${s.status === 'completed' ? 'completed' : ''}`}>
+                    <span style={{ color: '#475569', marginRight: '6px' }}>&gt;</span>
+                    <span>{log}</span>
                   </div>
                 ))}
               </React.Fragment>

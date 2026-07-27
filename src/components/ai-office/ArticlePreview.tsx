@@ -59,42 +59,42 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl transition-all duration-300">
+    <div className="ai-card" style={{ padding: 0, overflow: 'hidden' }}>
       {/* Top Banner & Control Bar */}
-      <div className="bg-gradient-to-r from-slate-900 via-purple-950/40 to-slate-900 p-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-400" />
-          <span className="text-sm font-bold text-white tracking-wide">
+      <div className="ai-preview-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Sparkles size={18} style={{ color: '#9d4edd' }} />
+          <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ffffff' }}>
             Article Draft Ready
           </span>
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-purple-900/50 border border-purple-500/30 text-purple-300 uppercase">
+          <span style={{ padding: '2px 10px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 700, background: 'rgba(157, 78, 221, 0.15)', border: '1px solid rgba(157, 78, 221, 0.3)', color: '#d8b4fe', textTransform: 'uppercase' }}>
             {article.category}
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <button
             onClick={() => setIsEditing(!isEditing)}
-            className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 transition-colors flex items-center gap-1.5"
+            style={{ padding: '6px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '8px', color: '#e2e8f0', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            <Edit3 className="w-3.5 h-3.5" />
+            <Edit3 size={14} />
             {isEditing ? 'Cancel Edit' : 'Edit Draft'}
           </button>
 
           <button
             onClick={handleCopy}
-            className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 transition-colors flex items-center gap-1.5"
+            style={{ padding: '6px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '8px', color: '#e2e8f0', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? <Check size={14} style={{ color: '#34d399' }} /> : <Copy size={14} />}
             {copied ? 'Copied' : 'Copy HTML'}
           </button>
 
           {onRegenerate && (
             <button
               onClick={onRegenerate}
-              className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 transition-colors flex items-center gap-1.5"
+              style={{ padding: '6px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '8px', color: '#e2e8f0', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
-              <RefreshCw className="w-3.5 h-3.5" />
+              <RefreshCw size={14} />
               Regenerate
             </button>
           )}
@@ -102,9 +102,10 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
           <button
             onClick={() => onPublish(currentArticle)}
             disabled={isPublishing}
-            className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-xs font-bold text-white shadow-lg shadow-cyan-500/20 transition-all flex items-center gap-1.5 disabled:opacity-50"
+            className="ai-btn-primary"
+            style={{ padding: '8px 16px', fontSize: '0.82rem' }}
           >
-            <Send className="w-3.5 h-3.5" />
+            <Send size={14} />
             {isPublishing ? 'Publishing...' : 'Publish to Blogs'}
           </button>
         </div>
@@ -112,93 +113,90 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
 
       {/* Notifications */}
       {publishSuccess && (
-        <div className="bg-emerald-950/60 border-b border-emerald-500/30 p-3 text-xs text-emerald-300 flex items-center gap-2">
-          <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+        <div style={{ background: 'rgba(16, 185, 129, 0.15)', borderBottom: '1px solid rgba(16, 185, 129, 0.3)', padding: '10px 16px', color: '#34d399', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Check size={16} />
           <span>{publishSuccess}</span>
         </div>
       )}
       {publishError && (
-        <div className="bg-rose-950/60 border-b border-rose-500/30 p-3 text-xs text-rose-300 flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+        <div style={{ background: 'rgba(239, 68, 68, 0.15)', borderBottom: '1px solid rgba(239, 68, 68, 0.3)', padding: '10px 16px', color: '#f87171', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <AlertCircle size={16} />
           <span>{publishError}</span>
         </div>
       )}
 
       {/* Main Content Preview Area */}
-      <div className="p-6 max-w-4xl mx-auto space-y-6">
+      <div className="ai-preview-body">
         {isEditing ? (
           /* Inline Editor Form */
-          <div className="space-y-4 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', background: 'rgba(0, 0, 0, 0.3)', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">Article Headline</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', marginBottom: '4px' }}>Article Headline</label>
               <input
                 type="text"
                 value={editedTitle}
                 onChange={(e) => setEditedTitle(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+                style={{ width: '100%', background: '#0b1120', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '8px', padding: '8px 12px', color: '#ffffff', fontSize: '0.9rem' }}
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">Meta Excerpt</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', marginBottom: '4px' }}>Meta Excerpt</label>
               <textarea
                 rows={2}
                 value={editedExcerpt}
                 onChange={(e) => setEditedExcerpt(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
+                style={{ width: '100%', background: '#0b1120', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '8px', padding: '8px 12px', color: '#ffffff', fontSize: '0.85rem' }}
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">Article HTML Content</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', marginBottom: '4px' }}>Article HTML Content</label>
               <textarea
                 rows={12}
                 value={editedContent}
                 onChange={(e) => setEditedContent(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 font-mono text-xs text-slate-300 focus:outline-none focus:border-cyan-500"
+                style={{ width: '100%', background: '#0b1120', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '8px', padding: '8px 12px', color: '#ffffff', fontFamily: 'monospace', fontSize: '0.82rem' }}
               />
             </div>
             <button
               onClick={handleSaveEdit}
-              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-xs font-bold text-white rounded-lg transition-colors"
+              className="ai-btn-primary"
+              style={{ alignSelf: 'flex-start', padding: '8px 16px', fontSize: '0.82rem' }}
             >
               Save Changes to Preview
             </button>
           </div>
         ) : (
           /* Rendered Article View */
-          <article className="prose prose-invert max-w-none">
+          <article style={{ maxWidth: '850px', margin: '0 auto' }}>
             {/* Headline */}
-            <h1 className="text-2xl md:text-3xl font-extrabold text-white leading-tight mb-3">
-              {editedTitle}
-            </h1>
+            <h1 className="ai-article-title">{editedTitle}</h1>
 
             {/* Excerpt Lead */}
-            <p className="text-slate-300 text-sm md:text-base leading-relaxed font-medium italic border-l-4 border-cyan-500 pl-4 py-1 mb-6 bg-slate-800/30 rounded-r-lg">
-              {editedExcerpt}
-            </p>
+            <p className="ai-article-excerpt">{editedExcerpt}</p>
 
             {/* Metadata Bar */}
-            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 border-y border-slate-800/80 py-3 mb-6">
-              <span className="flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5 text-cyan-400" />
+            <div className="ai-article-meta">
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <User size={14} style={{ color: '#00f2fe' }} />
                 {article.author}
               </span>
-              <span className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-slate-400" />
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Calendar size={14} />
                 {article.date}
               </span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-purple-400" />
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Clock size={14} style={{ color: '#9d4edd' }} />
                 {article.readTime}
               </span>
-              <span className="flex items-center gap-1.5">
-                <Tag className="w-3.5 h-3.5 text-emerald-400" />
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Tag size={14} style={{ color: '#34d399' }} />
                 {article.category}
               </span>
             </div>
 
             {/* Rendered HTML body */}
             <div
-              className="text-slate-200 text-sm leading-relaxed space-y-4 [&>h2]:text-lg [&>h2]:font-bold [&>h2]:text-cyan-300 [&>h2]:mt-6 [&>h2]:mb-2 [&>h3]:text-base [&>h3]:font-semibold [&>h3]:text-slate-100 [&>h3]:mt-4 [&>h3]:mb-2 [&>p]:text-slate-300 [&>p]:leading-7 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-1 [&>blockquote]:border-l-2 [&>blockquote]:border-purple-500 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-purple-200 [&>blockquote]:bg-purple-950/20 [&>blockquote]:py-2 [&>blockquote]:my-4 [&>blockquote]:rounded-r"
+              className="ai-article-content"
               dangerouslySetInnerHTML={{ __html: editedContent }}
             />
           </article>
