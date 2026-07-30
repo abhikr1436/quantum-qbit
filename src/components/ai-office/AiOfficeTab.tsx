@@ -7,6 +7,7 @@ import {
 import { ProcessStepper, type ProcessStep } from './ProcessStepper';
 import { ArticlePreview, type GeneratedArticle } from './ArticlePreview';
 import { generateArticleWithGemini } from '../../utils/geminiService';
+import { fetchLiveGoogleTrends } from '../../utils/googleTrendsService';
 
 interface AiOfficeTabProps {
   isLocalMode?: boolean;
@@ -297,12 +298,21 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
     });
   };
 
-  // Refresh / Scan Trending Radar
-  const handleScanRadar = async () => {
+  // Refresh / Scan Live Google Trends RSS Radar
+  const handleScanRadar = async (geo: 'IN' | 'US' | 'GLOBAL' = 'GLOBAL') => {
     setIsScanningRadar(true);
-    await new Promise((r) => setTimeout(r, 600));
-    setLastRadarScanTime(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-    setIsScanningRadar(false);
+    try {
+      const liveItems = await fetchLiveGoogleTrends(geo);
+      if (liveItems && liveItems.length > 0) {
+        setTrendingRadar(liveItems);
+        setSelectedTopic(liveItems[0]);
+      }
+    } catch (e) {
+      console.warn('Google Trends scan notice:', e);
+    } finally {
+      setLastRadarScanTime(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      setIsScanningRadar(false);
+    }
   };
 
   // Core Autonomous Research & Direct Auto-Posting Engine (powered by Gemini API)
@@ -869,7 +879,11 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
                 {(['All', 'India', 'USA', 'Global'] as const).map((reg) => (
                   <button
                     key={reg}
-                    onClick={() => setSelectedRegionFilter(reg)}
+                    onClick={() => {
+                      setSelectedRegionFilter(reg);
+                      const geoCode = reg === 'India' ? 'IN' : reg === 'USA' ? 'US' : 'GLOBAL';
+                      handleScanRadar(geoCode);
+                    }}
                     style={{
                       padding: '4px 10px',
                       borderRadius: '6px',
@@ -885,7 +899,7 @@ export const AiOfficeTab: React.FC<AiOfficeTabProps> = ({ isLocalMode = false })
                   </button>
                 ))}
                 <button
-                  onClick={handleScanRadar}
+                  onClick={() => handleScanRadar('GLOBAL')}
                   disabled={isScanningRadar}
                   style={{ padding: '4px 10px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '6px', color: '#e2e8f0', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                 >
