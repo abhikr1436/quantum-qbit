@@ -135,7 +135,16 @@ export const Blogs: React.FC<BlogsProps> = ({
     };
 
     const loadFallbackBlogs = () => {
-      const local = localStorage.getItem('quantum_blogs');
+      const localStr = localStorage.getItem('quantum_blogs') || localStorage.getItem('quantum_blogs_db');
+      if (localStr) {
+        try {
+          const parsed = JSON.parse(localStr);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setPosts(parsed);
+            return;
+          }
+        } catch (e) {}
+      }
       const defaultPosts: BlogPost[] = [
         {
           id: 'browser-privacy',
@@ -267,9 +276,9 @@ export const Blogs: React.FC<BlogsProps> = ({
         }
       ];
 
-      if (local) {
+      if (localStr) {
         try {
-          const parsed = JSON.parse(local);
+          const parsed = JSON.parse(localStr);
           if (Array.isArray(parsed) && parsed.length >= 8) {
             setPosts(parsed);
           } else {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Loader2, Circle, AlertCircle, Terminal, Sparkles, Search, FileText, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, Loader2, Circle, AlertCircle, Terminal, Sparkles, Search, FileText, ShieldCheck, TrendingUp, Send } from 'lucide-react';
 
 export interface ProcessStep {
   id: string;
@@ -35,16 +35,18 @@ export const ProcessStepper: React.FC<ProcessStepperProps> = ({
     }
 
     switch (step.id) {
+      case 'scan':
+        return <TrendingUp size={16} style={{ color: '#f59e0b' }} />;
       case 'analyze':
-        return <Sparkles size={16} style={{ color: '#94a3b8' }} />;
+        return <Sparkles size={16} style={{ color: '#00f2fe' }} />;
       case 'research':
-        return <Search size={16} style={{ color: '#94a3b8' }} />;
+        return <Search size={16} style={{ color: '#38bdf8' }} />;
       case 'outline':
-        return <Terminal size={16} style={{ color: '#94a3b8' }} />;
+        return <Terminal size={16} style={{ color: '#a78bfa' }} />;
       case 'draft':
-        return <FileText size={16} style={{ color: '#94a3b8' }} />;
-      case 'audit':
-        return <ShieldCheck size={16} style={{ color: '#94a3b8' }} />;
+        return <FileText size={16} style={{ color: '#f472b6' }} />;
+      case 'publish':
+        return <Send size={16} style={{ color: '#34d399' }} />;
       default:
         return <Circle size={16} style={{ color: '#64748b' }} />;
     }
@@ -63,7 +65,7 @@ export const ProcessStepper: React.FC<ProcessStepperProps> = ({
               {isGenerating ? 'AI Autonomous Agent Execution' : 'Execution Pipeline'}
             </h3>
             <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0 }}>
-              {isGenerating ? 'Real-time research, reasoning, and drafting stream' : 'Pipeline idle'}
+              {isGenerating ? 'Real-time viral trend discovery, live research, drafting & direct auto-posting stream' : 'Pipeline idle'}
             </p>
           </div>
         </div>
@@ -113,7 +115,7 @@ export const ProcessStepper: React.FC<ProcessStepperProps> = ({
         <div className="ai-terminal-logs">
           {steps.flatMap(s => s.logs).length === 0 ? (
             <div style={{ color: '#64748b', fontStyle: 'italic', textAlign: 'center', paddingTop: '3rem' }}>
-              Awaiting prompt execution request...
+              Awaiting trending search & auto-post execution trigger...
             </div>
           ) : (
             steps.map(s => (
