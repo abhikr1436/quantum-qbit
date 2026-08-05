@@ -27,17 +27,14 @@ def clean_host(raw):
 
 def get_candidate_hosts(host):
     """Return list of candidate hostnames/IPs to try in case primary is blocked/timing out"""
-    hosts = [host]
-    if host == '82.180.143.80':
-        hosts.extend(['ftp.quantumqbit.in', 'quantumqbit.in'])
-    elif host not in ('82.180.143.80', 'ftp.quantumqbit.in'):
-        hosts.extend(['82.180.143.80', 'ftp.quantumqbit.in'])
+    hosts = [host, 'ftp.hostinger.com', 'ftp.hostinger.in', '82.180.143.80', 'ftp.quantumqbit.in', 'quantumqbit.in']
     seen = set()
     result = []
     for h in hosts:
-        if h and h not in seen:
-            seen.add(h)
-            result.append(h)
+        ch = clean_host(h)
+        if ch and ch not in seen:
+            seen.add(ch)
+            result.append(ch)
     return result
 
 def upload_dir_ftp(ftp, local_path, verbose=True):
@@ -292,18 +289,14 @@ def deploy_sftp(host, user, password, dist_path):
     for current_host in candidate_hosts:
         print(f"Trying host: {current_host}")
         for port in (65002, 22):
-            for attempt in range(1, 3):
-                try:
-                    print(f"  [Attempt {attempt}] Connecting to {current_host}:{port} via SFTP...")
-                    ssh.connect(current_host, port=port, username=user, password=password, timeout=20)
-                    print("  SFTP Login successful!")
-                    connected = True
-                    break
-                except Exception as e:
-                    print(f"  SFTP Connection failed on {current_host}:{port}: {e}")
-                    time.sleep(3)
-            if connected:
+            try:
+                print(f"  Connecting to {current_host}:{port} via SFTP...")
+                ssh.connect(current_host, port=port, username=user, password=password, timeout=5)
+                print("  SFTP Login successful!")
+                connected = True
                 break
+            except Exception as e:
+                print(f"  SFTP Connection failed on {current_host}:{port}: {e}")
         if connected:
             break
             
@@ -341,34 +334,45 @@ def deploy_sftp(host, user, password, dist_path):
         return False
 
 def deploy_ftp(host, user, password, dist_path):
-    print("\n=== FALLING BACK TO FTP DEPLOYMENT ===")
+    print("\n=== FALLING BACK TO FTP / FTPS DEPLOYMENT ===")
     candidate_hosts = get_candidate_hosts(host)
     
     ftp = None
     connected = False
     
     for current_host in candidate_hosts:
-        print(f"Trying FTP Host: {current_host}:21")
-        for attempt in range(1, 4):
-            try:
-                print(f"  [Attempt {attempt}] Connecting to FTP server {current_host}...")
-                ftp = ftplib.FTP()
-                ftp.connect(current_host, 21, timeout=30)
-                print(f"  Connected: {ftp.getwelcome()}")
-
-                ftp.login(user, password)
-                print("  Login successful!")
-                ftp.set_pasv(True)
-                connected = True
-                break
-            except Exception as e:
-                print(f"  FTP Connection error on {current_host} (attempt {attempt}): {e}")
-                time.sleep(5)
-        if connected:
+        print(f"Trying FTP/FTPS Host: {current_host}:21")
+        # 1. Try standard FTP
+        try:
+            print(f"  [Attempt FTP] Connecting to {current_host}:21...")
+            f = ftplib.FTP()
+            f.connect(current_host, 21, timeout=5)
+            f.login(user, password)
+            f.set_pasv(True)
+            print("  FTP Login successful!")
+            ftp = f
+            connected = True
             break
+        except Exception as e:
+            print(f"  FTP connection error on {current_host}: {e}")
+
+        # 2. Try FTPS (FTP over TLS)
+        try:
+            print(f"  [Attempt FTPS] Connecting to {current_host}:21 via TLS...")
+            ftps = ftplib.FTP_TLS()
+            ftps.connect(current_host, 21, timeout=5)
+            ftps.login(user, password)
+            ftps.prot_p()
+            ftps.set_pasv(True)
+            print("  FTPS Login successful!")
+            ftp = ftps
+            connected = True
+            break
+        except Exception as e:
+            print(f"  FTPS connection error on {current_host}: {e}")
 
     if not connected or not ftp:
-        print("FTP Connection failed on all candidate hosts.")
+        print("FTP/FTPS Connection failed on all candidate hosts.")
         return False
 
     try:
