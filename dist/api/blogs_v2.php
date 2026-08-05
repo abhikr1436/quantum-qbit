@@ -40,66 +40,13 @@ function getFallbackBlogs($blogsFile) {
     }
     
     if (!file_exists($blogsFile)) {
-        // Seed default blog posts
-        $defaultBlogs = [
-            [
-                'id' => 'browser-privacy',
-                'title' => 'Why Browser-Only Tools Are the Future of Web Utility Apps',
-                'excerpt' => 'In an era of rising security concerns, running calculations, converting PDFs, and editing photos locally protects user data from server hazards.',
-                'author' => 'Quantum Engineering Team',
-                'date' => 'May 18, 2026',
-                'readTime' => '4 min read',
-                'category' => 'Privacy & Security',
-                'category_id' => 'privacy-security',
-                'imageGlow' => 'rgba(0, 242, 254, 0.1)',
-                'content' => [
-                    'In the early days of the web, performing complex file manipulations—like resizing high-resolution images or compiling documents—required powerful servers. Files were uploaded, processed remotely, and then sent back. While this worked, it introduced two major pain points: server network latency and privacy vulnerabilities.',
-                    'Today, modern web browser standards have changed the game. Technologies like WebAssembly, HTML5 Canvas, and File System APIs allow modern browsers to execute high-performance desktop-grade code directly on the user\'s CPU.',
-                    'By keeping operations 100% client-side, utility applications ensure that private photos and intellectual document drafts never touch a server database. There are no data leaks, no server costs to pass down as paywalls, and execution is sub-second, running completely offline.',
-                    'At Quantum Qbit, our entire architectural design centers on local-first processing. When you convert images to PDF or apply canvas color filters in our Image Studio, all computations happen inside your browser memory cache. It is safe, clean, and instant.'
-                ]
-            ],
-            [
-                'id' => 'base-math',
-                'title' => 'The Logic Behind Real-Time Cross-Input Number Base Conversions',
-                'excerpt' => 'Understanding how computers translate binary, octal, decimal, and hexadecimal representations under the hood to optimize data structures.',
-                'author' => 'Dr. Clara Chen',
-                'date' => 'May 10, 2026',
-                'readTime' => '5 min read',
-                'category' => 'Computer Science',
-                'category_id' => 'computer-science',
-                'imageGlow' => 'rgba(157, 78, 221, 0.1)',
-                'content' => [
-                    'To humans, numbers are decimal (base 10). To transistors, numbers are binary (base 2). To developers analyzing memory offsets or color palettes, numbers are hexadecimal (base 16). How do we bridge these bases without cognitive friction?',
-                    'A base converter relies on positional notation. Each digit in a number represents a coefficient multiplied by the base raised to the power of its position index. For example, the binary sequence 1011 equates to (1 × 2³) + (0 × 2²) + (1 × 2¹) + (1 × 2⁰) = 11 in decimal.',
-                    'Cross-input real-time conversion requires a reactive state tree. By standardizing any input base to a common central format (typically a standard base-10 JavaScript floating-point integer), we can instantly derive and output the other bases using native conversion algorithms.',
-                    'For example, JavaScript\'s Number.toString(base) simplifies base translation in our Math Workbench. Typing in any text box updates the central decimal state, which immediately re-renders the remaining inputs, making base translation effortless and educational.'
-                ]
-            ],
-            [
-                'id' => 'image-optimization',
-                'title' => 'Image Formats Decoded: Choosing Between JPG, PNG, and WEBP',
-                'excerpt' => 'A deep dive into compression algorithms and when to use each format to achieve visual clarity while keeping load times minimal.',
-                'author' => 'Marcus Vance',
-                'date' => 'May 02, 2026',
-                'readTime' => '3 min read',
-                'category' => 'Creative Tech',
-                'category_id' => 'creative-tech',
-                'imageGlow' => 'rgba(0, 242, 254, 0.1)',
-                'content' => [
-                    'Web optimization depends heavily on visual assets. An unoptimized image can slow a web page to a crawl, harming SEO rankings and driving visitors away. Choosing the correct file format is the first line of defense.',
-                    'JPEG (Joint Photographic Experts Group) uses lossy compression. It discards minor color data to compress natural scenery and photography into small file sizes, though it lacks transparency support.',
-                    'PNG (Portable Network Graphics) uses lossless compression. It preserves every single pixel, making it ideal for logos, screenshots, and graphics requiring transparent backgrounds (alpha channel), albeit at the cost of larger file sizes.',
-                    'WEBP, developed by Google, represents the modern standard. It provides both lossy and lossless compression, rendering files up to 30% smaller than JPEGs and PNGs while retaining comparable quality and alpha transparency. When using Quantum Qbit\'s Image Studio, saving as PNG is excellent for details, while converting to WEBP ensures your web app runs blazing fast.'
-                ]
-            ]
-        ];
-        file_put_contents($blogsFile, json_encode($defaultBlogs, JSON_PRETTY_PRINT));
-        return $defaultBlogs;
+        file_put_contents($blogsFile, json_encode([], JSON_PRETTY_PRINT));
+        return [];
     }
     
     $data = file_get_contents($blogsFile);
-    return json_decode($data, true);
+    $parsed = json_decode($data, true);
+    return is_array($parsed) ? $parsed : [];
 }
 
 // Helper to save blogs to JSON fallback
