@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Image, FileText, Calculator, ArrowLeft, Award } from 'lucide-react';
+import { TiltCard } from '../components/TiltCard';
 const ImageEditor = React.lazy(() => import('./tools/ImageEditor').then(m => ({ default: m.ImageEditor })));
 const PdfEditor = React.lazy(() => import('./tools/PdfEditor').then(m => ({ default: m.PdfEditor })));
 const MathCalculators = React.lazy(() => import('./tools/MathCalculators').then(m => ({ default: m.MathCalculators })));
@@ -175,7 +176,7 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, def
         {filteredTools.length > 0 ? (
           <div style={styles.toolsGrid}>
             {filteredTools.map((tool) => (
-              <div key={tool.id} className="glass-card" style={styles.toolCard}>
+              <TiltCard key={tool.id} className="glass-card" style={styles.toolCard} maxTilt={7} scale={1.02}>
                 <div style={styles.cardHeader}>
                   <div style={styles.iconBox}>{tool.icon}</div>
                   <span style={styles.tag}>{tool.category}</span>
@@ -195,7 +196,7 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, def
                 >
                   Open Tool
                 </a>
-              </div>
+              </TiltCard>
             ))}
           </div>
         ) : (

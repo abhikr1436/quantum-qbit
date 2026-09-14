@@ -178,7 +178,7 @@ const styles = {
     fontSize: '1.25rem',
     fontWeight: 700,
     letterSpacing: '-0.02em',
-    color: '#ffffff',
+    color: 'var(--text-primary)',
   },
   logoAccent: {
     background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
@@ -203,17 +203,18 @@ const styles = {
     fontSize: '0.95rem',
     fontWeight: 500,
     padding: '8px 16px',
-    borderRadius: '6px',
+    borderRadius: '8px',
     cursor: 'pointer',
     transition: 'var(--transition-smooth)',
   },
   activeNavLink: {
     color: 'var(--primary)',
-    background: 'rgba(0, 242, 254, 0.05)',
-    boxShadow: 'inset 0 0 0 1px rgba(0, 242, 254, 0.15)',
+    background: 'var(--primary-glow)',
+    boxShadow: 'inset 0 0 0 1px var(--primary)',
+    fontWeight: 600,
   },
   themeToggleBtn: {
-    background: 'rgba(255, 255, 255, 0.02)',
+    background: 'var(--bg-card)',
     border: '1px solid var(--border-glass)',
     color: 'var(--text-primary)',
     borderRadius: '8px',
@@ -226,7 +227,7 @@ const styles = {
     transition: 'var(--transition-smooth)',
   },
   sidebarToggleBtn: {
-    background: 'rgba(255, 255, 255, 0.02)',
+    background: 'var(--bg-card)',
     border: '1px solid var(--border-glass)',
     color: 'var(--text-primary)',
     borderRadius: '8px',
@@ -256,7 +257,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '12px',
-    boxShadow: '0 10px 20px rgba(0,0,0,0.5)',
+    boxShadow: 'var(--shadow-card)',
   },
   mobileNavLink: {
     background: 'transparent',
@@ -274,7 +275,8 @@ const styles = {
   },
   mobileActiveNavLink: {
     color: 'var(--primary)',
-    background: 'rgba(0, 242, 254, 0.05)',
+    background: 'var(--primary-glow)',
+    borderLeft: '3px solid var(--primary)',
   },
 };
 

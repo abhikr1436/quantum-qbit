@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Sidebar from './components/Sidebar';
+import Background3DScene from './components/Background3DScene';
 import { usePath, navigate } from './utils/router';
 import { updateSEO } from './utils/seo';
 
@@ -39,7 +40,7 @@ function App() {
   const [blogCategory, setBlogCategory] = useState<string>('all');
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('theme');
-    return (saved === 'light' || saved === 'dark') ? saved : 'dark';
+    return (saved === 'light' || saved === 'dark') ? saved : 'light';
   });
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -377,6 +378,7 @@ function App() {
 
   return (
     <div style={styles.appContainer}>
+      <Background3DScene />
       <Navbar 
         currentPage={page} 
         setCurrentPage={handleSetCurrentPage} 
