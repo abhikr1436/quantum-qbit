@@ -1,8 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Cpu, Image as ImageIcon, FileText, Calculator, ShieldCheck, Zap, Lock, BookOpen, Award, Sparkles, ArrowRight, Shield } from 'lucide-react';
+import { 
+  Cpu, 
+  Image as ImageIcon, 
+  FileText, 
+  Calculator, 
+  ShieldCheck, 
+  Zap, 
+  Lock, 
+  BookOpen, 
+  Award, 
+  ArrowRight, 
+  Sparkles, 
+  Terminal, 
+  Layers, 
+  CheckCircle2, 
+  ExternalLink 
+} from 'lucide-react';
 import { navigate } from '../utils/router';
-import { ThreeDQbit } from '../components/ThreeDQbit';
-import { QuantumCompanion } from '../components/QuantumCompanion';
+import Cerebrium3DRibbon from '../components/Cerebrium3DRibbon';
+import CerebriumFeatureTabs from '../components/CerebriumFeatureTabs';
+import HoldToAccelerate from '../components/HoldToAccelerate';
 import { TiltCard } from '../components/TiltCard';
 
 interface BlogPost {
@@ -13,23 +30,12 @@ interface BlogPost {
   date: string;
   readTime: string;
   category: string;
-  imageGlow: string;
 }
 
 export const LandingPage: React.FC = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [scrollY, setScrollY] = useState(0);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   useEffect(() => {
     const fetchBlogs = async () => {
@@ -39,10 +45,10 @@ export const LandingPage: React.FC = () => {
           const data = await response.json();
           setPosts(data);
         } else {
-          loadFallbackBlogs();
+          loadDefaultBlogs();
         }
       } catch {
-        loadFallbackBlogs();
+        loadDefaultBlogs();
       }
     };
 
@@ -52,11 +58,10 @@ export const LandingPage: React.FC = () => {
           id: 'browser-privacy',
           title: "Why Browser-Only Tools Are the Future of Web Utility Apps",
           excerpt: "In an era of rising security concerns, running calculations, converting PDFs, and editing photos locally protects user data from server hazards.",
-          author: "Quantum Engineering Team",
+          author: "Quantum Team",
           date: "May 18, 2026",
-          readTime: "4 min read",
-          category: "Privacy & Security",
-          imageGlow: 'rgba(43, 122, 143, 0.15)'
+          readTime: "4 MIN READ",
+          category: "PRIVACY & SECURITY"
         },
         {
           id: 'base-math',
@@ -64,9 +69,8 @@ export const LandingPage: React.FC = () => {
           excerpt: "Understanding how computers translate binary, octal, decimal, and hexadecimal representations under the hood to optimize data structures.",
           author: "Dr. Clara Chen",
           date: "May 10, 2026",
-          readTime: "5 min read",
-          category: "Computer Science",
-          imageGlow: 'rgba(99, 102, 241, 0.15)'
+          readTime: "5 MIN READ",
+          category: "COMPUTER SCIENCE"
         },
         {
           id: 'image-optimization',
@@ -74,36 +78,16 @@ export const LandingPage: React.FC = () => {
           excerpt: "A deep dive into compression algorithms and when to use each format to achieve visual clarity while keeping load times minimal.",
           author: "Marcus Vance",
           date: "May 02, 2026",
-          readTime: "4 min read",
-          category: "Creative Tech",
-          imageGlow: 'rgba(43, 122, 143, 0.15)'
+          readTime: "4 MIN READ",
+          category: "CREATIVE TECH"
         }
       ];
       setPosts(defaultPosts);
     };
 
-    const loadFallbackBlogs = () => {
-      const local = localStorage.getItem('quantum_blogs');
-      if (local) {
-        try {
-          const parsed = JSON.parse(local);
-          if (Array.isArray(parsed) && parsed.length >= 8) {
-            setPosts(parsed.slice(0, 3));
-          } else {
-            loadDefaultBlogs();
-          }
-        } catch {
-          loadDefaultBlogs();
-        }
-      } else {
-        loadDefaultBlogs();
-      }
-    };
-
     fetchBlogs();
   }, []);
 
-  // Track scroll position
   useEffect(() => {
     const handleScroll = () => {
       setScrollY(window.scrollY);
@@ -112,30 +96,6 @@ export const LandingPage: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Intersection Observer for scroll animations
-  useEffect(() => {
-    if (typeof IntersectionObserver === 'undefined') {
-      const elements = document.querySelectorAll('.reveal-on-scroll');
-      elements.forEach(el => el.classList.add('active'));
-      return;
-    }
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('active');
-        }
-      });
-    }, { threshold: 0.12 });
-
-    const elements = document.querySelectorAll('.reveal-on-scroll');
-    elements.forEach(el => observer.observe(el));
-    return () => {
-      elements.forEach(el => observer.unobserve(el));
-    };
-  }, [posts]);
-
-  // Mouse move for 3D hero tilt
   const handleMouseMove = (e: React.MouseEvent) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width - 0.5;
@@ -147,615 +107,444 @@ export const LandingPage: React.FC = () => {
     setMousePos({ x: 0, y: 0 });
   };
 
-  const features = [
-    {
-      icon: <Lock size={22} style={{ color: 'var(--primary)' }} />,
-      title: "100% Client-Side Privacy",
-      description: "Your files never touch a server. All operations (image resize, PDF conversion, calculations) happen securely in your browser."
-    },
-    {
-      icon: <Zap size={22} style={{ color: 'var(--secondary)' }} />,
-      title: "Sub-Second Execution",
-      description: "Powered by modern WebAssembly and HTML5 Canvas API. Experience instant processing speeds without network latency."
-    },
-    {
-      icon: <ShieldCheck size={22} style={{ color: 'var(--primary)' }} />,
-      title: "Zero Ads & Tracker Free",
-      description: "A clean, modern workspace designed for professionals and developers. No login required, no paywalls, just pure tools."
-    }
-  ];
-
-  // Dynamic 3D position of the Bloch Sphere centerpiece along scroll glide path
-  const getQbitPosition = () => {
-    if (isMobile) {
-      const op = Math.max(0, 1 - scrollY * 0.0035);
-      return {
-        transform: `translate3d(50vw, 30vh, 0) translate(-50%, -50%) scale(${Math.max(0.4, 0.8 - scrollY * 0.001)})`,
-        opacity: op,
-        pointerEvents: 'none' as const
-      };
-    }
-
-    const maxScroll = 2200;
-    const p = Math.min(scrollY / maxScroll, 1);
-
-    let left: number;
-    let top: number;
-    let scale: number;
-
-    if (p < 0.22) {
-      const t = p / 0.22;
-      left = 76 + (82 - 76) * t;
-      top = 46 + (58 - 46) * t;
-      scale = 1.0 - 0.2 * t;
-    } else if (p < 0.55) {
-      const t = (p - 0.22) / 0.33;
-      left = 82 + (18 - 82) * t;
-      top = 58 + (46 - 58) * t;
-      scale = 0.8 - 0.15 * t;
-    } else if (p < 0.82) {
-      const t = (p - 0.55) / 0.27;
-      left = 18 + (82 - 18) * t;
-      top = 46 + (54 - 46) * t;
-      scale = 0.65 + 0.2 * t;
-    } else {
-      const t = (p - 0.82) / 0.18;
-      left = 82 + (50 - 82) * t;
-      top = 54 + (70 - 54) * t;
-      scale = 0.85 - 0.3 * t;
-    }
-
-    const op = scrollY > 2600 ? Math.max(0, 1 - (scrollY - 2600) * 0.003) : 1;
-
-    return {
-      transform: `translate3d(${left}vw, ${top}vh, 0) translate(-50%, -50%) scale(${scale})`,
-      opacity: op,
-      pointerEvents: 'auto' as const
-    };
-  };
-
-  // Parallax calculations for hero backdrop
-  const translateY = scrollY * 0.12;
-  const heroOpacity = Math.max(0, 1 - scrollY * 0.0022);
-
   return (
-    <div style={styles.landing}>
-      {/* 3D Bloch Sphere Canvas Centerpiece */}
-      <div
-        className="qbit-3d-canvas-container"
-        style={{
-          position: 'fixed',
-          left: 0,
-          top: 0,
-          width: isMobile ? '280px' : '440px',
-          height: isMobile ? '280px' : '440px',
-          zIndex: 8,
-          transition: 'transform 0.75s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease-out',
-          ...getQbitPosition()
-        }}
-      >
-        <ThreeDQbit scrollY={scrollY} mousePos={mousePos} />
-      </div>
-
-      {/* Hero Section */}
+    <div style={{ position: 'relative', overflowX: 'hidden' }}>
+      {/* 1. Hero Section (Cerebrium Dark Obsidian + 3D Ribbon) */}
       <section
-        style={styles.heroSection}
+        style={{
+          position: 'relative',
+          padding: 'clamp(50px, 8vw, 100px) 24px 60px 24px',
+          minHeight: '88vh',
+          display: 'flex',
+          alignItems: 'center'
+        }}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="container" style={styles.heroGrid}>
-          {/* Hero Left Content */}
-          <div style={{ ...styles.heroContent, opacity: heroOpacity }}>
-            {/* 3D Badge */}
-            <div style={styles.badge} className="animate-fade-in">
-              <Cpu size={14} style={{ color: 'var(--primary)' }} />
-              <span>Quantum Qbit v2.0 • 100% Client-Side</span>
+        <div className="container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '40px', alignItems: 'center' }}>
+          
+          {/* Hero Left: Headline, Badge, CTAs, Tech Ticker */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', zIndex: 2 }}>
+            {/* Cerebrium Monospace Badge */}
+            <div className="mono-badge" style={{ gap: '8px' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 10px var(--primary)' }}></span>
+              SERVERLESS CLIENT-SIDE UTILITIES • V2.0
             </div>
 
-            <h1 style={styles.heroTitle} className="animate-fade-in">
-              Zero Server Latency.<br />
-              <span className="gradient-text">Absolute Privacy.</span>
+            {/* Cerebrium Signature Headline with Hot Pink Highlight */}
+            <h1
+              style={{
+                fontSize: 'clamp(2.5rem, 5.5vw, 4.4rem)',
+                lineHeight: 1.08,
+                fontWeight: 800,
+                letterSpacing: '-0.04em',
+                margin: 0,
+                color: 'var(--text-primary)'
+              }}
+            >
+              Real-time Web Utilities that <span className="cerebrium-highlight">scale</span> with you.
             </h1>
 
-            <p style={styles.heroSubtitle} className="animate-fade-in">
-              Experience the next generation of web utility applications. Transform digital photos, convert complex PDFs, and compute math formulas directly in your browser without uploading files to remote servers.
+            {/* Subtitle */}
+            <p
+              style={{
+                fontSize: 'clamp(1.05rem, 1.8vw, 1.22rem)',
+                color: 'var(--text-secondary)',
+                lineHeight: 1.6,
+                maxWidth: '560px',
+                margin: 0
+              }}
+            >
+              Execute voice agents, image edits, PDF compression, and math equations with sub-second cold starts. 100% client-side privacy. Zero server latency.
             </p>
 
-            {/* Quick Action Buttons */}
-            <div style={styles.ctaGroup} className="animate-fade-in">
-              <button className="btn-primary" onClick={() => navigate('/tools')}>
-                <Sparkles size={16} /> Explore Tools
+            {/* CTA Button Group */}
+            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center', marginTop: '6px' }}>
+              <button
+                className="btn-cerebrium-pink"
+                onClick={() => navigate('/tools')}
+              >
+                Start Using Tools <ArrowRight size={16} />
               </button>
-              <button className="btn-secondary" onClick={() => navigate('/blogs')}>
+              <button
+                className="btn-cerebrium-dark"
+                onClick={() => navigate('/blogs')}
+              >
                 <BookOpen size={16} /> Read Articles
               </button>
             </div>
 
-            {/* Trust Highlights / Privacy Guarantees */}
-            <div style={styles.trustRow}>
-              <div style={styles.trustItem}>
-                <Shield size={16} style={{ color: 'var(--primary)' }} />
-                <span>Zero File Uploads</span>
+            {/* Cerebrium Tech & Engine Ticker */}
+            <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--border-glass)' }}>
+              <div style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginBottom: '10px', letterSpacing: '0.06em' }}>
+                POWERED BY CLIENT-SIDE STANDARDS
               </div>
-              <div style={styles.trustItem}>
-                <Zap size={16} style={{ color: 'var(--secondary)' }} />
-                <span>Sub-Second WASM</span>
-              </div>
-              <div style={styles.trustItem}>
-                <Award size={16} style={{ color: 'var(--accent)' }} />
-                <span>Open & Free</span>
+              <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Cpu size={15} style={{ color: 'var(--primary)' }} /> WASM Core
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Layers size={15} style={{ color: 'var(--primary)' }} /> HTML5 Canvas 2D
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <FileText size={15} style={{ color: 'var(--primary)' }} /> PDF.js
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <ShieldCheck size={15} style={{ color: '#10B981' }} /> 0 Byte Upload
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Hero Right Column: Interactive 3D Mascot & Scene */}
+          {/* Hero Right: 3D Torus Ribbon & Floating Quantum Core */}
           <div
             style={{
-              ...styles.hero3DCol,
-              transform: `translateY(${translateY}px) perspective(1000px) rotateX(${mousePos.y * -8}deg) rotateY(${mousePos.x * 8}deg)`,
-              opacity: heroOpacity
+              position: 'relative',
+              width: '100%',
+              height: '460px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1
             }}
           >
-            {/* Interactive Animated Mascot Qbi */}
-            <div style={styles.companionWrapper}>
-              <QuantumCompanion mousePos={mousePos} />
+            <Cerebrium3DRibbon scrollY={scrollY} mousePos={mousePos} />
+
+            {/* Floating Metric Badges with Cerebrium Styling */}
+            <div
+              className="glass-card"
+              style={{
+                position: 'absolute',
+                bottom: '20px',
+                left: '20px',
+                padding: '12px 18px',
+                borderRadius: '14px',
+                border: '1px solid var(--border-glass-active)',
+                background: 'rgba(11, 15, 25, 0.85)',
+                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}
+            >
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981', boxShadow: '0 0 8px #10B981' }}></div>
+              <div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>AVERAGE COLD START</div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)' }}>0.048s Local</div>
+              </div>
+            </div>
+
+            <div
+              className="glass-card"
+              style={{
+                position: 'absolute',
+                top: '30px',
+                right: '20px',
+                padding: '12px 18px',
+                borderRadius: '14px',
+                border: '1px solid var(--border-glass-active)',
+                background: 'rgba(11, 15, 25, 0.85)',
+                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}
+            >
+              <Lock size={16} style={{ color: 'var(--primary)' }} />
+              <div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>SECURITY PROTOCOL</div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)' }}>100% Client RAM</div>
+              </div>
             </div>
           </div>
+
         </div>
       </section>
 
-      {/* Horizontally Scrollable / 3D Tilt Tools Directory */}
-      <section className="reveal-on-scroll" style={styles.showcaseSection}>
-        <div className="container">
-          <div style={styles.sectionHeader}>
-            <div style={styles.sectionBadge}>
-              <Sparkles size={14} /> Local Utilities
-            </div>
-            <h2 style={styles.sectionTitle}>Quantum Utilities Directory</h2>
-            <p style={styles.sectionSubtitle}>Select an offline-first utility application to start instant in-browser processing.</p>
-          </div>
-
-          <div className="horizontal-scroll-row">
-            {/* Card 1: Image Studio */}
-            <TiltCard className="glass-card horizontal-scroll-card" maxTilt={8} scale={1.02}>
-              <div className="scroll-card-content">
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <h3 className="scroll-card-title">
-                    <div style={styles.cardIconBox}>
-                      <ImageIcon size={22} style={{ color: 'var(--primary)' }} />
-                    </div>
-                    <span>Image Studio</span>
-                  </h3>
-                  <span style={styles.categoryPill}>Canvas API</span>
-                </div>
-                <p className="scroll-card-desc">
-                  Edit, compress, crop, and convert digital images locally in high definition without server lag or quality loss.
-                </p>
-                <div className="scroll-card-links-grid">
-                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/image-editor')}>Editor</button>
-                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/image-compressor')}>Compressor</button>
-                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/image-transform')}>Transform</button>
-                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/remove-bg')}>BG Removal</button>
-                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/image-crop')}>Crop</button>
-                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/image-resize')}>Resize</button>
-                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/image-dpi')}>DPI Settings</button>
-                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/image-converter')}>Converter</button>
-                </div>
-              </div>
-            </TiltCard>
-
-            {/* Card 2: PDF Workshop */}
-            <TiltCard className="glass-card horizontal-scroll-card" maxTilt={8} scale={1.02}>
-              <div className="scroll-card-content">
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <h3 className="scroll-card-title">
-                    <div style={{ ...styles.cardIconBox, background: 'var(--secondary-glow)' }}>
-                      <FileText size={22} style={{ color: 'var(--secondary)' }} />
-                    </div>
-                    <span>PDF Workshop</span>
-                  </h3>
-                  <span style={{ ...styles.categoryPill, color: 'var(--secondary)' }}>PDF.js Core</span>
-                </div>
-                <p className="scroll-card-desc">
-                  Shrink PDF sizes, convert images to standard documents, and parse text offline with absolute safety.
-                </p>
-                <div className="scroll-card-links-grid">
-                  <button className="scroll-card-link-btn btn-purple" onClick={() => navigate('/tools/pdf-compressor')}>Compressor</button>
-                  <button className="scroll-card-link-btn btn-purple" onClick={() => navigate('/tools/images-to-pdf')}>Images to PDF</button>
-                  <button className="scroll-card-link-btn btn-purple" onClick={() => navigate('/tools/convert-to-pdf')}>Office to PDF</button>
-                  <button className="scroll-card-link-btn btn-purple" onClick={() => navigate('/tools/pdf-to-word')}>PDF to Word</button>
-                </div>
-              </div>
-            </TiltCard>
-
-            {/* Card 3: Math Calculator */}
-            <TiltCard className="glass-card horizontal-scroll-card" maxTilt={8} scale={1.02}>
-              <div className="scroll-card-content">
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <h3 className="scroll-card-title">
-                    <div style={styles.cardIconBox}>
-                      <Calculator size={22} style={{ color: 'var(--primary)' }} />
-                    </div>
-                    <span>Math Calculator</span>
-                  </h3>
-                  <span style={styles.categoryPill}>Math Engine</span>
-                </div>
-                <p className="scroll-card-desc">
-                  High-precision scientific computation, hexadecimal/binary radix conversion, unit adapter, and equation solver.
-                </p>
-                <div className="scroll-card-links-grid">
-                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/math-scientific')}>Scientific</button>
-                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/math-base')}>Base Radix</button>
-                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/math-unit')}>Unit Adapter</button>
-                  <button className="scroll-card-link-btn" onClick={() => navigate('/tools/math-solver')}>Equation Solver</button>
-                  <button className="scroll-card-link-btn" style={{ gridColumn: 'span 2' }} onClick={() => navigate('/tools/math-plotter')}>2D Graph Plotter</button>
-                </div>
-              </div>
-            </TiltCard>
-
-            {/* Card 4: PYQ Mock Tests */}
-            <TiltCard className="glass-card horizontal-scroll-card" maxTilt={8} scale={1.02}>
-              <div className="scroll-card-content">
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <h3 className="scroll-card-title">
-                    <div style={{ ...styles.cardIconBox, background: 'var(--secondary-glow)' }}>
-                      <Award size={22} style={{ color: 'var(--secondary)' }} />
-                    </div>
-                    <span>PYQ Mock Tests</span>
-                  </h3>
-                  <span style={{ ...styles.categoryPill, color: 'var(--secondary)' }}>CBT Simulator</span>
-                </div>
-                <p className="scroll-card-desc">
-                  Practice standard Technical Assistant and Engineer competitive exams with genuine Computer Based Test interfaces.
-                </p>
-                <div className="scroll-card-links-grid">
-                  <a
-                    href="/isro-ta-computer-science-pyq/"
-                    className="scroll-card-link-btn btn-purple"
-                    style={{ gridColumn: 'span 2', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                  >
-                    ISRO TA CS Mock Test <ArrowRight size={14} />
-                  </a>
-                  <button className="scroll-card-link-btn btn-purple" onClick={() => navigate('/mock-tests')} style={{ gridColumn: 'span 2' }}>
-                    Browse All Mock Tests
-                  </button>
-                </div>
-              </div>
-            </TiltCard>
-          </div>
-        </div>
+      {/* 2. "Why Quantum Qbit" Tabbed Section (Cerebrium Alabaster Container) */}
+      <section className="container">
+        <CerebriumFeatureTabs />
       </section>
 
-      {/* Features Grid */}
-      <section className="reveal-on-scroll" style={styles.featuresSection}>
-        <div className="container">
-          <div style={styles.sectionHeader}>
-            <div style={styles.sectionBadge}>
-              <ShieldCheck size={14} /> Architecture
-            </div>
-            <h2 style={styles.sectionTitle}>Engineered for Speed & Security</h2>
-            <p style={styles.sectionSubtitle}>We reimagined web utility tools to put user privacy and desktop-level performance first.</p>
-          </div>
-          <div style={styles.featuresGrid}>
-            {features.map((feature, idx) => (
-              <TiltCard key={idx} className="glass-card" style={styles.featureCard} maxTilt={6}>
-                <div style={styles.featureIconContainer}>
-                  {feature.icon}
-                </div>
-                <h3 style={styles.featureTitle}>{feature.title}</h3>
-                <p style={styles.featureDesc}>{feature.description}</p>
-              </TiltCard>
-            ))}
-          </div>
-        </div>
+      {/* 3. Touch & Hold Acceleration Showcase */}
+      <section className="container" style={{ margin: '60px auto' }}>
+        <HoldToAccelerate />
       </section>
 
-      {/* Blogs & Articles Section */}
-      <section className="reveal-on-scroll" style={styles.blogsSection}>
-        <div className="container">
-          <div style={styles.sectionHeader}>
-            <div style={styles.sectionBadge}>
-              <BookOpen size={14} /> Knowledge Base
-            </div>
-            <h2 style={styles.sectionTitle}>Latest Engineering Articles</h2>
-            <p style={styles.sectionSubtitle}>Stay informed with in-depth guides on privacy, cryptography, web performance, and math.</p>
+      {/* 4. Tools Directory Bento Grid (Obsidian Dark with Hot Pink Accents) */}
+      <section className="container" style={{ margin: '80px auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: '44px', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
+          <div className="mono-badge">
+            <span>•</span> BROWSE TOOLS DIRECTORY
           </div>
-
-          <div className="horizontal-scroll-row">
-            {posts.map((post) => (
-              <TiltCard key={post.id} className="glass-card blog-scroll-card" maxTilt={6} scale={1.02}>
-                <div className="blog-body">
-                  <span style={{
-                    fontSize: '0.78rem',
-                    color: 'var(--primary)',
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>{post.category}</span>
-                  <h3 className="blog-title" onClick={() => navigate(`/blogs/${post.id}`)}>
-                    {post.title}
-                  </h3>
-                  <p className="blog-excerpt">{post.excerpt}</p>
-                </div>
-                <div className="blog-footer">
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{post.readTime}</span>
-                  <button
-                    className="scroll-card-link-btn"
-                    onClick={() => navigate(`/blogs/${post.id}`)}
-                    style={{ padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                  >
-                    Read <ArrowRight size={12} />
-                  </button>
-                </div>
-              </TiltCard>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Bottom CTA Banner */}
-      <section className="reveal-on-scroll" style={styles.ctaSection}>
-        <TiltCard className="glass-card" style={styles.ctaCard} maxTilt={4}>
-          <div style={styles.ctaIconBadge}>
-            <Sparkles size={24} style={{ color: 'var(--primary)' }} />
-          </div>
-          <h2 style={styles.ctaTitle}>Ready to experience privacy-first web utilities?</h2>
-          <p style={styles.ctaDesc}>
-            All tools run 100% locally in your browser. No file tracking, zero server latency, completely free to use.
+          <h2 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 800, margin: 0, letterSpacing: '-0.03em' }}>
+            Production-Ready <span className="cerebrium-highlight">Client Utilities</span>
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', maxWidth: '580px', margin: 0, lineHeight: 1.6 }}>
+            Run image transformations, document compilations, and mathematical algorithms offline without server limits.
           </p>
-          <div style={styles.ctaButtons}>
-            <button className="btn-primary" onClick={() => navigate('/tools')}>
-              <Sparkles size={16} /> Open Web Utilities
+        </div>
+
+        {/* Bento Grid */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '24px'
+          }}
+        >
+          {/* Card 1: Image Studio */}
+          <TiltCard className="glass-card" style={{ padding: '30px', display: 'flex', flexDirection: 'column', gap: '18px' }} maxTilt={8}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255, 46, 147, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <ImageIcon size={22} style={{ color: 'var(--primary)' }} />
+              </div>
+              <span className="mono-badge">CANVAS WASM</span>
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 700, margin: '0 0 8px 0' }}>Image Studio</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: 1.5, margin: 0 }}>
+                Adjust colors, remove backgrounds, crop, resize, and convert formats in sub-second offline execution.
+              </p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: 'auto' }}>
+              <button className="scroll-card-link-btn" onClick={() => navigate('/tools/image-editor')}>Editor</button>
+              <button className="scroll-card-link-btn" onClick={() => navigate('/tools/image-compressor')}>Compressor</button>
+              <button className="scroll-card-link-btn" onClick={() => navigate('/tools/remove-bg')}>BG Removal</button>
+              <button className="scroll-card-link-btn" onClick={() => navigate('/tools/image-converter')}>Converter</button>
+            </div>
+          </TiltCard>
+
+          {/* Card 2: PDF Workshop */}
+          <TiltCard className="glass-card" style={{ padding: '30px', display: 'flex', flexDirection: 'column', gap: '18px' }} maxTilt={8}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255, 46, 147, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <FileText size={22} style={{ color: 'var(--primary)' }} />
+              </div>
+              <span className="mono-badge">PDF.JS WORKER</span>
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 700, margin: '0 0 8px 0' }}>PDF Workshop</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: 1.5, margin: 0 }}>
+                Compress heavy PDF manuals, bundle photos into documents, and extract text drafts with client OCR.
+              </p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: 'auto' }}>
+              <button className="scroll-card-link-btn" onClick={() => navigate('/tools/pdf-compressor')}>Compressor</button>
+              <button className="scroll-card-link-btn" onClick={() => navigate('/tools/images-to-pdf')}>Images to PDF</button>
+              <button className="scroll-card-link-btn" onClick={() => navigate('/tools/convert-to-pdf')}>Office to PDF</button>
+              <button className="scroll-card-link-btn" onClick={() => navigate('/tools/pdf-to-word')}>PDF to Word</button>
+            </div>
+          </TiltCard>
+
+          {/* Card 3: Math Workbench */}
+          <TiltCard className="glass-card" style={{ padding: '30px', display: 'flex', flexDirection: 'column', gap: '18px' }} maxTilt={8}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255, 46, 147, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Calculator size={22} style={{ color: 'var(--primary)' }} />
+              </div>
+              <span className="mono-badge">IEEE-754 CORE</span>
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 700, margin: '0 0 8px 0' }}>Math Workbench</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: 1.5, margin: 0 }}>
+                Scientific notation calculator, cross-input Hex/Bin/Dec radix conversion, unit adapter, and 2D graph plotter.
+              </p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: 'auto' }}>
+              <button className="scroll-card-link-btn" onClick={() => navigate('/tools/math-scientific')}>Scientific</button>
+              <button className="scroll-card-link-btn" onClick={() => navigate('/tools/math-base')}>Base Radix</button>
+              <button className="scroll-card-link-btn" onClick={() => navigate('/tools/math-unit')}>Unit Adapter</button>
+              <button className="scroll-card-link-btn" onClick={() => navigate('/tools/math-solver')}>Equation Solver</button>
+            </div>
+          </TiltCard>
+
+          {/* Card 4: Mock Tests */}
+          <TiltCard className="glass-card" style={{ padding: '30px', display: 'flex', flexDirection: 'column', gap: '18px' }} maxTilt={8}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255, 46, 147, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Award size={22} style={{ color: 'var(--primary)' }} />
+              </div>
+              <span className="mono-badge">CBT SIMULATOR</span>
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 700, margin: '0 0 8px 0' }}>PYQ Mock Tests</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: 1.5, margin: 0 }}>
+                Practice real Technical Assistant & Engineer competitive exams with standard Computer Based Test simulation.
+              </p>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: 'auto' }}>
+              <a
+                href="/isro-ta-computer-science-pyq/"
+                className="btn-cerebrium-pink"
+                style={{ textDecoration: 'none', justifyContent: 'center', fontSize: '0.86rem', padding: '10px 16px' }}
+              >
+                ISRO TA CS Mock Test <ArrowRight size={14} />
+              </a>
+              <button className="btn-secondary" onClick={() => navigate('/mock-tests')} style={{ justifyContent: 'center', fontSize: '0.86rem', padding: '10px 16px' }}>
+                Browse All Tests
+              </button>
+            </div>
+          </TiltCard>
+        </div>
+      </section>
+
+      {/* 5. Cerebrium Security & Compliance Section */}
+      <section className="container" style={{ margin: '90px auto' }}>
+        <div
+          className="glass-card"
+          style={{
+            padding: 'clamp(40px, 6vw, 70px)',
+            borderRadius: 'var(--radius-xl)',
+            background: 'radial-gradient(ellipse at center, rgba(139, 30, 90, 0.15) 0%, rgba(11, 15, 25, 0.95) 75%)',
+            border: '1px solid var(--border-glass-active)',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '20px'
+          }}
+        >
+          <div className="mono-badge">
+            <span>•</span> PRIVACY & SECURITY FIRST
+          </div>
+          <h2 style={{ fontSize: 'clamp(2rem, 4vw, 3.4rem)', fontWeight: 800, margin: 0, letterSpacing: '-0.03em', lineHeight: 1.15 }}>
+            Stable, <span className="cerebrium-highlight">secure</span> and 100% private.
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '640px', lineHeight: 1.65, margin: 0 }}>
+            Because computation runs entirely on your device’s local CPU and GPU, your files, documents, and formulas never leave your browser window.
+          </p>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: '20px',
+              width: '100%',
+              maxWidth: '850px',
+              marginTop: '20px'
+            }}
+          >
+            <div style={{ padding: '20px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-glass)', borderRadius: '16px', textAlign: 'left' }}>
+              <div style={{ color: 'var(--primary)', fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CheckCircle2 size={16} /> Client Isolation
+              </div>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.86rem', marginTop: '8px', lineHeight: 1.5 }}>
+                Sandboxed execution inside the browser runtime prevents any unauthorized external memory access.
+              </p>
+            </div>
+
+            <div style={{ padding: '20px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-glass)', borderRadius: '16px', textAlign: 'left' }}>
+              <div style={{ color: 'var(--primary)', fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CheckCircle2 size={16} /> Zero Storage Risk
+              </div>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.86rem', marginTop: '8px', lineHeight: 1.5 }}>
+                Zero logs, zero database writes, and zero third-party cloud storage risks. Your files exist only in your RAM.
+              </p>
+            </div>
+
+            <div style={{ padding: '20px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-glass)', borderRadius: '16px', textAlign: 'left' }}>
+              <div style={{ color: 'var(--primary)', fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CheckCircle2 size={16} /> Free & Unrestricted
+              </div>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.86rem', marginTop: '8px', lineHeight: 1.5 }}>
+                No credit cards, no login gates, and no hidden subscriptions. Pure client utility for everyone.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. Engineering Blog Section */}
+      <section className="container" style={{ margin: '80px auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <div className="mono-badge">
+              <span>•</span> ENGINEERING & ARCHITECTURE
+            </div>
+            <h2 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.6rem)', fontWeight: 800, margin: '8px 0 0 0', letterSpacing: '-0.03em' }}>
+              Latest Research & Guides
+            </h2>
+          </div>
+          <button className="btn-secondary" onClick={() => navigate('/blogs')}>
+            View All Articles <ArrowRight size={14} />
+          </button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+          {posts.map((post) => (
+            <TiltCard key={post.id} className="glass-card" style={{ padding: '26px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '260px' }} maxTilt={6}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <span className="mono-badge" style={{ fontSize: '0.68rem' }}>{post.category}</span>
+                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{post.readTime}</span>
+                </div>
+                <h3
+                  onClick={() => navigate(`/blogs/${post.id}`)}
+                  style={{ fontSize: '1.2rem', fontWeight: 700, lineHeight: 1.35, cursor: 'pointer', margin: '0 0 10px 0', transition: 'color 0.2s ease' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--primary)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
+                >
+                  {post.title}
+                </h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.5, margin: 0, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {post.excerpt}
+                </p>
+              </div>
+
+              <div style={{ marginTop: '20px', paddingTop: '14px', borderTop: '1px solid var(--border-glass)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{post.author}</span>
+                <span onClick={() => navigate(`/blogs/${post.id}`)} style={{ color: 'var(--primary)', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  Read Article <ArrowRight size={12} />
+                </span>
+              </div>
+            </TiltCard>
+          ))}
+        </div>
+      </section>
+
+      {/* 7. Bottom Conversion Banner */}
+      <section className="container" style={{ margin: '100px auto 60px auto' }}>
+        <div
+          className="glass-card"
+          style={{
+            padding: 'clamp(40px, 6vw, 60px)',
+            borderRadius: 'var(--radius-xl)',
+            background: 'linear-gradient(135deg, rgba(255, 46, 147, 0.12) 0%, rgba(139, 30, 90, 0.25) 50%, rgba(11, 15, 25, 0.95) 100%)',
+            border: '1px solid var(--border-glass-active)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '30px',
+            boxShadow: '0 20px 60px rgba(255, 46, 147, 0.15)'
+          }}
+        >
+          <div style={{ maxWidth: '540px' }}>
+            <div className="mono-badge" style={{ marginBottom: '10px' }}>
+              <span>•</span> READY IN SUB-SECOND
+            </div>
+            <h2 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.6rem)', fontWeight: 800, margin: '0 0 12px 0', letterSpacing: '-0.03em' }}>
+              Start building with <span className="cerebrium-highlight">Quantum Qbit</span> now.
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', lineHeight: 1.6, margin: 0 }}>
+              No installation, no account creation, no tracking. Execute client-side web tools with sub-second speeds.
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+            <button className="btn-cerebrium-pink" onClick={() => navigate('/tools')}>
+              Launch Web Utilities <ArrowRight size={16} />
             </button>
-            <button className="btn-secondary" onClick={() => navigate('/about')}>
-              Learn About Our Mission
+            <button className="btn-cerebrium-dark" onClick={() => navigate('/about')}>
+              About Our Mission
             </button>
           </div>
-        </TiltCard>
+        </div>
       </section>
+
     </div>
   );
-};
-
-const styles = {
-  landing: {
-    paddingBottom: '80px',
-    position: 'relative' as const,
-  },
-  heroSection: {
-    position: 'relative' as const,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '70px 24px 90px 24px',
-    overflow: 'hidden',
-    minHeight: '82vh',
-  },
-  heroGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1.15fr 0.85fr',
-    gap: '40px',
-    alignItems: 'center',
-    width: '100%',
-  },
-  heroContent: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'flex-start',
-    gap: '22px',
-    textAlign: 'left' as const,
-    zIndex: 2,
-    transition: 'opacity 0.2s ease-out',
-  },
-  hero3DCol: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 2,
-    transition: 'transform 0.1s ease-out, opacity 0.2s ease-out',
-  },
-  companionWrapper: {
-    position: 'relative' as const,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
-    background: 'var(--bg-card)',
-    backdropFilter: 'blur(20px)',
-    border: '1px solid var(--border-glass-active)',
-    borderRadius: '28px',
-    padding: '24px 28px',
-    boxShadow: 'var(--shadow-card)',
-  },
-  badge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '8px',
-    backgroundColor: 'var(--bg-card)',
-    border: '1px solid var(--border-glass-active)',
-    borderRadius: '100px',
-    padding: '6px 16px',
-    fontSize: '0.85rem',
-    fontWeight: 500,
-    color: 'var(--text-secondary)',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-  },
-  heroTitle: {
-    fontSize: 'clamp(2.4rem, 5.2vw, 4.0rem)',
-    lineHeight: 1.15,
-    fontWeight: 800,
-    margin: 0,
-    letterSpacing: '-0.03em',
-  },
-  heroSubtitle: {
-    fontSize: 'clamp(1rem, 1.8vw, 1.12rem)',
-    color: 'var(--text-secondary)',
-    lineHeight: 1.65,
-    maxWidth: '560px',
-    margin: 0,
-  },
-  ctaGroup: {
-    display: 'flex',
-    gap: '14px',
-    marginTop: '6px',
-    flexWrap: 'wrap' as const,
-  },
-  trustRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '24px',
-    marginTop: '10px',
-    paddingTop: '16px',
-    borderTop: '1px solid var(--border-glass)',
-    flexWrap: 'wrap' as const,
-  },
-  trustItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    fontSize: '0.85rem',
-    fontWeight: 500,
-    color: 'var(--text-secondary)',
-  },
-  showcaseSection: {
-    padding: '60px 0',
-  },
-  sectionHeader: {
-    textAlign: 'center' as const,
-    marginBottom: '36px',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '8px',
-    alignItems: 'center',
-  },
-  sectionBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '6px',
-    fontSize: '0.78rem',
-    fontWeight: 600,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.06em',
-    color: 'var(--primary)',
-    background: 'var(--primary-glow)',
-    padding: '4px 12px',
-    borderRadius: '100px',
-    marginBottom: '4px',
-  },
-  sectionTitle: {
-    fontSize: 'clamp(1.8rem, 3.8vw, 2.4rem)',
-    fontWeight: 700,
-    margin: 0,
-  },
-  sectionSubtitle: {
-    color: 'var(--text-secondary)',
-    fontSize: '0.98rem',
-    maxWidth: '540px',
-    margin: 0,
-    lineHeight: 1.55,
-  },
-  cardIconBox: {
-    width: '42px',
-    height: '42px',
-    borderRadius: '10px',
-    background: 'var(--primary-glow)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  categoryPill: {
-    fontSize: '0.72rem',
-    fontWeight: 600,
-    color: 'var(--primary)',
-    background: 'var(--bg-card)',
-    border: '1px solid var(--border-glass)',
-    padding: '3px 8px',
-    borderRadius: '6px',
-  },
-  featuresSection: {
-    padding: '70px 0',
-  },
-  featuresGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-    gap: '24px',
-  },
-  featureCard: {
-    padding: '32px',
-    textAlign: 'left' as const,
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '16px',
-  },
-  featureIconContainer: {
-    width: '48px',
-    height: '48px',
-    borderRadius: '12px',
-    background: 'var(--primary-glow)',
-    border: '1px solid var(--border-glass)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  featureTitle: {
-    fontSize: '1.2rem',
-    fontWeight: 600,
-    margin: 0,
-  },
-  featureDesc: {
-    color: 'var(--text-secondary)',
-    lineHeight: 1.6,
-    fontSize: '0.94rem',
-    margin: 0,
-  },
-  blogsSection: {
-    padding: '60px 0',
-  },
-  ctaSection: {
-    position: 'relative' as const,
-    padding: '60px 24px 80px 24px',
-    display: 'flex',
-    justifyContent: 'center',
-  },
-  ctaCard: {
-    maxWidth: '880px',
-    width: '100%',
-    padding: '54px 36px',
-    textAlign: 'center' as const,
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    gap: '18px',
-  },
-  ctaIconBadge: {
-    width: '56px',
-    height: '56px',
-    borderRadius: '50%',
-    background: 'var(--primary-glow)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: '6px',
-  },
-  ctaTitle: {
-    fontSize: 'clamp(1.6rem, 3.2vw, 2.2rem)',
-    fontWeight: 700,
-    margin: 0,
-  },
-  ctaDesc: {
-    color: 'var(--text-secondary)',
-    maxWidth: '580px',
-    lineHeight: 1.6,
-    fontSize: '0.96rem',
-    margin: 0,
-  },
-  ctaButtons: {
-    display: 'flex',
-    gap: '14px',
-    marginTop: '8px',
-    flexWrap: 'wrap' as const,
-    justifyContent: 'center',
-  },
 };
 
 export default LandingPage;

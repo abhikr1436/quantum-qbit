@@ -92,6 +92,15 @@ export const Navbar: React.FC<NavbarProps> = ({
             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
+          {/* Launch Tools CTA Button */}
+          <button
+            onClick={() => handleNavClick('tools')}
+            className="btn-cerebrium-pink desktop-nav"
+            style={{ padding: '8px 18px', fontSize: '0.84rem' }}
+          >
+            Launch Tools
+          </button>
+
           {/* Mobile Hamburger Button */}
           <button
             className="mobile-toggle"
