@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Send, CheckCircle2, Copy, Check, MessageSquare } from 'lucide-react';
+import { Mail, Send, CheckCircle2, Copy, Check, MessageSquare, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export const ContactUs: React.FC = () => {
@@ -7,7 +7,7 @@ export const ContactUs: React.FC = () => {
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
-  
+
   const [submitted, setSubmitted] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [formError, setFormError] = useState('');
@@ -23,9 +23,8 @@ export const ContactUs: React.FC = () => {
     e.preventDefault();
     setFormError('');
 
-    // Quick validation
     if (!name.trim() || !email.trim() || !subject.trim() || !message.trim()) {
-      setFormError('Please fill out all fields.');
+      setFormError('Please fill out all required fields.');
       return;
     }
 
@@ -49,12 +48,11 @@ export const ContactUs: React.FC = () => {
 
       if (response.ok && data.success) {
         setSubmitted(true);
-        // Trigger celebration
         confetti({
-          particleCount: 120,
-          spread: 80,
+          particleCount: 100,
+          spread: 70,
           origin: { y: 0.7 },
-          colors: ['#00f2fe', '#9d4edd', '#ff007f']
+          colors: ['#00F0FF', '#A855F7', '#10B981'],
         });
       } else {
         setFormError(data.error || 'Failed to dispatch message. Please try again.');
@@ -76,286 +74,357 @@ export const ContactUs: React.FC = () => {
   };
 
   return (
-    <div style={styles.contactPage}>
-      <div className="container">
-        {/* Header */}
-        <div style={styles.header}>
-          <span style={styles.badge}>Get in Touch</span>
-          <h1 style={styles.title}>Contact Quantum Qbit</h1>
-          <p style={styles.subtitle}>
-            Have feedback, a tool suggestion, or bug report? Send us a message and we'll get back to you shortly.
-          </p>
+    <div style={styles.container}>
+      {/* Header */}
+      <div style={styles.header}>
+        <div className="liquid-glass-pill" style={{ marginBottom: '12px' }}>
+          <Sparkles size={14} style={{ color: 'var(--primary)' }} />
+          <span>CONTACT & SUPPORT</span>
         </div>
+        <h1 style={styles.title}>Get in Touch</h1>
+        <p style={styles.subtitle}>
+          Have feedback, feature requests for Image Studio or PDF Workshop, or general inquiries? We’d love to hear from you.
+        </p>
+      </div>
 
-        <div className="contact-grid" style={styles.grid}>
-          {/* Contact Details Card */}
-          <div className="glass-card" style={styles.detailsCard}>
-            <div style={styles.iconWrapper}>
+      <div style={styles.grid}>
+        {/* Contact Info Card */}
+        <div className="liquid-glass-card" style={styles.infoCard}>
+          <div style={styles.infoTop}>
+            <div style={styles.iconRing}>
               <Mail size={24} style={{ color: 'var(--primary)' }} />
             </div>
-            <h2 style={styles.detailsTitle}>Direct Inquiry</h2>
-            <p style={styles.detailsDesc}>
-              Skip the contact form entirely and email our support and development desk directly.
+            <h3 style={styles.infoTitle}>Direct Contact</h3>
+            <p style={styles.infoDesc}>
+              Our engineering team reviews all user inquiries and feature requests promptly.
             </p>
-            <div style={styles.emailBox}>
-              <span style={styles.emailText}>contactus@quantumqbit.in</span>
+          </div>
+
+          <div style={styles.emailBox}>
+            <span style={styles.emailLabel}>Official Support Email:</span>
+            <div style={styles.emailRow}>
+              <span style={styles.emailAddress}>contactus@quantumqbit.in</span>
               <button 
-                onClick={handleCopyEmail}
+                onClick={handleCopyEmail} 
+                className="liquid-glass-pill" 
                 style={styles.copyBtn}
-                title="Copy email to clipboard"
+                title="Copy to clipboard"
               >
-                {isCopied ? <Check size={16} style={{ color: '#10b981' }} /> : <Copy size={16} />}
+                {isCopied ? <Check size={14} style={{ color: 'var(--emerald)' }} /> : <Copy size={14} />}
+                <span>{isCopied ? 'Copied' : 'Copy'}</span>
               </button>
             </div>
-            <a 
-              href="mailto:contactus@quantumqbit.in" 
-              style={styles.mailtoLink}
-              className="btn-secondary"
-            >
-              Open Email Application
-            </a>
           </div>
 
-          {/* Form Card */}
-          <div className="glass-card" style={styles.formCard}>
-            {!submitted ? (
-              <form onSubmit={handleSubmit} style={styles.form}>
-                <h3 style={styles.formTitle}>
-                  <MessageSquare size={18} style={{ color: 'var(--secondary)' }} />
-                  <span>Send a Message</span>
-                </h3>
+          <div style={styles.guaranteeBox}>
+            <CheckCircle2 size={18} style={{ color: 'var(--emerald)' }} />
+            <span style={styles.guaranteeText}>
+              We never share or sell contact emails. All communication is strictly confidential.
+            </span>
+          </div>
+        </div>
 
-                {formError && (
-                  <div style={styles.errorBanner}>
-                    {formError}
-                  </div>
-                )}
+        {/* Contact Form Card */}
+        <div className="liquid-glass-card" style={styles.formCard}>
+          {submitted ? (
+            <div style={styles.successState}>
+              <div style={styles.successIconWrap}>
+                <CheckCircle2 size={44} style={{ color: 'var(--emerald)' }} />
+              </div>
+              <h3 style={styles.successTitle}>Message Sent!</h3>
+              <p style={styles.successDesc}>
+                Thank you for reaching out. We have received your inquiry and will respond as soon as possible.
+              </p>
+              <button onClick={handleReset} className="liquid-glass-btn-primary" style={{ marginTop: '12px' }}>
+                Send Another Message
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} style={styles.form}>
+              <h3 style={styles.formTitle}>
+                <MessageSquare size={20} style={{ color: 'var(--secondary)' }} />
+                <span>Send a Message</span>
+              </h3>
 
-                <div className="form-group">
-                  <label className="form-label">Full Name</label>
+              {formError && (
+                <div style={styles.errorBanner}>
+                  <span>⚠️ {formError}</span>
+                </div>
+              )}
+
+              <div style={styles.inputRow}>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Your Name *</label>
                   <input
                     type="text"
+                    required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="form-input"
-                    placeholder="John Doe"
-                    required
+                    placeholder="e.g. Alex Smith"
+                    style={styles.input}
                   />
                 </div>
-
-                <div className="form-group">
-                  <label className="form-label">Email Address</label>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Email Address *</label>
                   <input
                     type="email"
+                    required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="form-input"
-                    placeholder="john@example.com"
-                    required
+                    placeholder="alex@example.com"
+                    style={styles.input}
                   />
                 </div>
-
-                <div className="form-group">
-                  <label className="form-label">Subject</label>
-                  <input
-                    type="text"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    className="form-input"
-                    placeholder="Feedback / Suggestions"
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Message</label>
-                  <textarea
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="form-textarea"
-                    placeholder="Tell us what's on your mind..."
-                    required
-                  />
-                </div>
-
-                <button 
-                  type="submit" 
-                  className="btn-primary"
-                  style={{ width: '100%', justifyContent: 'center', marginTop: '8px', opacity: sending ? 0.7 : 1, cursor: sending ? 'not-allowed' : 'pointer' }}
-                  disabled={sending}
-                >
-                  {sending ? 'Sending Message...' : 'Submit Message'} <Send size={14} />
-                </button>
-              </form>
-            ) : (
-              /* Success Screen */
-              <div style={styles.successScreen}>
-                <CheckCircle2 size={54} style={styles.successIcon} />
-                <h3 style={styles.successTitle}>Message Dispatched!</h3>
-                <p style={styles.successDesc}>
-                  Thank you, <strong>{name}</strong>. Your message regarding <em>"{subject}"</em> has been processed. We will respond back to your email at <strong>{email}</strong>.
-                </p>
-                <button 
-                  onClick={handleReset} 
-                  className="btn-secondary"
-                  style={{ marginTop: '12px' }}
-                >
-                  Send Another Message
-                </button>
               </div>
-            )}
-          </div>
+
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>Subject *</label>
+                <input
+                  type="text"
+                  required
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  placeholder="Feature request, bug report, or inquiry"
+                  style={styles.input}
+                />
+              </div>
+
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>Message *</label>
+                <textarea
+                  required
+                  rows={5}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Describe your suggestion or issue in detail..."
+                  style={styles.textarea}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={sending}
+                className="liquid-glass-btn-primary"
+                style={styles.submitBtn}
+              >
+                <Send size={16} />
+                <span>{sending ? 'Sending Message...' : 'Send Message'}</span>
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-const styles = {
-  contactPage: {
-    padding: '60px 0 100px 0',
+const styles: Record<string, React.CSSProperties> = {
+  container: {
+    width: '100%',
+    maxWidth: '1100px',
+    margin: '0 auto',
+    padding: '40px 20px 80px 20px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '40px',
   },
   header: {
     textAlign: 'center' as const,
-    marginBottom: '54px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    gap: '12px',
+  },
+  title: {
+    fontSize: 'clamp(2.2rem, 4vw, 3.2rem)',
+    fontWeight: 800,
+    fontFamily: 'var(--font-heading)',
+  },
+  subtitle: {
+    fontSize: '1.05rem',
+    color: 'var(--text-secondary)',
+    maxWidth: '640px',
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+    gap: '24px',
+  },
+  infoCard: {
+    padding: '36px',
+    borderRadius: 'var(--radius-xl)',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '24px',
+  },
+  infoTop: {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '12px',
-    alignItems: 'center',
   },
-  badge: {
-    fontSize: '0.8rem',
-    background: 'rgba(0, 242, 254, 0.05)',
-    border: '1px solid rgba(0, 242, 254, 0.15)',
-    padding: '4px 12px',
-    borderRadius: '100px',
-    color: 'var(--primary)',
-    fontWeight: 600,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.05em',
-  },
-  title: {
-    fontSize: 'clamp(2rem, 5vw, 3rem)',
-    fontWeight: 700,
-  },
-  subtitle: {
-    color: 'var(--text-secondary)',
-    fontSize: '1.05rem',
-    maxWidth: '600px',
-    lineHeight: 1.5,
-  },
-  grid: {
-  },
-  detailsCard: {
-    padding: '40px 30px',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    textAlign: 'center' as const,
-    gap: '18px',
-  },
-  iconWrapper: {
-    width: '54px',
-    height: '54px',
-    borderRadius: '50%',
-    background: 'rgba(0, 242, 254, 0.04)',
-    border: '1px solid rgba(0, 242, 254, 0.15)',
+  iconRing: {
+    width: '52px',
+    height: '52px',
+    borderRadius: '16px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 8px 24px rgba(0, 242, 254, 0.1)',
+    background: 'rgba(0, 240, 255, 0.08)',
+    border: '1px solid rgba(0, 240, 255, 0.25)',
   },
-  detailsTitle: {
+  infoTitle: {
     fontSize: '1.4rem',
-    fontWeight: 600,
+    fontWeight: 700,
+    fontFamily: 'var(--font-heading)',
   },
-  detailsDesc: {
-    color: 'var(--text-secondary)',
+  infoDesc: {
+    fontSize: '0.95rem',
     lineHeight: 1.6,
-    fontSize: '0.92rem',
-    maxWidth: '300px',
+    color: 'var(--text-secondary)',
   },
   emailBox: {
+    background: 'rgba(255, 255, 255, 0.03)',
+    border: '1px solid var(--glass-border)',
+    borderRadius: 'var(--radius-md)',
+    padding: '16px',
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    background: 'rgba(0,0,0,0.15)',
-    border: '1px solid var(--border-glass)',
-    padding: '10px 14px',
-    borderRadius: '8px',
-    width: '100%',
-    margin: '8px 0',
+    flexDirection: 'column' as const,
+    gap: '10px',
   },
-  emailText: {
-    fontSize: '0.85rem',
-    fontFamily: 'monospace',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap' as const,
-    color: 'var(--text-primary)',
+  emailLabel: {
+    fontSize: '0.8rem',
+    color: 'var(--text-muted)',
+    fontWeight: 500,
+  },
+  emailRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap' as const,
+    gap: '10px',
+  },
+  emailAddress: {
+    fontSize: '0.95rem',
+    fontWeight: 600,
+    fontFamily: 'var(--font-mono)',
+    color: 'var(--primary)',
   },
   copyBtn: {
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--text-secondary)',
+    border: '1px solid var(--glass-border)',
     cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    paddingLeft: '10px',
-    transition: 'var(--transition-fast)',
+    padding: '4px 10px',
+    fontSize: '0.78rem',
   },
-  mailtoLink: {
-    width: '100%',
-    justifyContent: 'center',
+  guaranteeBox: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '10px',
+    marginTop: 'auto',
+    paddingTop: '16px',
+    borderTop: '1px solid var(--glass-border)',
+  },
+  guaranteeText: {
+    fontSize: '0.84rem',
+    color: 'var(--text-secondary)',
+    lineHeight: 1.5,
   },
   formCard: {
     padding: '36px',
+    borderRadius: 'var(--radius-xl)',
   },
   form: {
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '16px',
+    gap: '18px',
   },
   formTitle: {
-    fontSize: '1.25rem',
-    fontWeight: 600,
+    fontSize: '1.3rem',
+    fontWeight: 700,
+    fontFamily: 'var(--font-heading)',
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
-    borderBottom: '1px solid var(--border-glass)',
-    paddingBottom: '12px',
-    marginBottom: '10px',
+    gap: '10px',
+    marginBottom: '6px',
   },
   errorBanner: {
-    background: 'rgba(239, 68, 68, 0.08)',
-    border: '1px solid rgba(239, 68, 68, 0.2)',
-    borderRadius: '6px',
+    background: 'rgba(239, 68, 68, 0.1)',
+    border: '1px solid rgba(239, 68, 68, 0.3)',
+    color: '#ef4444',
     padding: '10px 14px',
-    color: '#fca5a5',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '0.88rem',
-    fontWeight: 500,
   },
-  successScreen: {
+  inputRow: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+    gap: '16px',
+  },
+  inputGroup: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '6px',
+  },
+  label: {
+    fontSize: '0.84rem',
+    fontWeight: 500,
+    color: 'var(--text-secondary)',
+  },
+  input: {
+    background: 'rgba(255, 255, 255, 0.04)',
+    border: '1px solid var(--glass-border)',
+    borderRadius: 'var(--radius-md)',
+    padding: '12px 16px',
+    color: 'var(--text-primary)',
+    fontSize: '0.95rem',
+    outline: 'none',
+    transition: 'var(--transition-fast)',
+  },
+  textarea: {
+    background: 'rgba(255, 255, 255, 0.04)',
+    border: '1px solid var(--glass-border)',
+    borderRadius: 'var(--radius-md)',
+    padding: '12px 16px',
+    color: 'var(--text-primary)',
+    fontSize: '0.95rem',
+    outline: 'none',
+    fontFamily: 'var(--font-body)',
+    resize: 'vertical' as const,
+    transition: 'var(--transition-fast)',
+  },
+  submitBtn: {
+    marginTop: '6px',
+    width: '100%',
+  },
+  successState: {
     display: 'flex',
     flexDirection: 'column' as const,
     alignItems: 'center',
+    justifyContent: 'center',
     textAlign: 'center' as const,
+    padding: '40px 20px',
     gap: '16px',
-    padding: '40px 10px',
   },
-  successIcon: {
-    color: 'var(--primary)',
-    filter: 'drop-shadow(0 0 10px rgba(0, 242, 254, 0.4))',
+  successIconWrap: {
+    width: '72px',
+    height: '72px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'rgba(16, 185, 129, 0.1)',
+    border: '1px solid rgba(16, 185, 129, 0.3)',
+    marginBottom: '8px',
   },
   successTitle: {
-    fontSize: '1.5rem',
+    fontSize: '1.6rem',
     fontWeight: 700,
+    fontFamily: 'var(--font-heading)',
   },
   successDesc: {
+    fontSize: '0.95rem',
     color: 'var(--text-secondary)',
-    fontSize: '0.98rem',
+    maxWidth: '420px',
     lineHeight: 1.6,
-    maxWidth: '400px',
   },
 };
 

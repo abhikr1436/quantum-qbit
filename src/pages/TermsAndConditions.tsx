@@ -1,206 +1,179 @@
 import React from 'react';
-import { Scale, Compass, HelpCircle, AlertTriangle, CheckSquare } from 'lucide-react';
+import { Scale, Compass, CheckSquare, AlertTriangle, ArrowLeft, Sparkles } from 'lucide-react';
+import { navigate } from '../utils/router';
 
 interface TermsAndConditionsProps {
-  setCurrentPage: (page: string) => void;
+  setCurrentPage?: (page: string) => void;
 }
 
-export const TermsAndConditions: React.FC<TermsAndConditionsProps> = ({ setCurrentPage }) => {
-  const handleBackToHome = () => {
-    setCurrentPage('landing');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
+export const TermsAndConditions: React.FC<TermsAndConditionsProps> = () => {
   return (
-    <div style={styles.termsPage}>
-      <div className="container">
-        {/* Header */}
-        <div style={styles.header}>
-          <span style={styles.badge}>User Agreement</span>
-          <h1 style={styles.title}>Terms & Conditions</h1>
-          <p style={styles.subtitle}>
-            Effective date: May 22, 2026. Please read this agreement before using our local-first tools.
+    <div style={styles.container}>
+      {/* Header */}
+      <div style={styles.header}>
+        <div className="liquid-glass-pill" style={{ marginBottom: '12px' }}>
+          <Sparkles size={14} style={{ color: 'var(--primary)' }} />
+          <span>TERMS OF SERVICE</span>
+        </div>
+        <h1 style={styles.title}>Terms & Conditions</h1>
+        <p style={styles.subtitle}>
+          Effective date: September 2026. Please review these terms governing the use of Quantum Qbit tools.
+        </p>
+      </div>
+
+      {/* Intro Card */}
+      <div className="liquid-glass-card" style={styles.heroCard}>
+        <div style={styles.heroIconWrap}>
+          <Scale size={32} style={{ color: 'var(--secondary)' }} />
+        </div>
+        <div>
+          <h2 style={styles.heroTitle}>User Agreement & Acceptance</h2>
+          <p style={styles.heroText}>
+            By accessing and utilizing Quantum Qbit (<code>quantumqbit.in</code>), you agree to be bound by these Terms & Conditions 
+            and our Privacy Policy. If you do not accept these terms, please discontinue using our client-side tools.
+          </p>
+        </div>
+      </div>
+
+      {/* Sections */}
+      <div style={styles.sections}>
+        <div className="liquid-glass-card" style={styles.card}>
+          <h3 style={styles.sectionTitle}>
+            <Compass size={18} style={{ color: 'var(--primary)' }} />
+            <span>1. Free License & Permitted Usage</span>
+          </h3>
+          <p style={styles.text}>
+            Quantum Qbit grants you a revocable, non-exclusive, non-transferable license to use the Image Studio and PDF Workshop 
+            for personal, educational, or commercial workloads free of charge.
+          </p>
+          <ul style={styles.list}>
+            <li>You may process personal photographs, commercial artwork, and business documents.</li>
+            <li>You may not scrape, mirror, or repackage the application's client-side code into commercial third-party wrappers without explicit written permission.</li>
+          </ul>
+        </div>
+
+        <div className="liquid-glass-card" style={styles.card}>
+          <h3 style={styles.sectionTitle}>
+            <CheckSquare size={18} style={{ color: 'var(--emerald)' }} />
+            <span>2. User Content Responsibility</span>
+          </h3>
+          <p style={styles.text}>
+            Because all file conversions and edits take place strictly on your local machine, you retain 100% ownership and copyright of your media. 
+            You are solely responsible for ensuring you have appropriate legal rights to the images and documents you process.
           </p>
         </div>
 
-        {/* Introduction Card */}
-        <div className="glass-card" style={styles.introCard}>
-          <div style={styles.glowBg}></div>
-          <div style={styles.introContent}>
-            <Scale size={36} style={{ color: 'var(--secondary)', marginBottom: '16px' }} />
-            <h2 style={styles.introTitle}>Acceptance of Terms</h2>
-            <p style={styles.introText}>
-              By accessing and using Quantum Qbit (located at `quantumqbit.in`), you acknowledge that you have read, understood, and agreed to be bound by these Terms & Conditions and our accompanying Privacy Policy. If you do not agree, please discontinue using our site.
-            </p>
-          </div>
+        <div className="liquid-glass-card" style={styles.card}>
+          <h3 style={styles.sectionTitle}>
+            <AlertTriangle size={18} style={{ color: 'var(--accent)' }} />
+            <span>3. Disclaimer of Warranties</span>
+          </h3>
+          <p style={styles.text}>
+            The services and browser utilities are provided on an "AS IS" and "AS AVAILABLE" basis without warranties of any kind. 
+            While our tools undergo rigorous testing, we cannot guarantee that document conversions or image compression will always meet your specific requirements.
+          </p>
         </div>
+      </div>
 
-        {/* Content Sections */}
-        <div style={styles.sectionsContainer}>
-          <div className="glass-card" style={styles.sectionCard}>
-            <h3 style={styles.sectionTitle}>
-              <Compass size={18} style={styles.icon} />
-              1. License and Scope of Use
-            </h3>
-            <p style={styles.text}>
-              Quantum Qbit provides high-performance, client-side utility applications (including but not limited to the Image Studio, PDF Compressor, Base Converter, and Math Workbench) completely free of charge.
-            </p>
-            <ul style={styles.list}>
-              <li><strong>Free License:</strong> You are granted a non-exclusive, non-transferable, revocable license to utilize the tools for personal, educational, or commercial workloads.</li>
-              <li><strong>Source Integrity:</strong> You must not reverse-engineer, mirror, or repackage our assets for commercial resale or distribute malicious wrappers of the application.</li>
-              <li><strong>No Installation:</strong> Our applications compile directly in standard modern web browsers. No additional downloads or software extensions are required.</li>
-            </ul>
-          </div>
-
-          <div className="glass-card" style={styles.sectionCard}>
-            <h3 style={styles.sectionTitle}>
-              <CheckSquare size={18} style={styles.icon} />
-              2. User Content & Local Responsibility
-            </h3>
-            <p style={styles.text}>
-              Because all computational workflows run on your local device CPU/GPU and inside browser memory caches:
-            </p>
-            <ul style={styles.list}>
-              <li>You retain sole ownership, copyright, and responsibility for all files (documents, sheets, canvas drawings, graphics) you import or process.</li>
-              <li>We do not monitor, store, intercept, or review the files you work with.</li>
-              <li>You represent that your files do not infringe third-party intellectual property or contain malware designed to harm your local runtime environment.</li>
-            </ul>
-          </div>
-
-          <div className="glass-card" style={styles.sectionCard}>
-            <h3 style={styles.sectionTitle}>
-              <AlertTriangle size={18} style={styles.icon} />
-              3. Disclaimer of Warranties
-            </h3>
-            <p style={styles.text}>
-              The website and all utilities are provided on an <strong>"AS IS" and "AS AVAILABLE" basis</strong> without any express or implied warranties. While we make every effort to optimize calculations and preserve file integrity (e.g., maintaining PDF layouts and pixel compression clarity):
-            </p>
-            <p style={styles.text}>
-              We do not warrant that the calculators are free of mathematical rounding anomalies, that the PDF compressor will compress all documents without exception, or that the application will function uninterrupted during server maintenance or browser updates.
-            </p>
-          </div>
-
-          <div className="glass-card" style={styles.sectionCard}>
-            <h3 style={styles.sectionTitle}>
-              <HelpCircle size={18} style={styles.icon} />
-              4. Limitation of Liability
-            </h3>
-            <p style={styles.text}>
-              In no event shall Quantum Qbit, its developers, or its hosting partners be liable for any direct, indirect, incidental, special, or consequential damages (including, but not limited to, loss of data, loss of business profits, computer failure, or processing latency) arising out of the use or inability to use the tools, even if advised of the possibility of such damage.
-            </p>
-          </div>
-        </div>
-
-        {/* Return to Homepage Button */}
-        <div style={styles.backContainer}>
-          <button className="btn-primary" onClick={handleBackToHome}>
-            I Agree, Back to Home
-          </button>
-        </div>
+      <div style={{ textAlign: 'center', marginTop: '16px' }}>
+        <button onClick={() => navigate('/')} className="liquid-glass-btn-secondary">
+          <ArrowLeft size={16} />
+          <span>Return to Studio Hub</span>
+        </button>
       </div>
     </div>
   );
 };
 
-const styles = {
-  termsPage: {
-    padding: '60px 0 100px 0',
+const styles: Record<string, React.CSSProperties> = {
+  container: {
+    width: '100%',
+    maxWidth: '900px',
+    margin: '0 auto',
+    padding: '40px 20px 80px 20px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '32px',
   },
   header: {
     textAlign: 'center' as const,
-    marginBottom: '54px',
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '12px',
     alignItems: 'center',
-  },
-  badge: {
-    fontSize: '0.8rem',
-    background: 'rgba(157, 78, 221, 0.05)',
-    border: '1px solid rgba(157, 78, 221, 0.15)',
-    padding: '4px 12px',
-    borderRadius: '100px',
-    color: 'var(--secondary)',
-    fontWeight: 600,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.05em',
+    gap: '12px',
   },
   title: {
-    fontSize: 'clamp(2rem, 5vw, 3rem)',
-    fontWeight: 700,
+    fontSize: 'clamp(2.2rem, 4vw, 3.2rem)',
+    fontWeight: 800,
+    fontFamily: 'var(--font-heading)',
   },
   subtitle: {
+    fontSize: '1rem',
     color: 'var(--text-secondary)',
-    fontSize: '1.05rem',
     maxWidth: '600px',
-    lineHeight: 1.5,
   },
-  introCard: {
-    padding: '40px',
-    position: 'relative' as const,
-    overflow: 'hidden',
-    marginBottom: '48px',
+  heroCard: {
+    padding: '30px',
+    borderRadius: 'var(--radius-xl)',
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '20px',
   },
-  glowBg: {
-    position: 'absolute' as const,
-    bottom: '-100px',
-    right: '-100px',
-    width: '300px',
-    height: '300px',
-    background: 'radial-gradient(circle, rgba(157, 78, 221, 0.08) 0%, transparent 70%)',
-    pointerEvents: 'none' as const,
+  heroIconWrap: {
+    width: '56px',
+    height: '56px',
+    borderRadius: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'rgba(168, 85, 247, 0.1)',
+    border: '1px solid rgba(168, 85, 247, 0.3)',
+    flexShrink: 0,
   },
-  introContent: {
-    position: 'relative' as const,
-    zIndex: 2,
-  },
-  introTitle: {
-    fontSize: '1.5rem',
+  heroTitle: {
+    fontSize: '1.35rem',
     fontWeight: 700,
-    marginBottom: '12px',
+    fontFamily: 'var(--font-heading)',
+    marginBottom: '8px',
   },
-  introText: {
-    color: 'var(--text-primary)',
-    lineHeight: 1.7,
-    fontSize: '1.05rem',
+  heroText: {
+    fontSize: '0.95rem',
+    lineHeight: 1.6,
+    color: 'var(--text-secondary)',
   },
-  sectionsContainer: {
+  sections: {
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '30px',
+    gap: '20px',
   },
-  sectionCard: {
-    padding: '30px',
+  card: {
+    padding: '28px',
+    borderRadius: 'var(--radius-lg)',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '14px',
   },
   sectionTitle: {
-    fontSize: '1.25rem',
-    fontWeight: 600,
-    marginBottom: '16px',
+    fontSize: '1.2rem',
+    fontWeight: 700,
+    fontFamily: 'var(--font-heading)',
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
-    color: 'var(--text-primary)',
-  },
-  icon: {
-    color: 'var(--secondary)',
   },
   text: {
-    color: 'var(--text-secondary)',
+    fontSize: '0.95rem',
     lineHeight: 1.6,
-    fontSize: '0.96rem',
-    marginBottom: '12px',
+    color: 'var(--text-secondary)',
   },
   list: {
-    paddingLeft: '24px',
-    marginBottom: '16px',
-    color: 'var(--text-secondary)',
-    lineHeight: 1.7,
-    fontSize: '0.96rem',
-  },
-  backContainer: {
-    marginTop: '48px',
+    listStylePosition: 'inside' as const,
     display: 'flex',
-    justifyContent: 'center',
+    flexDirection: 'column' as const,
+    gap: '8px',
+    color: 'var(--text-secondary)',
+    fontSize: '0.92rem',
+    lineHeight: 1.5,
   },
 };
 

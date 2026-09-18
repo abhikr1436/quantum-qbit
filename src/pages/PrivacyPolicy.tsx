@@ -1,230 +1,215 @@
 import React from 'react';
-import { Shield, Lock, Eye, HardDrive, Info } from 'lucide-react';
+import { Shield, Lock, HardDrive, Info, CheckCircle2, ArrowLeft, Sparkles } from 'lucide-react';
+import { navigate } from '../utils/router';
 
 interface PrivacyPolicyProps {
-  setCurrentPage: (page: string) => void;
+  setCurrentPage?: (page: string) => void;
 }
 
-export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ setCurrentPage }) => {
-  const handleBackToHome = () => {
-    setCurrentPage('landing');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
+export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = () => {
   return (
-    <div style={styles.policyPage}>
-      <div className="container">
-        {/* Header */}
-        <div style={styles.header}>
-          <span style={styles.badge}>Privacy Center</span>
-          <h1 style={styles.title}>Privacy Policy</h1>
-          <p style={styles.subtitle}>
-            Last updated: May 22, 2026. At Quantum Qbit, your privacy is our architectural foundation.
+    <div style={styles.container}>
+      {/* Header */}
+      <div style={styles.header}>
+        <div className="liquid-glass-pill" style={{ marginBottom: '12px' }}>
+          <Sparkles size={14} style={{ color: 'var(--primary)' }} />
+          <span>LEGAL & PRIVACY COMPLIANCE</span>
+        </div>
+        <h1 style={styles.title}>Privacy Policy</h1>
+        <p style={styles.subtitle}>
+          Last Updated: September 2026. At Quantum Qbit, client-side privacy is our foundational architecture.
+        </p>
+      </div>
+
+      {/* Guarantee Hero Card */}
+      <div className="liquid-glass-card" style={styles.heroCard}>
+        <div style={styles.heroIconWrap}>
+          <Shield size={32} style={{ color: 'var(--emerald)' }} />
+        </div>
+        <div>
+          <h2 style={styles.heroTitle}>100% In-Browser Processing Guarantee</h2>
+          <p style={styles.heroText}>
+            Unlike legacy online utility websites that transfer your photos and documents to remote cloud storage, 
+            <strong> Quantum Qbit never uploads your files</strong>. All image operations (cropping, resizing, compression, DPI injection, format conversion) 
+            and PDF operations (merging, splitting, OCR, image extraction) execute 100% locally in your device's memory.
+          </p>
+        </div>
+      </div>
+
+      {/* Structured Sections */}
+      <div style={styles.sections}>
+        <div className="liquid-glass-card" style={styles.card}>
+          <h3 style={styles.sectionTitle}>
+            <Lock size={18} style={{ color: 'var(--primary)' }} />
+            <span>1. User Data We Do Not Collect or Store</span>
+          </h3>
+          <p style={styles.text}>
+            Because all tools operate client-side in RAM:
+          </p>
+          <ul style={styles.list}>
+            <li>We do NOT collect, inspect, store, or transmit your images, photographs, or graphics.</li>
+            <li>We do NOT collect, inspect, store, or transmit your PDF files, contracts, or scanned documents.</li>
+            <li>We do NOT require user account creation, logins, passwords, or personal identity verification.</li>
+            <li>All memory buffers are instantly wiped when you close the tab or reload the application.</li>
+          </ul>
+        </div>
+
+        <div className="liquid-glass-card" style={styles.card}>
+          <h3 style={styles.sectionTitle}>
+            <HardDrive size={18} style={{ color: 'var(--secondary)' }} />
+            <span>2. Local Storage and Preferences</span>
+          </h3>
+          <p style={styles.text}>
+            Quantum Qbit uses standard browser <code>localStorage</code> strictly for immediate client-side UI convenience:
+          </p>
+          <ul style={styles.list}>
+            <li><strong>Theme Preference:</strong> Retaining your preferred mode (Light or Dark) across sessions.</li>
+            <li>No personal identifiable information (PII) is ever written to your browser storage.</li>
+          </ul>
+        </div>
+
+        <div className="liquid-glass-card" style={styles.card}>
+          <h3 style={styles.sectionTitle}>
+            <Info size={18} style={{ color: 'var(--accent)' }} />
+            <span>3. Advertising & Cookies (Google AdSense Compliance)</span>
+          </h3>
+          <p style={styles.text}>
+            We partner with Google AdSense to serve ads when you visit our website. Google, as a third-party vendor, uses cookies to serve ads on our site:
+          </p>
+          <ul style={styles.list}>
+            <li>Google's use of advertising cookies enables it and its partners to serve ads to our users based on their visit to our site and/or other sites on the Internet.</li>
+            <li>Users may opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer" style={styles.link}>Google Ads Settings</a>.</li>
+            <li>Alternatively, users can opt out of third-party vendor use of cookies for personalized advertising by visiting <a href="https://www.aboutads.info" target="_blank" rel="noopener noreferrer" style={styles.link}>aboutads.info</a>.</li>
+          </ul>
+        </div>
+
+        <div className="liquid-glass-card" style={styles.card}>
+          <h3 style={styles.sectionTitle}>
+            <CheckCircle2 size={18} style={{ color: 'var(--emerald)' }} />
+            <span>4. GDPR & CCPA Compliance</span>
+          </h3>
+          <p style={styles.text}>
+            We respect user rights under the General Data Protection Regulation (GDPR) and California Consumer Privacy Act (CCPA). 
+            Because we do not collect personal file data, your confidential intellectual property and media are completely isolated on your machine.
           </p>
         </div>
 
-        {/* Highlight Card */}
-        <div className="glass-card" style={styles.highlightCard}>
-          <div style={styles.glowBg}></div>
-          <div style={styles.highlightContent}>
-            <Shield size={36} style={{ color: 'var(--primary)', marginBottom: '16px' }} />
-            <h2 style={styles.highlightTitle}>100% Local Processing Guarantee</h2>
-            <p style={styles.highlightText}>
-              Unlike traditional utility websites that upload your files to remote cloud servers for editing, compressing, or calculating, <strong>Quantum Qbit does not upload your files anywhere</strong>. All operations on images, PDFs, math inputs, and converters are processed entirely inside your browser's memory using client-side execution.
-            </p>
-          </div>
+        <div className="liquid-glass-card" style={styles.card}>
+          <h3 style={styles.sectionTitle}>
+            <Shield size={18} style={{ color: 'var(--primary)' }} />
+            <span>5. Contact Privacy Team</span>
+          </h3>
+          <p style={styles.text}>
+            If you have questions regarding this Privacy Policy or our security architecture, please contact us at:
+            <br />
+            <strong>Email:</strong> <span style={{ color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>contactus@quantumqbit.in</span>
+          </p>
         </div>
+      </div>
 
-        {/* Content Sections */}
-        <div style={styles.sectionsContainer}>
-          <div className="glass-card" style={styles.sectionCard}>
-            <h3 style={styles.sectionTitle}>
-              <Lock size={18} style={styles.icon} />
-              1. Information We Do Not Collect
-            </h3>
-            <p style={styles.text}>
-              Because all tools run 100% locally on your computer or device, we do not have access to, store, or share:
-            </p>
-            <ul style={styles.list}>
-              <li>Images, photographs, or graphics you crop, scale, or edit.</li>
-              <li>PDF files, documents, or presentations you compress or manipulate.</li>
-              <li>Values, mathematical formulas, equations, or numbers you input into our calculators and base converters.</li>
-              <li>Private text inputs or files processed by other modules on this site.</li>
-            </ul>
-            <p style={styles.text}>
-              All file buffers and inputs are destroyed as soon as you close the browser tab or reload the application page.
-            </p>
-          </div>
-
-          <div className="glass-card" style={styles.sectionCard}>
-            <h3 style={styles.sectionTitle}>
-              <HardDrive size={18} style={styles.icon} />
-              2. Browser Storage & Cache
-            </h3>
-            <p style={styles.text}>
-              We use standard browser storage options (like LocalStorage) strictly to improve your immediate user experience:
-            </p>
-            <ul style={styles.list}>
-              <li><strong>Theme Preferences:</strong> Storing your selected color theme (Light Mode vs. Dark Mode) so it persists on subsequent visits.</li>
-              <li><strong>Blog Cache:</strong> Periodically caching blog content locally to speed up navigation.</li>
-            </ul>
-            <p style={styles.text}>
-              You can clear your browser cache and site data at any time to delete these stored parameters.
-            </p>
-          </div>
-
-          <div className="glass-card" style={styles.sectionCard}>
-            <h3 style={styles.sectionTitle}>
-              <Eye size={18} style={styles.icon} />
-              3. Server Logs and Hosting
-            </h3>
-            <p style={styles.text}>
-              Our website is hosted on Hostinger. Like most web servers, Hostinger automatically compiles standard web server logs when you visit the site. These logs may include your IP address, browser type, referral paths, and timestamps.
-            </p>
-            <p style={styles.text}>
-              These logs are used purely for security purposes, network performance monitoring, and server diagnostics. They are not linked to any personal files, since no file uploads occur.
-            </p>
-          </div>
-
-          <div className="glass-card" style={styles.sectionCard}>
-            <h3 style={styles.sectionTitle}>
-              <Info size={18} style={styles.icon} />
-              4. Contact & Correspondence
-            </h3>
-            <p style={styles.text}>
-              If you contact us directly via email (e.g., at <a href="mailto:contactus@quantumqbit.in" style={{ color: 'var(--primary)' }}>contactus@quantumqbit.in</a>) or through our contact page, we receive the details you choose to share (such as your name, email address, and inquiry content). We use this information solely to respond to your request and never share it with third-party advertisers.
-            </p>
-          </div>
-
-          <div className="glass-card" style={styles.sectionCard}>
-            <h3 style={styles.sectionTitle}>
-              <Eye size={18} style={styles.icon} />
-              5. Google AdSense & Third-Party Advertising Disclosures
-            </h3>
-            <p style={styles.text}>
-              Quantum Qbit uses Google AdSense to display advertisements on selected pages to support free hosting and software development. In accordance with Google AdSense Publisher Program Policies, we disclose the following:
-            </p>
-            <ul style={styles.list}>
-              <li><strong>Third-Party Advertising:</strong> Third-party vendors, including Google, use cookies to serve ads based on a user's prior visits to Quantum Qbit or other websites on the Internet.</li>
-              <li><strong>Advertising Cookies (DART Cookies):</strong> Google's use of advertising cookies enables it and its partners to serve targeted ads to our users based on their visit to our site and/or other sites on the web.</li>
-              <li><strong>Personalized Ads Opt-Out:</strong> Users may opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>Google Ads Settings</a>. Alternatively, users can opt out of third-party vendors' use of cookies for personalized advertising by visiting <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>www.aboutads.info</a>.</li>
-            </ul>
-            <p style={styles.text}>
-              Please note that opting out of personalized advertising does not prevent advertisements from displaying; it simply ensures that displayed ads will not be customized based on your past browsing behavior.
-            </p>
-          </div>
-        </div>
-
-        {/* Back Button */}
-        <div style={styles.backContainer}>
-          <button className="btn-primary" onClick={handleBackToHome}>
-            Return to Homepage
-          </button>
-        </div>
+      <div style={{ textAlign: 'center', marginTop: '16px' }}>
+        <button onClick={() => navigate('/')} className="liquid-glass-btn-secondary">
+          <ArrowLeft size={16} />
+          <span>Return to Studio Hub</span>
+        </button>
       </div>
     </div>
   );
 };
 
-const styles = {
-  policyPage: {
-    padding: '60px 0 100px 0',
+const styles: Record<string, React.CSSProperties> = {
+  container: {
+    width: '100%',
+    maxWidth: '900px',
+    margin: '0 auto',
+    padding: '40px 20px 80px 20px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '32px',
   },
   header: {
     textAlign: 'center' as const,
-    marginBottom: '54px',
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '12px',
     alignItems: 'center',
-  },
-  badge: {
-    fontSize: '0.8rem',
-    background: 'rgba(0, 242, 254, 0.05)',
-    border: '1px solid rgba(0, 242, 254, 0.15)',
-    padding: '4px 12px',
-    borderRadius: '100px',
-    color: 'var(--primary)',
-    fontWeight: 600,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.05em',
+    gap: '12px',
   },
   title: {
-    fontSize: 'clamp(2rem, 5vw, 3rem)',
-    fontWeight: 700,
+    fontSize: 'clamp(2.2rem, 4vw, 3.2rem)',
+    fontWeight: 800,
+    fontFamily: 'var(--font-heading)',
   },
   subtitle: {
+    fontSize: '1rem',
     color: 'var(--text-secondary)',
-    fontSize: '1.05rem',
     maxWidth: '600px',
-    lineHeight: 1.5,
   },
-  highlightCard: {
-    padding: '40px',
-    position: 'relative' as const,
-    overflow: 'hidden',
-    marginBottom: '48px',
+  heroCard: {
+    padding: '30px',
+    borderRadius: 'var(--radius-xl)',
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '20px',
   },
-  glowBg: {
-    position: 'absolute' as const,
-    bottom: '-100px',
-    right: '-100px',
-    width: '300px',
-    height: '300px',
-    background: 'radial-gradient(circle, rgba(0, 242, 254, 0.08) 0%, transparent 70%)',
-    pointerEvents: 'none' as const,
+  heroIconWrap: {
+    width: '56px',
+    height: '56px',
+    borderRadius: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'rgba(16, 185, 129, 0.1)',
+    border: '1px solid rgba(16, 185, 129, 0.3)',
+    flexShrink: 0,
   },
-  highlightContent: {
-    position: 'relative' as const,
-    zIndex: 2,
-  },
-  highlightTitle: {
-    fontSize: '1.5rem',
+  heroTitle: {
+    fontSize: '1.35rem',
     fontWeight: 700,
-    marginBottom: '12px',
+    fontFamily: 'var(--font-heading)',
+    marginBottom: '8px',
   },
-  highlightText: {
-    color: 'var(--text-primary)',
-    lineHeight: 1.7,
-    fontSize: '1.05rem',
+  heroText: {
+    fontSize: '0.95rem',
+    lineHeight: 1.6,
+    color: 'var(--text-secondary)',
   },
-  sectionsContainer: {
+  sections: {
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '30px',
+    gap: '20px',
   },
-  sectionCard: {
-    padding: '30px',
+  card: {
+    padding: '28px',
+    borderRadius: 'var(--radius-lg)',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '14px',
   },
   sectionTitle: {
-    fontSize: '1.25rem',
-    fontWeight: 600,
-    marginBottom: '16px',
+    fontSize: '1.2rem',
+    fontWeight: 700,
+    fontFamily: 'var(--font-heading)',
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
-    color: 'var(--text-primary)',
-  },
-  icon: {
-    color: 'var(--primary)',
   },
   text: {
-    color: 'var(--text-secondary)',
+    fontSize: '0.95rem',
     lineHeight: 1.6,
-    fontSize: '0.96rem',
-    marginBottom: '12px',
+    color: 'var(--text-secondary)',
   },
   list: {
-    paddingLeft: '24px',
-    marginBottom: '16px',
-    color: 'var(--text-secondary)',
-    lineHeight: 1.7,
-    fontSize: '0.96rem',
-  },
-  backContainer: {
-    marginTop: '48px',
+    listStylePosition: 'inside' as const,
     display: 'flex',
-    justifyContent: 'center',
+    flexDirection: 'column' as const,
+    gap: '8px',
+    color: 'var(--text-secondary)',
+    fontSize: '0.92rem',
+    lineHeight: 1.5,
+  },
+  link: {
+    color: 'var(--primary)',
+    textDecoration: 'underline',
   },
 };
 

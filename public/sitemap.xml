@@ -110,6 +110,30 @@
   
   <!-- Blog Articles (Direct slugs) -->
   <url>
+    <loc>https://quantumqbit.in/blogs/why-in-browser-image-editing-is-the-future-of-privacy</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://quantumqbit.in/blogs/mastering-client-side-pdf-operations-ocr-compression</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://quantumqbit.in/blogs/understanding-dpi-vs-resolution-passport-exam-portals</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://quantumqbit.in/blogs/lossless-vs-lossy-compression-guide</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://quantumqbit.in/blogs/browser-privacy</loc>
     <lastmod>2026-05-23</lastmod>
     <changefreq>weekly</changefreq>

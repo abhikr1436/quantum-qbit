@@ -1,566 +1,924 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, User, Clock, ArrowLeft, BookOpenText } from 'lucide-react';
-import DOMPurify from 'dompurify';
+import { 
+  BookOpen, 
+  Search, 
+  Clock, 
+  Calendar, 
+  User, 
+  ArrowRight, 
+  ArrowLeft, 
+  Share2, 
+  Check, 
+  Sparkles, 
+  ShieldCheck, 
+  Tag, 
+  Sliders, 
+  FileText, 
+  Image as ImageIcon 
+} from 'lucide-react';
+import { navigate } from '../utils/router';
 import { updateSEO } from '../utils/seo';
+import { blogStorage } from '../services/blogStorage';
 
-interface BlogPost {
+export interface BlogPost {
   id: string;
+  slug: string;
   title: string;
-  excerpt: string;
-  content: string | string[];
-  author: string;
-  date: string;
+  category: 'privacy' | 'image' | 'pdf' | 'tech' | string;
+  categoryLabel: string;
+  summary: string;
   readTime: string;
-  category: string;
-  category_id?: string;
-  imageGlow: string;
-  created_at?: string;
-  updated_at?: string;
+  date: string;
+  publishedAt?: number;
+  author: string;
+  tags: string[];
+  coverImage?: string;
+  htmlContent?: string;
+  rawMarkup?: string;
+  content: {
+    intro: string;
+    sections: {
+      heading: string;
+      body: string[];
+      tip?: string;
+      code?: string;
+    }[];
+    takeaways: string[];
+    relatedTool?: {
+      name: string;
+      route: string;
+      label: string;
+    };
+  };
 }
 
-interface Category {
-  id: string;
-  name: string;
-}
+const DEFAULT_POSTS: BlogPost[] = [
+  {
+    id: '1',
+    slug: 'why-in-browser-image-editing-is-the-future-of-privacy',
+    title: 'Why 100% In-Browser Image Editing is the Future of Digital Privacy',
+    category: 'privacy',
+    categoryLabel: 'Privacy & Security',
+    summary: 'Explore why uploading confidential documents and photos to remote conversion servers creates massive security liabilities, and how modern Canvas & WebAssembly APIs solve this.',
+    readTime: '4 min read',
+    date: 'Sep 15, 2026',
+    author: 'Quantum Qbit Engineering',
+    tags: ['Privacy', 'WebAssembly', 'HTML5 Canvas', 'Data Sovereignty'],
+    content: {
+      intro: 'In the modern web ecosystem, performing a task as simple as resizing an identity document or converting a photo format has traditionally required transmitting that file to a remote cloud server. This outdated server-bound paradigm poses severe privacy hazards that are no longer necessary.',
+      sections: [
+        {
+          heading: 'The Hidden Risks of Server-Side Media Processing',
+          body: [
+            'When you upload an image to an online tool, that file is written to cloud storage buckets, logged across HTTP proxies, and processed by backend microservices. Even if a provider promises to delete your files within 1 hour, that data remains vulnerable to breach during transit, retention intervals, and automated server backups.',
+            'Furthermore, image metadata—including EXIF GPS geolocation tags, device serial numbers, and timestamp identifiers—is often permanently cached in server request logs.'
+          ],
+          tip: 'Always check if an online photo editor requires a server upload. If it works offline without an internet connection, your data is 100% safe in your own RAM.'
+        },
+        {
+          heading: 'How In-Browser Execution Solves This at the Architecture Level',
+          body: [
+            'With the advancement of HTML5 Canvas, OffscreenCanvas, and WebAssembly, modern client browsers can allocate multi-gigabyte memory arrays and perform high-resolution matrix transformations directly on your device GPU and CPU.',
+            'When you edit or compress an image in Quantum Qbit, the pixel buffer is decoded into your local browser memory space. The browser executes the bilinear interpolation or quantization algorithm locally, and exports a Blob URL directly to your hard drive. Zero bytes travel across the network.'
+          ]
+        },
+        {
+          heading: 'Unmatched Velocity: Eliminating Network Latency',
+          body: [
+            'Network transfer times represent over 90% of the duration when using cloud utilities. Uploading a 25MB RAW photo on a mobile network can take 15 to 30 seconds, followed by cloud processing queues, followed by re-downloading.',
+            'Local processing executes in sub-second timeframes (typically under 100 milliseconds) because there is no network transfer bottleneck.'
+          ]
+        }
+      ],
+      takeaways: [
+        'Client-side execution provides absolute data sovereignty—files never leave your device.',
+        'Eliminates upload/download bandwidth bottlenecks, delivering instantaneous sub-second speeds.',
+        'Operates fully offline once loaded into browser cache, immune to server outages.'
+      ],
+      relatedTool: {
+        name: 'Image Studio',
+        route: '/image-studio',
+        label: 'Open Image Studio'
+      }
+    }
+  },
+  {
+    id: '2',
+    slug: 'mastering-client-side-pdf-operations-ocr-compression',
+    title: 'Mastering Client-Side PDF Operations: Local Merging, OCR & Compression',
+    category: 'pdf',
+    categoryLabel: 'PDF Workflows',
+    summary: 'A deep-dive into how PDF.js, Web Workers, and Tesseract.js empower browser-native document merging, optical character recognition, and multi-megabyte compression.',
+    readTime: '5 min read',
+    date: 'Sep 12, 2026',
+    author: 'Quantum Qbit Engineering',
+    tags: ['PDF Tools', 'OCR', 'Tesseract', 'Document Security'],
+    content: {
+      intro: 'PDFs are the universal standard for legal contracts, academic publications, and corporate records. Managing sensitive multi-page archives locally has historically required bulky desktop software suites. Today, browser-native document pipelines rival native desktop apps.',
+      sections: [
+        {
+          heading: 'Client-Side PDF Merging and Page Extraction',
+          body: [
+            'Using client-side JavaScript PDF parsers, documents are read as binary ArrayBuffers. The engine inspects the cross-reference tables (XRef), extracts individual page streams, re-indexes dictionary objects, and compiles a clean, standardized PDF binary.',
+            'Because this happens directly within the browser tab, you can seamlessly combine dozens of receipts, contracts, and scans into a single cohesive document without waiting for server queues.'
+          ],
+          tip: 'When merging PDFs locally, page reordering is handled via memory pointers, meaning zero quality loss and negligible memory overhead.'
+        },
+        {
+          heading: 'Extracting Text with In-Memory Tesseract OCR',
+          body: [
+            'Optical Character Recognition (OCR) enables scanned contracts and non-searchable document photos to be converted into editable text. Quantum Qbit runs a compiled WebAssembly port of the Tesseract OCR engine inside a background Web Worker.',
+            'The Worker pre-processes the canvas bitmap using adaptive binarization and thresholding, then feeds character contours into neural network language models to extract high-accuracy text strings in real-time.'
+          ]
+        },
+        {
+          heading: 'Smart PDF Compression Techniques',
+          body: [
+            'Unoptimized PDFs often balloon in size due to uncompressed embedded JPEG artifacts and redundant color profiles. Our local compression engine dynamically recalculates image quality and downsamples high-DPI scans, easily reducing 15MB documents down to under 1.5MB for email attachment limits.'
+          ]
+        }
+      ],
+      takeaways: [
+        'Web Workers allow multi-page OCR and compression without freezing your browser interface.',
+        'Sensitive financial contracts and legal records remain strictly confidential on your machine.',
+        'Produce optimized, standards-compliant PDF/A files ready for official submission.'
+      ],
+      relatedTool: {
+        name: 'PDF Workshop',
+        route: '/pdf-workshop',
+        label: 'Open PDF Workshop'
+      }
+    }
+  },
+  {
+    id: '3',
+    slug: 'understanding-dpi-vs-resolution-passport-exam-portals',
+    title: 'DPI vs Resolution: How to Accurately Prepare Photos for Government & Exam Portals',
+    category: 'image',
+    categoryLabel: 'Image Guides',
+    summary: 'Demystifying Dots Per Inch (DPI), Pixel Dimensions, and JFIF/pHYs metadata chunks so your uploaded photos are never rejected by automated government validation portals.',
+    readTime: '3 min read',
+    date: 'Sep 08, 2026',
+    author: 'Quantum Qbit Engineering',
+    tags: ['DPI', 'Passports', 'Government Portals', 'Image Resizing'],
+    content: {
+      intro: 'Nearly every government job application, passport portal, and university admission form requires photos to comply with strict dimensional and density requirements—such as "300 DPI, exactly 35mm x 45mm, under 50 KB". Understanding how DPI works ensures your uploads never get rejected.',
+      sections: [
+        {
+          heading: 'DPI is Density, Not Pixel Count',
+          body: [
+            'A common misconception is that increasing DPI increases an image\'s pixel resolution. In reality, an image that is 600 × 600 pixels has exactly 360,000 pixels regardless of whether its metadata declares 72 DPI or 300 DPI.',
+            'DPI (Dots Per Inch) is simply a physical print instruction header embedded in the file. When a government portal reads your photo, its automated scanner reads the JFIF metadata block in JPEG files or the pHYs chunk in PNG files to verify print density.'
+          ],
+          tip: 'To change DPI properly, the software must inject binary markers into the file header. Simply changing the file extension will fail portal checks.'
+        },
+        {
+          heading: 'How Quantum Qbit Injects Exact DPI Metadata',
+          body: [
+            'Our Image Studio provides an automated DPI injector that writes standard APP0 JFIF density bytes (`0x01` unit specifier) directly into JPEG buffers, and inserts a calibrated `pHYs` chunk into PNG binaries.',
+            'This guarantees 100% compliance with strict government portals (such as US State Dept, UK Passport Office, India SSC/UPSC, and Schengen visa systems) while keeping file size strictly within their prescribed limits.'
+          ]
+        }
+      ],
+      takeaways: [
+        'DPI is a metadata header indicating how many pixels correspond to one physical inch of print.',
+        'Use Image Studio to simultaneously resize dimensions, inject 300 DPI, and compress below KB caps.',
+        'Never re-save photos through social media or messaging apps, as they strip DPI metadata.'
+      ],
+      relatedTool: {
+        name: 'Image Studio',
+        route: '/image-studio',
+        label: 'Tune DPI in Image Studio'
+      }
+    }
+  },
+  {
+    id: '4',
+    slug: 'lossless-vs-lossy-compression-guide',
+    title: 'Lossless vs Lossy Compression: How to Cut File Sizes by 90% Without Visual Degradation',
+    category: 'tech',
+    categoryLabel: 'Web Tech',
+    summary: 'A deep look at discrete cosine transforms (DCT), chroma subsampling (4:2:0), and modern WebP quantization techniques for lightning-fast web assets.',
+    readTime: '4 min read',
+    date: 'Sep 02, 2026',
+    author: 'Quantum Qbit Engineering',
+    tags: ['Compression', 'WebP', 'Performance', 'Media Tech'],
+    content: {
+      intro: 'Whether you are preparing banners for a web application, sending resumes over email, or archiving family photo albums, file compression is essential. Choosing the right compression strategy allows you to reduce files by over 90% while keeping them visually indistinguishable from the original.',
+      sections: [
+        {
+          heading: 'Lossy vs Lossless: Choosing the Right Trade-off',
+          body: [
+            'Lossless compression (such as PNG and standard Deflate) preserves every single pixel value with mathematical exactness. It is ideal for logos, screenshots with sharp text, and geometric illustrations.',
+            'Lossy compression (such as JPEG and lossy WebP) takes advantage of human visual perception limitations. Human eyes are significantly more sensitive to variations in brightness (luminance) than to subtle variations in color (chrominance). By applying 4:2:0 chroma subsampling and frequency quantization, high-frequency details that the human eye cannot perceive are discarded, yielding massive size reductions.'
+          ]
+        },
+        {
+          heading: 'Why Modern WebP is the Optimal Format',
+          body: [
+            'WebP incorporates advanced spatial predictive coding derived from VP8 video frames. On average, a WebP file is 26% smaller than an equivalent PNG and 25-34% smaller than an equivalent JPEG at identical SSIM quality scores.',
+            'Quantum Qbit allows instant 1-click conversion between PNG, JPEG, and WebP, alongside a target KB slider that automatically calculates optimal quantization factors.'
+          ]
+        }
+      ],
+      takeaways: [
+        'Use WebP or optimized JPEG for photographic assets to save 80-90% file size.',
+        'Keep screenshots, charts, and transparent graphics in PNG to prevent text fringing.',
+        'Our local compressor lets you define an exact target KB limit (e.g. 50KB or 200KB).'
+      ],
+      relatedTool: {
+        name: 'Image Studio',
+        route: '/image-studio',
+        label: 'Compress Images Locally'
+      }
+    }
+  }
+];
 
 interface BlogsProps {
   selectedCategory?: string;
-  setSelectedCategory?: (cat: string) => void;
+  setSelectedCategory?: (category: string) => void;
   postId?: string;
-  setPostId?: (id: string | null) => void;
+  setPostId?: (postId?: string) => void;
 }
 
-declare global {
-  interface Window {
-    adsbygoogle?: unknown[];
-  }
-}
+export const Blogs: React.FC<BlogsProps> = ({ postId, setPostId }) => {
+  const [posts, setPosts] = useState<BlogPost[]>(() => blogStorage.getBlogs());
+  const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [activePost, setActivePost] = useState<BlogPost | null>(null);
+  const [copiedLink, setCopiedLink] = useState<boolean>(false);
 
-const AdSenseUnit: React.FC<{ slot: string; format?: string; responsive?: string; style?: React.CSSProperties }> = ({
-  slot,
-  format = 'auto',
-  responsive = 'true',
-  style = { display: 'block' }
-}) => {
+  // Subscribe to storage changes from admin
   useEffect(() => {
-    try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch {
-      // Ignore adsbygoogle errors
-    }
+    return blogStorage.subscribe(() => {
+      setPosts(blogStorage.getBlogs());
+    });
   }, []);
 
-  return (
-    <div style={{ margin: '24px 0', textAlign: 'center', width: '100%' }}>
-      <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px', marginBottom: '6px', textTransform: 'uppercase' }}>Advertisement</div>
-      <ins
-        className="adsbygoogle"
-        style={style}
-        data-ad-client="ca-pub-3643379306547907"
-        data-ad-slot={slot}
-        data-ad-format={format}
-        data-full-width-responsive={responsive}
-      />
-    </div>
-  );
-};
+  // If a postId or slug is specified, open that post
+  useEffect(() => {
+    if (postId) {
+      const found = posts.find((p) => p.id === postId || p.slug === postId);
+      if (found) {
+        setActivePost(found);
+        updateSEO(
+          `${found.title} | Quantum Qbit Blog`,
+          found.summary,
+          `/blogs/${found.slug}`
+        );
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } else {
+      setActivePost(null);
+      updateSEO(
+        "Engineering Blog & Tutorials | Quantum Qbit",
+        "Technical articles and deep-dives on client-side privacy, image optimization, DPI metadata, and PDF manipulation 100% in browser memory.",
+        "/blogs"
+      );
+    }
+  }, [postId, posts]);
 
-export const Blogs: React.FC<BlogsProps> = ({
-  selectedCategory = 'all',
-  setSelectedCategory,
-  postId,
-  setPostId
-}) => {
-  const [localPostId, setLocalPostId] = useState<string | null>(null);
-  const activePostId = postId !== undefined ? postId : localPostId;
-
-
-  const setActivePostId = (id: string | null) => {
+  const handleOpenPost = (post: BlogPost) => {
+    setActivePost(post);
     if (setPostId) {
-      setPostId(id);
+      setPostId(post.slug);
     } else {
-      setLocalPostId(id);
+      navigate(`/blogs/${post.slug}`);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleBackToList = () => {
+    setActivePost(null);
+    if (setPostId) {
+      setPostId(undefined);
+    } else {
+      navigate('/blogs');
     }
   };
 
-  const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch('/api/categories.php');
-        if (response.ok) {
-          const data = await response.json();
-          setCategories(data);
-        } else {
-          loadFallbackCategories();
-        }
-      } catch {
-        loadFallbackCategories();
-      }
-    };
-
-    const loadFallbackCategories = () => {
-      const local = localStorage.getItem('quantum_categories');
-      if (local) {
-        setCategories(JSON.parse(local));
-      } else {
-        const defaultCategories: Category[] = [
-          { id: 'privacy-security', name: 'Privacy & Security' },
-          { id: 'computer-science', name: 'Computer Science' },
-          { id: 'creative-tech', name: 'Creative Tech' },
-          { id: 'general-utilities', name: 'General Utilities' }
-        ];
-        localStorage.setItem('quantum_categories', JSON.stringify(defaultCategories));
-        setCategories(defaultCategories);
-      }
-    };
-
-    const fetchBlogs = async () => {
-      try {
-        const response = await fetch('/api/blogs.php');
-        if (response.ok) {
-          const data = await response.json();
-          setPosts(data);
-        } else {
-          loadFallbackBlogs();
-        }
-      } catch {
-        loadFallbackBlogs();
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    const loadFallbackBlogs = () => {
-      const localStr = localStorage.getItem('quantum_blogs') || localStorage.getItem('quantum_blogs_db');
-      if (localStr) {
-        try {
-          const parsed = JSON.parse(localStr);
-          if (Array.isArray(parsed)) {
-            setPosts(parsed);
-            return;
-          }
-        } catch (e) {}
-      }
-      setPosts([]);
-    };
-
-    fetchCategories();
-    fetchBlogs();
-  }, []);
-
-  const selectedPost = posts.find(p => p.id === activePostId);
-
-  // Dynamic SEO Updates for Blogs page or individual blog post
-  useEffect(() => {
-    if (selectedPost) {
-      updateSEO(
-        `${selectedPost.title} | Quantum Qbit Blog`,
-        selectedPost.excerpt,
-        `/blogs/${selectedPost.id}`
-      );
-    } else {
-      const catObj = categories.find(c => c.id === selectedCategory);
-      const categoryText = catObj ? ` - ${catObj.name}` : '';
-      updateSEO(
-        `Quantum Qbit Blog${categoryText} - Blogs & Articles`,
-        "Explore blogs and articles on privacy-first web utilities, local browser tools, and client-side technology written by the Quantum Engineering Team.",
-        `/blogs`
-      );
+  const handleCopyShare = () => {
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(window.location.href);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2200);
     }
-  }, [selectedPost, selectedCategory, categories]);
-
-  const getCategoryName = (post: BlogPost) => {
-    if (post.category_id) {
-      const cat = categories.find(c => c.id === post.category_id);
-      if (cat) return cat.name;
-    }
-    if (post.category) return post.category;
-    if (post.category_id) {
-      return post.category_id
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-    }
-    return 'General';
   };
 
-  // Render Single Blog Post Reader View
-  if (selectedPost) {
+  const filteredPosts = posts.filter((post) => {
+    const matchesCat = activeCategory === 'all' || post.category === activeCategory;
+    const matchesSearch = 
+      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchesCat && matchesSearch;
+  });
+
+  // =========================================================================
+  // VIEW 1: FULL ARTICLE READER
+  // =========================================================================
+  if (activePost) {
     return (
-      <div className="container" style={styles.readerFlexWrapper}>
-        <div style={styles.articleCol}>
-          <button style={styles.backBtn} onClick={() => setActivePostId(null)}>
-            <ArrowLeft size={16} /> Back to Blog List
+      <article style={styles.articleContainer}>
+        {/* Navigation Breadcrumb Bar */}
+        <div style={styles.breadcrumbBar}>
+          <button onClick={handleBackToList} style={styles.backBtn} className="liquid-glass-pill">
+            <ArrowLeft size={15} />
+            <span>Back to All Articles</span>
           </button>
-
-          <article style={styles.article}>
-            <div style={{ ...styles.articleGlow, background: `radial-gradient(circle, ${selectedPost.imageGlow} 0%, transparent 70%)` }}></div>
-            <span style={styles.articleTag}>{getCategoryName(selectedPost)}</span>
-            <h1 style={styles.articleTitle}>{selectedPost.title}</h1>
-
-            {/* Author/Date Header */}
-            <div style={styles.articleMeta}>
-              <div style={styles.metaItem}>
-                <User size={14} />
-                <span>{selectedPost.author}</span>
-              </div>
-              <div style={styles.metaItem}>
-                <Calendar size={14} />
-                <span>{selectedPost.date}</span>
-              </div>
-              <div style={styles.metaItem}>
-                <Clock size={14} />
-                <span>{selectedPost.readTime}</span>
-              </div>
-            </div>
-
-            <div style={styles.articleDivider}></div>
-
-            {/* Article Text Content */}
-            <div style={styles.articleBody}>
-              {Array.isArray(selectedPost.content) ? (
-                selectedPost.content.map((paragraph, index) => (
-                  <p key={index} style={styles.paragraph}>
-                    {paragraph}
-                  </p>
-                ))
-              ) : (
-                <div 
-                  className="rich-html-blog"
-                  dangerouslySetInnerHTML={{ 
-                    __html: DOMPurify.sanitize(selectedPost.content, {
-                      ADD_TAGS: ['iframe', 'video', 'source', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'style', 'figure', 'figcaption', 'span', 'mark', 'code', 'pre', 'u', 's', 'sub', 'sup', 'hr'],
-                      ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'target', 'style', 'class', 'colspan', 'rowspan', 'controls', 'autoplay', 'loop', 'alt', 'width', 'height', 'rel']
-                    }) 
-                  }} 
-                />
-              )}
-            </div>
-            
-            <div style={{ marginTop: '40px', borderTop: '1px solid var(--border-glass)', paddingTop: '20px' }}>
-              <AdSenseUnit slot="5938271046" />
-            </div>
-          </article>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={handleCopyShare} style={styles.shareBtn} className="liquid-glass-pill">
+              {copiedLink ? <Check size={14} style={{ color: 'var(--emerald)' }} /> : <Share2 size={14} />}
+              <span>{copiedLink ? 'Link Copied!' : 'Share'}</span>
+            </button>
+          </div>
         </div>
 
-        {/* Sidebar Column */}
-        <aside className="ad-sidebar-col" style={styles.sidebarCol}>
-          <div style={sidebarStickyCardStyle} className="glass-card">
-            <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '10px', fontFamily: 'var(--font-heading)' }}>Quantum Utilities</h4>
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.45, margin: 0 }}>
-              Try our offline-first local image studio and PDF compressor apps directly in your browser.
-            </p>
+        {/* Article Header Card */}
+        <div className="liquid-glass-card" style={styles.articleHeaderCard}>
+          <div style={styles.metaTopRow}>
+            <span className="liquid-badge">{activePost.categoryLabel}</span>
+            <span style={styles.readTime}>
+              <Clock size={13} /> {activePost.readTime}
+            </span>
           </div>
-          <AdSenseUnit slot="8372619405" />
-        </aside>
-      </div>
+
+          <h1 style={styles.articleTitle}>{activePost.title}</h1>
+          <p style={styles.articleSummary}>{activePost.summary}</p>
+
+          <div style={styles.authorBar}>
+            <div style={styles.authorAvatar}>
+              <User size={16} />
+            </div>
+            <div>
+              <div style={styles.authorName}>{activePost.author}</div>
+              <div style={styles.authorDate}>Published on {activePost.date}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Cover Image if present */}
+        {activePost.coverImage && (
+          <div style={styles.coverImageContainer}>
+            <img
+              src={activePost.coverImage}
+              alt={activePost.title}
+              style={styles.coverImage}
+            />
+          </div>
+        )}
+
+        {/* Article Body Content */}
+        <div className="liquid-glass-card" style={styles.articleBodyCard}>
+          {activePost.htmlContent ? (
+            <div
+              className="article-rich-body"
+              dangerouslySetInnerHTML={{ __html: activePost.htmlContent }}
+            />
+          ) : (
+            <>
+              <p style={styles.introParagraph}>{activePost.content.intro}</p>
+
+              {activePost.content.sections.map((sec, idx) => (
+                <section key={idx} style={styles.sectionBlock}>
+                  <h2 style={styles.sectionHeading}>{sec.heading}</h2>
+                  {sec.body.map((pText, pIdx) => (
+                    <p key={pIdx} style={styles.bodyParagraph}>{pText}</p>
+                  ))}
+
+                  {sec.tip && (
+                    <div style={styles.tipCard}>
+                      <Sparkles size={18} style={{ color: 'var(--primary)', flexShrink: 0, marginTop: '2px' }} />
+                      <div style={styles.tipText}>
+                        <strong>Pro-Tip:</strong> {sec.tip}
+                      </div>
+                    </div>
+                  )}
+                </section>
+              ))}
+            </>
+          )}
+
+          {/* Key Takeaways Box */}
+          <div style={styles.takeawaysCard}>
+            <h3 style={styles.takeawaysTitle}>
+              <ShieldCheck size={18} style={{ color: 'var(--emerald)' }} />
+              <span>Key Takeaways</span>
+            </h3>
+            <ul style={styles.takeawaysList}>
+              {activePost.content.takeaways.map((item, idx) => (
+                <li key={idx} style={styles.takeawayItem}>
+                  <Check size={15} style={{ color: 'var(--emerald)', flexShrink: 0, marginTop: '3px' }} />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Tags */}
+          <div style={styles.tagsRow}>
+            {activePost.tags.map((tag, idx) => (
+              <span key={idx} className="liquid-glass-pill" style={{ fontSize: '0.78rem' }}>
+                <Tag size={11} /> {tag}
+              </span>
+            ))}
+          </div>
+
+          {/* Related Tool CTA */}
+          {activePost.content.relatedTool && (
+            <div style={styles.relatedToolBanner}>
+              <div>
+                <h4 style={styles.relatedToolTitle}>Put this into practice</h4>
+                <p style={styles.relatedToolDesc}>
+                  Experience zero-upload client-side performance right now in {activePost.content.relatedTool.name}.
+                </p>
+              </div>
+              <button
+                onClick={() => navigate(activePost.content.relatedTool!.route)}
+                className="liquid-glass-btn-primary"
+              >
+                <span>{activePost.content.relatedTool.label}</span>
+                <ArrowRight size={15} />
+              </button>
+            </div>
+          )}
+        </div>
+      </article>
     );
   }
 
-  const sortedPosts = [...posts].sort((a, b) => {
-    const ta = a.updated_at || a.created_at || '';
-    const tb = b.updated_at || b.created_at || '';
-    if (ta && tb && ta !== tb) {
-      return tb.localeCompare(ta);
-    }
-    const da = a.date ? new Date(a.date).getTime() : 0;
-    const db = b.date ? new Date(b.date).getTime() : 0;
-    if (da !== db) {
-      return db - da;
-    }
-    return b.id.localeCompare(a.id);
-  });
-
-  const filteredPosts = selectedCategory !== 'all'
-    ? sortedPosts.filter(post => post.category_id === selectedCategory || post.category === selectedCategory)
-    : sortedPosts;
-
+  // =========================================================================
+  // VIEW 2: BLOG DIRECTORY & ARTICLE LIST
+  // =========================================================================
   return (
-    <div style={styles.blogFeed}>
-      <div className="container">
-        {/* Header */}
-        <div style={styles.header}>
-          <h1 style={styles.title}>Quantum Qbit Blogs & Articles</h1>
-          <p style={styles.subtitle}>
-            Blogs, articles, and technical breakdowns about web tools, data security, and client-side processing.
-          </p>
+    <div style={styles.container}>
+      {/* Header */}
+      <div style={styles.header}>
+        <div className="liquid-glass-pill" style={{ marginBottom: '12px' }}>
+          <BookOpen size={14} style={{ color: 'var(--primary)' }} />
+          <span>ENGINEERING JOURNAL & GUIDES</span>
         </div>
+        <h1 style={styles.title}>
+          Quantum Qbit <span className="liquid-gradient-text">Insights</span>
+        </h1>
+        <p style={styles.subtitle}>
+          Technical deep-dives on browser-native media pipelines, client-side privacy, image optimization, and document engineering.
+        </p>
 
-        {/* Category filter banner */}
-        {selectedCategory !== 'all' && (
-          <div className="blog-filter-banner">
-            <div className="blog-filter-text">
-              Showing articles in <strong>{
-                categories.find(c => c.id === selectedCategory)?.name || 
-                selectedCategory.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-              }</strong>
+        {/* Search & Category Filter Controls */}
+        <div style={styles.filterControls}>
+          {/* Search Box */}
+          <div className="liquid-glass-card" style={styles.searchBox}>
+            <Search size={16} style={{ color: 'var(--primary)' }} />
+            <input
+              type="text"
+              placeholder="Search tutorials, privacy guides, DPI, WebAssembly..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={styles.searchInput}
+            />
+          </div>
+
+          {/* Category Filter Pills */}
+          <div style={styles.categoryPills}>
+            <button
+              onClick={() => setActiveCategory('all')}
+              style={{
+                ...styles.categoryBtn,
+                ...(activeCategory === 'all' ? styles.categoryBtnActive : {}),
+              }}
+            >
+              All Articles
+            </button>
+            <button
+              onClick={() => setActiveCategory('privacy')}
+              style={{
+                ...styles.categoryBtn,
+                ...(activeCategory === 'privacy' ? styles.categoryBtnActive : {}),
+              }}
+            >
+              Privacy & Security
+            </button>
+            <button
+              onClick={() => setActiveCategory('image')}
+              style={{
+                ...styles.categoryBtn,
+                ...(activeCategory === 'image' ? styles.categoryBtnActive : {}),
+              }}
+            >
+              Image Studio
+            </button>
+            <button
+              onClick={() => setActiveCategory('pdf')}
+              style={{
+                ...styles.categoryBtn,
+                ...(activeCategory === 'pdf' ? styles.categoryBtnActive : {}),
+              }}
+            >
+              PDF Workflows
+            </button>
+            <button
+              onClick={() => setActiveCategory('tech')}
+              style={{
+                ...styles.categoryBtn,
+                ...(activeCategory === 'tech' ? styles.categoryBtnActive : {}),
+              }}
+            >
+              Web Tech
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Blog Cards Grid */}
+      <div style={styles.grid}>
+        {filteredPosts.map((post) => (
+          <div
+            key={post.id}
+            className="liquid-glass-card liquid-glass-card-interactive"
+            style={styles.postCard}
+            onClick={() => handleOpenPost(post)}
+          >
+            <div style={styles.cardHeader}>
+              <span className="liquid-badge">{post.categoryLabel}</span>
+              <span style={styles.cardReadTime}>
+                <Clock size={12} /> {post.readTime}
+              </span>
             </div>
-            {setSelectedCategory && (
-              <button 
-                className="clear-filter-btn"
-                onClick={() => setSelectedCategory('all')}
-              >
-                Clear Filter
-              </button>
-            )}
-          </div>
-        )}
 
-        {/* Blog Post List */}
-        {isLoading ? (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-secondary)' }}>
-            Loading blogs and articles database...
-          </div>
-        ) : filteredPosts.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-secondary)' }}>
-            No blogs or articles found in this category.
-          </div>
-        ) : (
-          <div style={styles.postsGrid}>
-            {filteredPosts.map((post) => (
-              <div key={post.id} className="glass-card" style={styles.postCard}>
-                {/* Dynamic glowing ambient backing */}
-                <div style={{
-                  ...styles.cardGlowBg,
-                  background: `radial-gradient(circle at top right, ${post.imageGlow} 0%, transparent 60%)`
-                }}></div>
-                
-                <div style={styles.cardInfo}>
-                  <span style={styles.postCategory}>{getCategoryName(post)}</span>
-                  <h2 style={styles.postTitle} onClick={() => setActivePostId(post.id)}>
-                    {post.title}
-                  </h2>
-                  <p style={styles.postExcerpt}>{post.excerpt}</p>
-                  
-                  <div style={styles.cardFooter}>
-                    <div style={styles.metaGroup}>
-                      <Clock size={13} />
-                      <span>{post.readTime}</span>
-                    </div>
-                    <button
-                      style={styles.readMoreBtn}
-                      onClick={() => setActivePostId(post.id)}
-                    >
-                      Read Article <BookOpenText size={14} />
-                    </button>
-                  </div>
-                </div>
+            <h2 style={styles.cardTitle}>{post.title}</h2>
+            <p style={styles.cardSummary}>{post.summary}</p>
+
+            <div style={styles.cardFooter}>
+              <div style={styles.cardDate}>
+                <Calendar size={13} />
+                <span>{post.date}</span>
               </div>
-            ))}
+              <span style={styles.readMoreLink}>
+                <span>Read Article</span>
+                <ArrowRight size={14} />
+              </span>
+            </div>
           </div>
-        )}
+        ))}
       </div>
     </div>
   );
 };
 
-const sidebarStickyCardStyle = {
-  padding: '24px 20px',
-  border: '1px solid var(--border-glass)',
-  borderRadius: 'var(--radius-lg)',
-  position: 'sticky' as const,
-  top: '100px',
-  background: 'var(--bg-card)',
-};
-
-const styles = {
-  blogFeed: {
-    padding: '60px 0 100px 0',
-  },
-  readerContainer: {
-    padding: '40px 24px 100px 24px',
-    maxWidth: '800px',
+const styles: Record<string, React.CSSProperties> = {
+  container: {
+    width: '100%',
+    maxWidth: '1240px',
     margin: '0 auto',
-    position: 'relative' as const,
-  },
-  readerFlexWrapper: {
-    padding: '40px 24px 100px 24px',
-    maxWidth: '1140px',
-    margin: '0 auto',
+    padding: '40px 20px 80px 20px',
     display: 'flex',
+    flexDirection: 'column' as const,
     gap: '40px',
-    position: 'relative' as const,
-  },
-  articleCol: {
-    flex: 1,
-    minWidth: 0,
-  },
-  sidebarCol: {
-    width: '300px',
-    flexShrink: 0,
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '24px',
-    paddingTop: '64px',
-  },
-  backBtn: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '8px',
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--text-secondary)',
-    cursor: 'pointer',
-    fontFamily: 'var(--font-heading)',
-    fontSize: '0.95rem',
-    fontWeight: 500,
-    marginBottom: '32px',
-    transition: 'var(--transition-fast)',
-    padding: 0,
-  },
-  article: {
-    position: 'relative' as const,
-    zIndex: 2,
-  },
-  articleGlow: {
-    position: 'absolute' as const,
-    top: '-80px',
-    right: '-80px',
-    width: '320px',
-    height: '320px',
-    pointerEvents: 'none' as const,
-    zIndex: -1,
-  },
-  articleTag: {
-    fontSize: '0.85rem',
-    fontWeight: 600,
-    color: 'var(--primary)',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.05em',
-  },
-  articleTitle: {
-    fontSize: 'clamp(2rem, 5vw, 2.75rem)',
-    fontWeight: 700,
-    lineHeight: 1.2,
-    marginTop: '12px',
-    marginBottom: '20px',
-  },
-  articleMeta: {
-    display: 'flex',
-    gap: '20px',
-    color: 'var(--text-muted)',
-    fontSize: '0.88rem',
-    flexWrap: 'wrap' as const,
-  },
-  metaItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-  },
-  articleDivider: {
-    height: '1px',
-    background: 'var(--border-glass)',
-    margin: '24px 0 32px 0',
-  },
-  articleBody: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '24px',
-  },
-  paragraph: {
-    color: 'var(--text-secondary)',
-    fontSize: '1.05rem',
-    lineHeight: '1.75',
   },
   header: {
     textAlign: 'center' as const,
-    marginBottom: '54px',
     display: 'flex',
     flexDirection: 'column' as const,
+    alignItems: 'center',
     gap: '12px',
   },
   title: {
-    fontSize: 'clamp(2rem, 5vw, 3rem)',
-    fontWeight: 700,
+    fontSize: 'clamp(2.2rem, 4.5vw, 3.4rem)',
+    fontWeight: 800,
+    fontFamily: 'var(--font-heading)',
+    letterSpacing: '-0.02em',
   },
   subtitle: {
-    color: 'var(--text-secondary)',
     fontSize: '1.05rem',
-    maxWidth: '600px',
-    margin: '0 auto',
-    lineHeight: 1.5,
+    color: 'var(--text-secondary)',
+    maxWidth: '680px',
+    lineHeight: 1.6,
   },
-  postsGrid: {
+  filterControls: {
+    width: '100%',
+    maxWidth: '820px',
+    marginTop: '20px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '14px',
+    alignItems: 'center',
+  },
+  searchBox: {
+    width: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '12px 20px',
+    borderRadius: 'var(--radius-full)',
+  },
+  searchInput: {
+    flex: 1,
+    background: 'transparent',
+    border: 'none',
+    outline: 'none',
+    color: 'var(--text-primary)',
+    fontSize: '0.95rem',
+    fontFamily: 'var(--font-body)',
+  },
+  categoryPills: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'wrap' as const,
+    gap: '8px',
+  },
+  categoryBtn: {
+    background: 'var(--glass-bg)',
+    border: '1px solid var(--glass-border)',
+    color: 'var(--text-secondary)',
+    padding: '6px 16px',
+    borderRadius: 'var(--radius-full)',
+    fontSize: '0.84rem',
+    fontWeight: 600,
+    fontFamily: 'var(--font-heading)',
+    cursor: 'pointer',
+    transition: 'var(--transition-tactile)',
+  },
+  categoryBtnActive: {
+    background: 'rgba(0, 240, 255, 0.12)',
+    color: 'var(--primary)',
+    borderColor: 'var(--primary)',
+    boxShadow: '0 0 14px var(--primary-glow)',
+  },
+  grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
     gap: '24px',
   },
   postCard: {
-    padding: '30px',
-    position: 'relative' as const,
-    overflow: 'hidden',
+    padding: '32px',
     display: 'flex',
     flexDirection: 'column' as const,
-    height: '100%',
+    gap: '16px',
+    borderRadius: 'var(--radius-xl)',
   },
-  cardGlowBg: {
-    position: 'absolute' as const,
-    top: 0,
-    right: 0,
-    width: '150px',
-    height: '150px',
-    pointerEvents: 'none' as const,
-  },
-  cardInfo: {
-    position: 'relative' as const,
-    zIndex: 2,
+  cardHeader: {
     display: 'flex',
-    flexDirection: 'column' as const,
-    height: '100%',
-    gap: '14px',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  postCategory: {
+  cardReadTime: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '5px',
     fontSize: '0.78rem',
-    color: 'var(--primary)',
-    fontWeight: 600,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.05em',
+    color: 'var(--text-muted)',
+    fontWeight: 500,
   },
-  postTitle: {
-    fontSize: '1.3rem',
-    fontWeight: 600,
+  cardTitle: {
+    fontSize: '1.45rem',
+    fontWeight: 700,
+    fontFamily: 'var(--font-heading)',
     lineHeight: 1.3,
-    cursor: 'pointer',
-    transition: 'var(--transition-fast)',
   },
-  postExcerpt: {
-    color: 'var(--text-secondary)',
+  cardSummary: {
     fontSize: '0.92rem',
     lineHeight: 1.6,
-    flexGrow: 1,
+    color: 'var(--text-secondary)',
   },
   cardFooter: {
+    marginTop: 'auto',
+    paddingTop: '18px',
+    borderTop: '1px solid var(--glass-border)',
     display: 'flex',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    borderTop: '1px solid var(--border-glass)',
-    paddingTop: '14px',
-    marginTop: '6px',
+    justifyContent: 'space-between',
   },
-  metaGroup: {
+  cardDate: {
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
-    color: 'var(--text-muted)',
     fontSize: '0.8rem',
+    color: 'var(--text-muted)',
   },
-  readMoreBtn: {
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--text-primary)',
-    fontFamily: 'var(--font-heading)',
+  readMoreLink: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
     fontSize: '0.88rem',
     fontWeight: 600,
+    color: 'var(--primary)',
+    fontFamily: 'var(--font-heading)',
+  },
+
+  // Article Reader Styles
+  articleContainer: {
+    width: '100%',
+    maxWidth: '860px',
+    margin: '0 auto',
+    padding: '30px 20px 80px 20px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '24px',
+  },
+  breadcrumbBar: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap' as const,
+    gap: '12px',
+  },
+  backBtn: {
+    border: 'none',
     cursor: 'pointer',
+    background: 'transparent',
+    color: 'var(--text-primary)',
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
-    transition: 'var(--transition-fast)',
-    padding: 0,
+  },
+  shareBtn: {
+    border: 'none',
+    cursor: 'pointer',
+    background: 'transparent',
+    color: 'var(--text-primary)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+  },
+  articleHeaderCard: {
+    padding: '40px',
+    borderRadius: 'var(--radius-xl)',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '18px',
+  },
+  metaTopRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  readTime: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '0.84rem',
+    color: 'var(--text-muted)',
+  },
+  articleTitle: {
+    fontSize: 'clamp(1.9rem, 3.5vw, 2.7rem)',
+    fontWeight: 800,
+    fontFamily: 'var(--font-heading)',
+    lineHeight: 1.25,
+    letterSpacing: '-0.02em',
+  },
+  articleSummary: {
+    fontSize: '1.1rem',
+    lineHeight: 1.6,
+    color: 'var(--text-secondary)',
+  },
+  authorBar: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    marginTop: '6px',
+    paddingTop: '18px',
+    borderTop: '1px solid var(--glass-border)',
+  },
+  authorAvatar: {
+    width: '38px',
+    height: '38px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'rgba(255, 255, 255, 0.08)',
+    border: '1px solid var(--glass-border)',
+  },
+  authorName: {
+    fontSize: '0.9rem',
+    fontWeight: 600,
+    fontFamily: 'var(--font-heading)',
+  },
+  authorDate: {
+    fontSize: '0.78rem',
+    color: 'var(--text-muted)',
+  },
+  articleBodyCard: {
+    padding: '48px',
+    borderRadius: 'var(--radius-xl)',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '32px',
+  },
+  introParagraph: {
+    fontSize: '1.12rem',
+    lineHeight: 1.8,
+    color: 'var(--text-primary)',
+    fontWeight: 400,
+  },
+  sectionBlock: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '16px',
+  },
+  sectionHeading: {
+    fontSize: '1.5rem',
+    fontWeight: 700,
+    fontFamily: 'var(--font-heading)',
+    letterSpacing: '-0.01em',
+    marginTop: '8px',
+  },
+  bodyParagraph: {
+    fontSize: '1rem',
+    lineHeight: 1.75,
+    color: 'var(--text-secondary)',
+  },
+  tipCard: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '12px',
+    padding: '16px 20px',
+    background: 'rgba(0, 240, 255, 0.06)',
+    border: '1px solid rgba(0, 240, 255, 0.25)',
+    borderRadius: 'var(--radius-md)',
+    marginTop: '6px',
+  },
+  tipText: {
+    fontSize: '0.92rem',
+    lineHeight: 1.6,
+    color: 'var(--text-primary)',
+  },
+  takeawaysCard: {
+    padding: '24px',
+    borderRadius: 'var(--radius-lg)',
+    background: 'rgba(16, 185, 129, 0.06)',
+    border: '1px solid rgba(16, 185, 129, 0.25)',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '14px',
+  },
+  takeawaysTitle: {
+    fontSize: '1.15rem',
+    fontWeight: 700,
+    fontFamily: 'var(--font-heading)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  takeawaysList: {
+    listStyle: 'none',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '10px',
+  },
+  takeawayItem: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '10px',
+    fontSize: '0.94rem',
+    lineHeight: 1.6,
+    color: 'var(--text-primary)',
+  },
+  tagsRow: {
+    display: 'flex',
+    flexWrap: 'wrap' as const,
+    gap: '8px',
+    paddingTop: '16px',
+    borderTop: '1px solid var(--glass-border)',
+  },
+  relatedToolBanner: {
+    padding: '24px',
+    borderRadius: 'var(--radius-lg)',
+    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',
+    border: '1px solid var(--glass-border-bright)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap' as const,
+    gap: '18px',
+    marginTop: '12px',
+  },
+  relatedToolTitle: {
+    fontSize: '1.15rem',
+    fontWeight: 700,
+    fontFamily: 'var(--font-heading)',
+    marginBottom: '4px',
+  },
+  relatedToolDesc: {
+    fontSize: '0.9rem',
+    color: 'var(--text-secondary)',
+  },
+  coverImageContainer: {
+    width: '100%',
+    borderRadius: 'var(--radius-lg)',
+    overflow: 'hidden',
+    border: '1px solid var(--border-color)',
+    boxShadow: '0 12px 36px rgba(0, 0, 0, 0.4)',
+    marginBottom: '20px',
+  },
+  coverImage: {
+    width: '100%',
+    maxHeight: '440px',
+    objectFit: 'cover' as const,
+    display: 'block',
   },
 };
 

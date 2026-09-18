@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Search, Image, FileText, Calculator, ArrowLeft, Award } from 'lucide-react';
-import { TiltCard } from '../components/TiltCard';
+import { Search, Image as ImageIcon, FileText, ArrowLeft, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { navigate } from '../utils/router';
+
 const ImageEditor = React.lazy(() => import('./tools/ImageEditor').then(m => ({ default: m.ImageEditor })));
 const PdfEditor = React.lazy(() => import('./tools/PdfEditor').then(m => ({ default: m.PdfEditor })));
-const MathCalculators = React.lazy(() => import('./tools/MathCalculators').then(m => ({ default: m.MathCalculators })));
 
 interface ToolsProps {
   selectedTool: string;
@@ -13,367 +13,298 @@ interface ToolsProps {
 
 export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, defaultTab }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState('all');
 
   const toolsList = [
     {
       id: 'image-editor',
-      icon: <Image size={22} style={{ color: 'var(--primary)' }} />,
-      title: "Image Studio",
-      category: "creative",
-      description: "Fast, private image editor. Fine-tune brightness, contrast, rotate, crop standard dimensions, and download.",
-      keywords: ["edit", "image", "photo", "crop", "rotate", "canvas", "brightness"]
+      icon: <ImageIcon size={26} style={{ color: 'var(--primary)' }} />,
+      badge: 'CREATIVE SUITE',
+      title: 'Image Studio',
+      description: 'Ultra-fast, private image editor. Crop, resize, compress to exact KB/MB sizes, change DPI for passports/portals, remove backdrops, and convert formats.',
+      keywords: ['edit', 'image', 'photo', 'crop', 'rotate', 'compress', 'dpi', 'resize', 'background', 'convert'],
+      tabCount: '7 Specialized Tools',
+      action: () => setSelectedTool('image-editor'),
     },
     {
       id: 'pdf-editor',
-      icon: <FileText size={22} style={{ color: 'var(--secondary)' }} />,
-      title: "PDF Workshop",
-      category: "productivity",
-      description: "Convert individual or multiple images to PDF. Extract text content from image or document drafts.",
-      keywords: ["pdf", "convert", "extract", "images to pdf", "text reader", "ocr"]
+      icon: <FileText size={26} style={{ color: 'var(--secondary)' }} />,
+      badge: 'DOCUMENT SUITE',
+      title: 'PDF Workshop',
+      description: 'Comprehensive client-side PDF document manipulation. Merge multiple files, extract pages, convert images to PDF, run local OCR, and convert Office docs.',
+      keywords: ['pdf', 'merge', 'split', 'convert', 'extract', 'ocr', 'images to pdf', 'compress'],
+      tabCount: '6 Document Utilities',
+      action: () => setSelectedTool('pdf-editor'),
     },
-    {
-      id: 'math-calculators',
-      icon: <Calculator size={22} style={{ color: 'var(--primary)' }} />,
-      title: "Math Workbench",
-      category: "math",
-      description: "Interactive calculators including: Scientific Calculator, real-time Binary/Hex/Octal base converter, and Unit adapter.",
-      keywords: ["calculator", "math", "hex", "binary", "octal", "base", "unit", "converter"]
-    },
-    {
-      id: 'isro-ta-computer-science-pyq',
-      icon: <Award size={22} style={{ color: 'var(--secondary)' }} />,
-      title: "ISRO TA Computer Science PYQ Mock Test",
-      category: "mock-tests",
-      description: "Attempt the Indian Space Research Organisation (ISRO) Technical Assistant (TA) Computer Science Previous Year Question (PYQ) Mock Test in a real Computer Based Test (CBT) practice environment.",
-      keywords: ["isro", "ta", "technical assistant", "computer science", "pyq", "mock test", "exam", "cbt"]
-    }
   ];
 
-  const handleBackToDirectory = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setSelectedTool('none');
-    setSearchQuery('');
-    setActiveCategory('all');
-  };
+  const filteredTools = toolsList.filter(
+    (t) =>
+      t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.keywords.some((kw) => kw.includes(searchQuery.toLowerCase()))
+  );
 
-  const filteredTools = toolsList.filter((tool) => {
-    const matchesCategory = activeCategory === 'all' || tool.category === activeCategory;
-    const matchesSearch = tool.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tool.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tool.keywords.some(kw => kw.includes(searchQuery.toLowerCase()));
-    return matchesCategory && matchesSearch;
-  });
-
-  // Render active tool page
+  // Active Tool: Image Studio
   if (selectedTool === 'image-editor') {
     return (
       <div style={styles.toolContainer}>
-        <div style={styles.backBar}>
-          <a href="/tools" onClick={handleBackToDirectory} style={{ textDecoration: 'none' }}>
-            <span style={styles.backBtn}>
-              <ArrowLeft size={16} /> Back to Tools Directory
-            </span>
-          </a>
-        </div>
-        <React.Suspense fallback={
-          <div style={styles.toolLoading}>Initialising Image Studio...</div>
-        }>
-          <ImageEditor defaultTab={defaultTab as 'adjust' | 'crop' | 'resize' | 'dpi' | 'compress' | 'bg-remove' | 'convert' | undefined} />
+        <React.Suspense fallback={<div style={styles.toolLoading}>Initialising Image Studio...</div>}>
+          <ImageEditor defaultTab={defaultTab as any} />
         </React.Suspense>
       </div>
     );
   }
 
+  // Active Tool: PDF Workshop
   if (selectedTool === 'pdf-editor') {
     return (
       <div style={styles.toolContainer}>
-        <div style={styles.backBar}>
-          <a href="/tools" onClick={handleBackToDirectory} style={{ textDecoration: 'none' }}>
-            <span style={styles.backBtn}>
-              <ArrowLeft size={16} /> Back to Tools Directory
-            </span>
-          </a>
-        </div>
-        <React.Suspense fallback={
-          <div style={styles.toolLoading}>Initialising PDF Workshop...</div>
-        }>
-          <PdfEditor defaultTab={defaultTab as 'imgToPdf' | 'compress' | 'officeToPdf' | 'pdfToWord' | undefined} />
+        <React.Suspense fallback={<div style={styles.toolLoading}>Initialising PDF Workshop...</div>}>
+          <PdfEditor defaultTab={defaultTab as any} />
         </React.Suspense>
       </div>
     );
   }
 
-  if (selectedTool === 'math-calculators') {
-    return (
-      <div style={styles.toolContainer}>
-        <div style={styles.backBar}>
-          <a href="/tools" onClick={handleBackToDirectory} style={{ textDecoration: 'none' }}>
-            <span style={styles.backBtn}>
-              <ArrowLeft size={16} /> Back to Tools Directory
-            </span>
-          </a>
-        </div>
-        <React.Suspense fallback={
-          <div style={styles.toolLoading}>Initialising Math Workbench...</div>
-        }>
-          <MathCalculators defaultTab={defaultTab as 'scientific' | 'base' | 'unit' | 'solver' | 'plotter' | undefined} />
-        </React.Suspense>
-      </div>
-    );
-  }
-
+  // Directory Overview (Both tools)
   return (
-    <div style={styles.directory}>
-      <div className="container">
-        {/* Header */}
-        <div style={styles.header}>
-          <h1 style={styles.title}>Web Applications & Tools</h1>
-          <p style={styles.subtitle}>
-            Explore our collection of utility applications. Run completely locally inside your browser with speed and security.
-          </p>
+    <div style={styles.directoryWrapper}>
+      <div style={styles.header}>
+        <div className="liquid-glass-pill" style={{ marginBottom: '12px' }}>
+          <Sparkles size={14} style={{ color: 'var(--primary)' }} />
+          <span>LIQUID WORKSHOP DIRECTORY</span>
         </div>
+        <h1 style={styles.title}>
+          Select a <span className="liquid-gradient-text">Liquid Utility</span>
+        </h1>
+        <p style={styles.subtitle}>
+          Private, instant tools that run purely on your machine. Choose an engine below to start.
+        </p>
 
-        {/* Filters and Search Bar */}
-        <div style={styles.filterSection}>
-          <div style={styles.searchWrapper}>
-            <Search size={18} style={styles.searchIcon} />
+        {/* Search Box */}
+        <div style={styles.searchWrapper}>
+          <div className="liquid-glass-card" style={styles.searchCard}>
+            <Search size={18} style={{ color: 'var(--primary)' }} />
             <input
               type="text"
-              placeholder="Search tools (e.g. crop, pdf, base converter)..."
+              placeholder="Search tools, features, crop, compress, ocr, pdf..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={styles.searchInput}
             />
           </div>
-
-          <div style={styles.categories}>
-            {['all', 'creative', 'productivity', 'math', 'mock-tests'].map((cat) => {
-              const categoryLabels: Record<string, string> = {
-                all: 'All',
-                creative: 'Creative',
-                productivity: 'Productivity',
-                math: 'Math',
-                'mock-tests': 'PYQ Mock Tests'
-              };
-              return (
-                <button
-                  key={cat}
-                  style={{
-                    ...styles.categoryBtn,
-                    ...(activeCategory === cat ? styles.activeCategoryBtn : {})
-                  }}
-                  onClick={() => setActiveCategory(cat)}
-                >
-                  {categoryLabels[cat]}
-                </button>
-              );
-            })}
-          </div>
         </div>
+      </div>
 
-        {/* Directory Grid */}
-        {filteredTools.length > 0 ? (
-          <div style={styles.toolsGrid}>
-            {filteredTools.map((tool) => (
-              <TiltCard key={tool.id} className="glass-card" style={styles.toolCard} maxTilt={7} scale={1.02}>
-                <div style={styles.cardHeader}>
-                  <div style={styles.iconBox}>{tool.icon}</div>
-                  <span style={styles.tag}>{tool.category}</span>
-                </div>
-                <h3 style={styles.cardTitle}>{tool.title}</h3>
-                <p style={styles.cardDesc}>{tool.description}</p>
-                <a
-                  href={tool.id === 'isro-ta-computer-science-pyq' ? '/isro-ta-computer-science-pyq/' : `/tools/${tool.id}`}
-                  onClick={(e) => {
-                    if (tool.id !== 'isro-ta-computer-science-pyq') {
-                      e.preventDefault();
-                      setSelectedTool(tool.id);
-                    }
-                  }}
-                  className="btn-primary"
-                  style={{ ...styles.openBtn, textDecoration: 'none', display: 'flex' }}
-                >
-                  Open Tool
-                </a>
-              </TiltCard>
-            ))}
+      {/* Tools Cards */}
+      <div style={styles.grid}>
+        {filteredTools.map((tool) => (
+          <div
+            key={tool.id}
+            className="liquid-glass-card liquid-glass-card-interactive"
+            style={styles.card}
+            onClick={tool.action}
+          >
+            <div style={styles.cardTop}>
+              <div style={styles.iconCircle}>{tool.icon}</div>
+              <span className="liquid-badge">{tool.badge}</span>
+            </div>
+
+            <h2 style={styles.cardTitle}>{tool.title}</h2>
+            <p style={styles.cardDesc}>{tool.description}</p>
+
+            <div style={styles.cardFooter}>
+              <span style={styles.tabCount}>{tool.tabCount}</span>
+              <button className="liquid-glass-btn-primary" style={styles.openBtn}>
+                <span>Launch</span>
+                <ArrowRight size={14} />
+              </button>
+            </div>
           </div>
-        ) : (
-          <div style={styles.noResults}>
-            <p>No tools matched your search query. Try typing something else!</p>
-          </div>
-        )}
+        ))}
       </div>
     </div>
   );
 };
 
-const styles = {
-  directory: {
-    padding: '60px 0 100px 0',
-  },
+const styles: Record<string, React.CSSProperties> = {
   toolContainer: {
-    padding: '40px 0 80px 0',
+    width: '100%',
     minHeight: '80vh',
     display: 'flex',
     flexDirection: 'column' as const,
   },
-  backBar: {
-    maxWidth: '1200px',
+  stickyHeader: {
+    position: 'sticky',
+    top: '74px',
+    zIndex: 900,
     width: '100%',
-    margin: '0 auto 24px auto',
-    padding: '0 24px',
+    padding: '8px 16px',
+    display: 'flex',
+    justifyContent: 'center',
+    marginBottom: '16px',
+  },
+  stickyHeaderInner: {
+    width: '100%',
+    maxWidth: '1240px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '6px 14px',
+    background: 'var(--glass-bg)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid var(--glass-border)',
+    borderRadius: 'var(--radius-full)',
+    boxShadow: 'var(--shadow-pill)',
   },
   backBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    background: 'transparent',
     border: 'none',
-    color: 'var(--text-secondary)',
     cursor: 'pointer',
-    fontSize: '0.95rem',
-    fontWeight: 500,
-    fontFamily: 'var(--font-heading)',
-    transition: 'var(--transition-fast)',
-  },
-  header: {
-    textAlign: 'center' as const,
-    marginBottom: '48px',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '12px',
-  },
-  title: {
-    fontSize: 'clamp(2rem, 5vw, 3rem)',
-    fontWeight: 700,
-  },
-  subtitle: {
-    color: 'var(--text-secondary)',
-    fontSize: '1.05rem',
-    maxWidth: '600px',
-    margin: '0 auto',
-    lineHeight: 1.5,
-  },
-  filterSection: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: '24px',
-    marginBottom: '40px',
-    flexWrap: 'wrap' as const,
-  },
-  searchWrapper: {
-    position: 'relative' as const,
-    flex: '1 1 320px',
-    maxWidth: '480px',
-  },
-  searchIcon: {
-    position: 'absolute' as const,
-    left: '14px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    color: 'var(--text-muted)',
-  },
-  searchInput: {
-    width: '100%',
-    background: 'rgba(255, 255, 255, 0.02)',
-    border: '1px solid var(--border-glass)',
-    borderRadius: '10px',
-    padding: '12px 16px 12px 42px',
+    background: 'transparent',
     color: 'var(--text-primary)',
-    fontSize: '0.95rem',
-    outline: 'none',
-    transition: 'var(--transition-smooth)',
-  },
-  categories: {
     display: 'flex',
-    gap: '8px',
-    background: 'rgba(255,255,255,0.01)',
-    border: '1px solid var(--border-glass)',
-    padding: '4px',
-    borderRadius: '10px',
+    alignItems: 'center',
+    gap: '6px',
   },
-  categoryBtn: {
+  toolSwitcherPill: {
+    padding: '4px',
+    display: 'flex',
+    gap: '4px',
+  },
+  switchBtn: {
     background: 'transparent',
     border: 'none',
     color: 'var(--text-secondary)',
-    fontFamily: 'var(--font-heading)',
-    fontSize: '0.9rem',
+    padding: '6px 14px',
+    borderRadius: 'var(--radius-full)',
+    fontSize: '0.84rem',
     fontWeight: 500,
-    padding: '8px 16px',
-    borderRadius: '6px',
     cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
     transition: 'var(--transition-fast)',
   },
-  activeCategoryBtn: {
+  switchBtnActive: {
+    background: 'var(--glass-bg-hover)',
     color: 'var(--primary)',
-    background: 'rgba(0, 242, 254, 0.06)',
+    boxShadow: '0 0 12px var(--primary-glow)',
   },
-  toolsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-    gap: '24px',
-  },
-  toolCard: {
-    padding: '28px',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '16px',
-    textAlign: 'left' as const,
-  },
-  cardHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  iconBox: {
-    width: '42px',
-    height: '42px',
-    borderRadius: '8px',
-    background: 'rgba(255, 255, 255, 0.02)',
-    border: '1px solid var(--border-glass)',
+  privacyIndicator: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tag: {
-    fontSize: '0.75rem',
-    color: 'var(--text-muted)',
-    textTransform: 'uppercase' as const,
-    fontWeight: 600,
-    letterSpacing: '0.05em',
-  },
-  cardTitle: {
-    fontSize: '1.25rem',
-    fontWeight: 600,
-  },
-  cardDesc: {
-    color: 'var(--text-secondary)',
-    fontSize: '0.92rem',
-    lineHeight: 1.5,
-    flexGrow: 1,
-  },
-  openBtn: {
-    marginTop: '8px',
-    width: '100%',
-    justifyContent: 'center',
-  },
-  noResults: {
-    textAlign: 'center' as const,
-    padding: '40px 0',
-    color: 'var(--text-secondary)',
+    gap: '6px',
   },
   toolLoading: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: '40vh',
-    color: 'var(--primary)',
-    fontSize: '1rem',
+    minHeight: '60vh',
+    fontSize: '1.2rem',
     fontFamily: 'var(--font-heading)',
-    textShadow: '0 0 8px var(--primary-glow)',
+    color: 'var(--primary)',
+  },
+  directoryWrapper: {
+    width: '100%',
+    maxWidth: '1240px',
+    margin: '0 auto',
+    padding: '40px 20px 80px 20px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '40px',
+  },
+  header: {
+    textAlign: 'center' as const,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    gap: '12px',
+  },
+  title: {
+    fontSize: 'clamp(2rem, 4vw, 3.2rem)',
+    fontWeight: 800,
+    fontFamily: 'var(--font-heading)',
+  },
+  subtitle: {
+    fontSize: '1.05rem',
+    color: 'var(--text-secondary)',
+    maxWidth: '600px',
+  },
+  searchWrapper: {
+    width: '100%',
+    maxWidth: '560px',
+    marginTop: '16px',
+  },
+  searchCard: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '12px 20px',
+    borderRadius: 'var(--radius-full)',
+  },
+  searchInput: {
+    flex: 1,
+    background: 'transparent',
+    border: 'none',
+    outline: 'none',
+    color: 'var(--text-primary)',
+    fontSize: '0.95rem',
+    fontFamily: 'var(--font-body)',
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+    gap: '24px',
+  },
+  card: {
+    padding: '36px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '18px',
+    borderRadius: 'var(--radius-xl)',
+  },
+  cardTop: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  iconCircle: {
+    width: '54px',
+    height: '54px',
+    borderRadius: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'rgba(255, 255, 255, 0.05)',
+    border: '1px solid var(--glass-border)',
+  },
+  cardTitle: {
+    fontSize: '1.8rem',
+    fontWeight: 700,
+    fontFamily: 'var(--font-heading)',
+  },
+  cardDesc: {
+    fontSize: '0.95rem',
+    lineHeight: 1.6,
+    color: 'var(--text-secondary)',
+  },
+  cardFooter: {
+    marginTop: 'auto',
+    paddingTop: '20px',
+    borderTop: '1px solid var(--glass-border)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  tabCount: {
+    fontSize: '0.85rem',
+    color: 'var(--text-muted)',
+    fontWeight: 500,
+  },
+  openBtn: {
+    padding: '8px 18px',
+    fontSize: '0.88rem',
   },
 };
+
 export default Tools;

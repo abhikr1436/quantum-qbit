@@ -463,9 +463,43 @@ if ($method === 'PUT') {
     exit;
 }
 
-// 4. DELETE ROUTE (Delete)
+// 4. DELETE ROUTE (Delete, Batch Delete, Delete All)
 if ($method === 'DELETE') {
     $id = isset($_GET['id']) ? trim($_GET['id']) : (isset($input['id']) ? trim($input['id']) : '');
+    $action = isset($_GET['action']) ? trim($_GET['action']) : (isset($input['action']) ? trim($input['action']) : '');
+    $ids = isset($input['ids']) && is_array($input['ids']) ? $input['ids'] : [];
+
+    // Delete All
+    if ($action === 'delete_all' || $id === 'all') {
+        if ($pdo) {
+            try {
+                $pdo->exec("DELETE FROM blogs");
+            } catch (PDOException $e) {}
+        }
+        saveFallbackBlogs($blogsFile, []);
+        echo json_encode(['success' => true, 'message' => 'All posts deleted']);
+        exit;
+    }
+
+    // Batch Delete
+    if (!empty($ids)) {
+        if ($pdo) {
+            try {
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                $stmt = $pdo->prepare("DELETE FROM blogs WHERE id IN ($placeholders)");
+                $stmt->execute($ids);
+            } catch (PDOException $e) {}
+        }
+        $blogs = getFallbackBlogs($blogsFile);
+        $filtered = array_values(array_filter($blogs, function($p) use ($ids) {
+            return !in_array($p['id'], $ids);
+        }));
+        saveFallbackBlogs($blogsFile, $filtered);
+        echo json_encode(['success' => true, 'deletedCount' => count($ids)]);
+        exit;
+    }
+
+    // Single Delete
     if (empty($id)) {
         http_response_code(400);
         echo json_encode(['error' => 'Post ID is required']);

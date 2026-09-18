@@ -1,8 +1,8 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import Sidebar from './components/Sidebar';
-import Background3DScene from './components/Background3DScene';
+import LiquidNavbar from './components/LiquidNavbar';
+import LiquidFooter from './components/LiquidFooter';
+import LiquidGlassBackground from './components/LiquidGlassBackground';
+import LandingPage from './pages/LandingPage';
 import { usePath, navigate } from './utils/router';
 import { updateSEO } from './utils/seo';
 
@@ -12,35 +12,22 @@ declare global {
   }
 }
 
-// Static import for LandingPage to ensure immediate rendering of homepage
-import LandingPage from './pages/LandingPage';
-
-// Lazy load other views to keep the initial JS bundle size minimal for mobile PageSpeed (90+)
+// Lazy load tool workshops, blogs & compliance pages
 const Tools = lazy(() => import('./pages/Tools'));
+const Blogs = lazy(() => import('./pages/Blogs'));
+const AdminBlogs = lazy(() => import('./pages/AdminBlogs'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
 const ContactUs = lazy(() => import('./pages/ContactUs'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions'));
-const Blogs = lazy(() => import('./pages/Blogs'));
-const Admin = lazy(() => import('./pages/Admin'));
-const MockTests = lazy(() => import('./pages/MockTests'));
 
 function App() {
   const rawPath = usePath();
   const path = rawPath.endsWith('/') && rawPath.length > 1 ? rawPath.slice(0, -1) : rawPath;
 
-  // Safety net: force full page reload for static directories to bypass client-side SPA routing
-  useEffect(() => {
-    if (rawPath.startsWith('/isro-pyq') || rawPath.startsWith('/isro-ta-computer-science-pyq')) {
-      window.location.replace(rawPath.endsWith('/') ? rawPath : rawPath + '/');
-    }
-  }, [rawPath]);
-
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
-  const [blogCategory, setBlogCategory] = useState<string>('all');
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('theme');
-    return (saved === 'light' || saved === 'dark') ? saved : 'light';
+    return (saved === 'light' || saved === 'dark') ? saved : 'dark';
   });
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -61,25 +48,24 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Load heavy external tracking/ad scripts on delay or first interaction to maximize PageSpeed score
+  // Performance script loading for Google Analytics & AdSense
   useEffect(() => {
     let loaded = false;
     const loadScripts = () => {
       if (loaded) return;
       loaded = true;
-      
-      // Clean up event listeners
+
       window.removeEventListener('scroll', loadScripts);
       window.removeEventListener('mousemove', loadScripts);
       window.removeEventListener('touchstart', loadScripts);
-      
-      // 1. Load Google Analytics
+
+      // Google Analytics
       const gaScript = document.createElement('script');
       gaScript.async = true;
       gaScript.src = "https://www.googletagmanager.com/gtag/js?id=G-8T0PECJQD7";
       document.head.appendChild(gaScript);
-      
-      // 2. Load Google AdSense
+
+      // Google AdSense
       const adScript = document.createElement('script');
       adScript.async = true;
       adScript.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3643379306547907";
@@ -87,9 +73,7 @@ function App() {
       document.head.appendChild(adScript);
     };
 
-    // Load after 3.5 seconds delay or on first interaction (whichever comes first)
     const timeoutId = setTimeout(loadScripts, 3500);
-
     window.addEventListener('scroll', loadScripts, { passive: true });
     window.addEventListener('mousemove', loadScripts, { passive: true });
     window.addEventListener('touchstart', loadScripts, { passive: true });
@@ -112,98 +96,64 @@ function App() {
   let toolTab: string | undefined = undefined;
   let blogPostId: string | undefined = undefined;
 
-  if (path.startsWith('/tools')) {
-    page = 'tools';
-    const subpath = path.substring(6); // e.g. "/pdf-editor", "/pdf-compressor"
-    if (subpath === '/image-editor' || subpath === '/image-transform') {
-      tool = 'image-editor';
-      toolTab = 'adjust';
-    } else if (subpath === '/image-compressor' || subpath === '/photo-compressor') {
-      tool = 'image-editor';
-      toolTab = 'compress';
-    } else if (subpath === '/remove-bg' || subpath === '/bg-remove' || subpath === '/remove-background') {
-      tool = 'image-editor';
-      toolTab = 'bg-remove';
-    } else if (subpath === '/image-crop' || subpath === '/crop-image') {
-      tool = 'image-editor';
-      toolTab = 'crop';
-    } else if (subpath === '/image-resize' || subpath === '/resize-image') {
-      tool = 'image-editor';
-      toolTab = 'resize';
-    } else if (subpath === '/image-dpi' || subpath === '/change-dpi' || subpath === '/dpi-converter') {
-      tool = 'image-editor';
-      toolTab = 'dpi';
-    } else if (subpath === '/image-converter' || subpath === '/convert-image') {
-      tool = 'image-editor';
-      toolTab = 'convert';
-    } else if (subpath === '/pdf-editor') {
-      tool = 'pdf-editor';
-    } else if (subpath === '/pdf-compressor') {
-      tool = 'pdf-editor';
-      toolTab = 'compress';
-    } else if (subpath === '/images-to-pdf') {
-      tool = 'pdf-editor';
-      toolTab = 'imgToPdf';
-    } else if (subpath === '/convert-to-pdf') {
-      tool = 'pdf-editor';
-      toolTab = 'officeToPdf';
-    } else if (subpath === '/pdf-to-word') {
-      tool = 'pdf-editor';
-      toolTab = 'pdfToWord';
-    } else if (subpath === '/math-calculators') {
-      tool = 'math-calculators';
-    } else if (subpath === '/math-scientific') {
-      tool = 'math-calculators';
-      toolTab = 'scientific';
-    } else if (subpath === '/math-base') {
-      tool = 'math-calculators';
-      toolTab = 'base';
-    } else if (subpath === '/math-unit') {
-      tool = 'math-calculators';
-      toolTab = 'unit';
-    } else if (subpath === '/math-solver') {
-      tool = 'math-calculators';
-      toolTab = 'solver';
-    } else if (subpath === '/math-plotter') {
-      tool = 'math-calculators';
-      toolTab = 'plotter';
-    } else if (subpath === '' || subpath === '/') {
-      tool = 'none';
-    }
-  } else if (path === '/image-editor' || path === '/image-transform') {
-    page = 'tools';
+  if (path === '/image-studio' || path === '/image-editor' || path === '/image-transform' || path === '/tools/image-editor' || path === '/tools/image-transform') {
+    page = 'image-studio';
     tool = 'image-editor';
     toolTab = 'adjust';
-  } else if (path === '/image-compressor' || path === '/photo-compressor') {
-    page = 'tools';
+  } else if (path === '/image-compressor' || path === '/photo-compressor' || path === '/tools/image-compressor') {
+    page = 'image-studio';
     tool = 'image-editor';
     toolTab = 'compress';
-  } else if (path === '/remove-bg' || path === '/bg-remove' || path === '/remove-background') {
-    page = 'tools';
+  } else if (path === '/remove-bg' || path === '/bg-remove' || path === '/remove-background' || path === '/tools/remove-bg') {
+    page = 'image-studio';
     tool = 'image-editor';
     toolTab = 'bg-remove';
-  } else if (path === '/image-crop' || path === '/crop-image') {
-    page = 'tools';
+  } else if (path === '/image-crop' || path === '/crop-image' || path === '/tools/image-crop') {
+    page = 'image-studio';
     tool = 'image-editor';
     toolTab = 'crop';
-  } else if (path === '/image-resize' || path === '/resize-image') {
-    page = 'tools';
+  } else if (path === '/image-resize' || path === '/resize-image' || path === '/tools/image-resize') {
+    page = 'image-studio';
     tool = 'image-editor';
     toolTab = 'resize';
-  } else if (path === '/image-dpi' || path === '/change-dpi' || path === '/dpi-converter') {
-    page = 'tools';
+  } else if (path === '/image-dpi' || path === '/change-dpi' || path === '/dpi-converter' || path === '/tools/image-dpi') {
+    page = 'image-studio';
     tool = 'image-editor';
     toolTab = 'dpi';
-  } else if (path === '/image-converter' || path === '/convert-image') {
-    page = 'tools';
+  } else if (path === '/image-converter' || path === '/convert-image' || path === '/tools/image-converter') {
+    page = 'image-studio';
     tool = 'image-editor';
     toolTab = 'convert';
+  } else if (path === '/pdf-workshop' || path === '/pdf-editor' || path === '/tools/pdf-editor') {
+    page = 'pdf-workshop';
+    tool = 'pdf-editor';
+  } else if (path === '/pdf-compressor' || path === '/tools/pdf-compressor') {
+    page = 'pdf-workshop';
+    tool = 'pdf-editor';
+    toolTab = 'compress';
+  } else if (path === '/images-to-pdf' || path === '/tools/images-to-pdf') {
+    page = 'pdf-workshop';
+    tool = 'pdf-editor';
+    toolTab = 'imgToPdf';
+  } else if (path === '/convert-to-pdf' || path === '/tools/convert-to-pdf') {
+    page = 'pdf-workshop';
+    tool = 'pdf-editor';
+    toolTab = 'officeToPdf';
+  } else if (path === '/pdf-to-word' || path === '/tools/pdf-to-word') {
+    page = 'pdf-workshop';
+    tool = 'pdf-editor';
+    toolTab = 'pdfToWord';
+  } else if (path === '/tools') {
+    page = 'tools';
+    tool = 'none';
   } else if (path.startsWith('/blogs')) {
     page = 'blogs';
     const match = path.match(/^\/blogs\/([^/]+)/);
     if (match) {
       blogPostId = match[1];
     }
+  } else if (path === '/admin' || path === '/admin/blogs') {
+    page = 'admin-blogs';
   } else if (path === '/about') {
     page = 'about';
   } else if (path === '/contact') {
@@ -212,117 +162,75 @@ function App() {
     page = 'privacy';
   } else if (path === '/terms') {
     page = 'terms';
-  } else if (path === '/admin') {
-    page = 'admin';
-  } else if (path === '/mock-tests') {
-    page = 'mock-tests';
   }
 
-  // Toggle body class for admin page to hide the traditional sticky bottom ad
-  useEffect(() => {
-    if (page === 'admin') {
-      document.body.classList.add('page-admin');
-    } else {
-      document.body.classList.remove('page-admin');
-    }
-  }, [page]);
-
-  // Dynamic SEO Updates for main pages (Tools and Blogs update their own metadata)
+  // SEO Updates
   useEffect(() => {
     if (page === 'landing') {
       updateSEO(
-        "Quantum Qbit | Privacy-First Web Utilities & Developer Tools",
-        "Quantum Qbit offers free, privacy-first web utilities. Edit photos, convert PDFs, and solve math formulas 100% locally in your browser with sub-second speed.",
-        "/",
-        {
-          "@context": "https://schema.org",
-          "@graph": [
-            {
-              "@type": "WebSite",
-              "@id": "https://quantumqbit.in/#website",
-              "url": "https://quantumqbit.in/",
-              "name": "Quantum Qbit",
-              "description": "Privacy-First Web Utilities & Developer Tools"
-            },
-            {
-              "@type": "WebApplication",
-              "@id": "https://quantumqbit.in/#webapp",
-              "url": "https://quantumqbit.in/",
-              "name": "Quantum Qbit Web Utilities",
-              "applicationCategory": "UtilitiesApplication, DeveloperApplication",
-              "operatingSystem": "All",
-              "browserRequirements": "Requires HTML5 Canvas and JavaScript enabled.",
-              "offers": {
-                "@type": "Offer",
-                "price": "0",
-                "priceCurrency": "USD"
-              }
-            },
-            {
-              "@type": "Organization",
-              "@id": "https://quantumqbit.in/#organization",
-              "name": "Quantum Qbit",
-              "url": "https://quantumqbit.in/",
-              "logo": {
-                "@type": "ImageObject",
-                "@id": "https://quantumqbit.in/#logo",
-                "url": "https://quantumqbit.in/favicon_qq.png",
-                "caption": "Quantum Qbit Logo"
-              },
-              "image": {
-                "@id": "https://quantumqbit.in/#logo"
-              }
-            }
-          ]
-        }
+        "Quantum Qbit | Liquid Glass Media Studio & Local Utilities",
+        "Studio-grade media utilities with liquid glass design. Edit photos, compress images, and manage PDFs 100% locally in your browser with zero cloud uploads.",
+        "/"
       );
-    } else if (page === 'tools' && tool === 'none') {
+    } else if (page === 'image-studio') {
       updateSEO(
-        "Web Applications & Tools Directory | Quantum Qbit",
-        "Browse our collection of free client-side utility applications. Compress images, merge/convert PDFs, and perform base math offline.",
+        "Image Studio | Quantum Qbit Liquid Tools",
+        "High-performance client-side photo editor. Crop, resize, compress to exact KB targets, adjust DPI, and convert formats 100% in browser memory.",
+        "/image-studio"
+      );
+    } else if (page === 'pdf-workshop') {
+      updateSEO(
+        "PDF Workshop | Quantum Qbit Liquid Tools",
+        "Merge, split, compress, and run client-side OCR on PDFs. Convert photos to PDF and documents without remote server storage.",
+        "/pdf-workshop"
+      );
+    } else if (page === 'tools') {
+      updateSEO(
+        "Media Utilities Directory | Quantum Qbit",
+        "Explore Quantum Qbit's private in-browser tool suite for photos and PDF workflows.",
         "/tools"
       );
+    } else if (page === 'blogs') {
+      // Blogs manages its own SEO based on active article
     } else if (page === 'about') {
       updateSEO(
-        "About Our Mission - Privacy-First Web Utilities | Quantum Qbit",
-        "Learn about Quantum Qbit's offline-first architecture. All calculation, image resizing, and PDF editing happen 100% in your browser.",
+        "About Us | Quantum Qbit Liquid Architecture",
+        "Discover our mission to return computing power to the client with liquid glass aesthetics and zero data leakage.",
         "/about"
       );
     } else if (page === 'contact') {
       updateSEO(
-        "Contact Us - Quantum Qbit Support",
-        "Get in touch with the Quantum Qbit development team. Send suggestions, feature requests, or business inquiries.",
+        "Contact Us | Quantum Qbit Support",
+        "Reach out to the Quantum Qbit team with questions, feature requests, or suggestions.",
         "/contact"
       );
     } else if (page === 'privacy') {
       updateSEO(
         "Privacy Policy - 100% Client-Side Safe | Quantum Qbit",
-        "Read our privacy policy. Since all tools process data locally on your device, your private files never touch a remote server.",
+        "Read our privacy policy. Your private files never leave your browser memory.",
         "/privacy"
+      );
+    } else if (page === 'admin-blogs') {
+      updateSEO(
+        "Blog Management Studio | Quantum Qbit Admin",
+        "Administrative console to publish, edit, batch delete, and manage Quantum Qbit engineering articles using custom XML-like tag markup.",
+        "/admin"
       );
     } else if (page === 'terms') {
       updateSEO(
-        "Terms and Conditions - Quantum Qbit",
-        "Terms of service for utilizing the free tools and utility libraries on the Quantum Qbit workspace.",
+        "Terms and Conditions | Quantum Qbit",
+        "Terms of service for utilizing the free tools and utility libraries on the Quantum Qbit platform.",
         "/terms"
       );
-    } else if (page === 'admin') {
-      updateSEO(
-        "Admin Portal | Quantum Qbit",
-        "Management interface for blogging categories and publishing content.",
-        "/admin"
-      );
-    } else if (page === 'mock-tests') {
-      updateSEO(
-        "Competitive Exam Mock Tests | Quantum Qbit",
-        "Attempt previous year question (PYQ) mock tests for ISRO Technical Assistant (TA) Computer Science and other competitive exams with real-time scoring.",
-        "/mock-tests"
-      );
     }
-  }, [page, tool]);
+  }, [page]);
 
-  const handleSetCurrentPage = (p: string) => {
+  const handleNavPage = (p: string) => {
     if (p === 'landing') navigate('/');
+    else if (p === 'image-studio') navigate('/image-studio');
+    else if (p === 'pdf-workshop') navigate('/pdf-workshop');
+    else if (p === 'blogs') navigate('/blogs');
+    else if (p === 'admin-blogs' || p === 'admin') navigate('/admin');
     else navigate(`/${p}`);
   };
 
@@ -330,25 +238,29 @@ function App() {
     switch (page) {
       case 'landing':
         return <LandingPage />;
+      case 'image-studio':
+      case 'pdf-workshop':
       case 'tools':
         return (
-          <Tools 
-            selectedTool={tool} 
+          <Tools
+            selectedTool={tool}
             setSelectedTool={(newTool) => {
               if (newTool === 'none') {
                 navigate('/tools');
+              } else if (newTool === 'image-editor') {
+                navigate('/image-studio');
+              } else if (newTool === 'pdf-editor') {
+                navigate('/pdf-workshop');
               } else {
                 navigate(`/tools/${newTool}`);
               }
-            }} 
+            }}
             defaultTab={toolTab}
           />
         );
       case 'blogs':
         return (
-          <Blogs 
-            selectedCategory={blogCategory} 
-            setSelectedCategory={setBlogCategory} 
+          <Blogs
             postId={blogPostId}
             setPostId={(newPostId) => {
               if (newPostId) {
@@ -359,104 +271,96 @@ function App() {
             }}
           />
         );
+      case 'admin-blogs':
+        return <AdminBlogs />;
       case 'about':
         return <AboutUs />;
       case 'contact':
         return <ContactUs />;
       case 'privacy':
-        return <PrivacyPolicy setCurrentPage={handleSetCurrentPage} />;
+        return <PrivacyPolicy setCurrentPage={handleNavPage} />;
       case 'terms':
-        return <TermsAndConditions setCurrentPage={handleSetCurrentPage} />;
-      case 'admin':
-        return <Admin setCurrentPage={handleSetCurrentPage} />;
-      case 'mock-tests':
-        return <MockTests />;
+        return <TermsAndConditions setCurrentPage={handleNavPage} />;
       default:
         return <LandingPage />;
     }
   };
 
   return (
-    <div style={styles.appContainer}>
-      <Background3DScene />
-      <Navbar 
-        currentPage={page} 
-        setCurrentPage={handleSetCurrentPage} 
-        theme={theme} 
-        toggleTheme={toggleTheme} 
-        setSidebarOpen={setSidebarOpen}
-      />
-      
-      {page !== 'admin' && (
-        <Sidebar 
-          isOpen={sidebarOpen} 
-          onClose={() => setSidebarOpen(false)}
+    <>
+      <LiquidGlassBackground />
+      <div style={styles.appContainer}>
+        <LiquidNavbar
           currentPage={page}
-          setCurrentPage={handleSetCurrentPage}
-          selectedTool={tool}
-          setSelectedTool={(t) => {
-            if (t === 'none') navigate('/tools');
-            else navigate(`/tools/${t}`);
-          }}
-          selectedCategory={blogCategory}
-          setSelectedCategory={setBlogCategory}
+          setCurrentPage={handleNavPage}
+          theme={theme}
+          toggleTheme={toggleTheme}
         />
-      )}
-      
-      <div className="content-layout">
-        <main style={styles.mainContent} className="main-content-area">
-          <Suspense fallback={
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: '60vh',
-              color: 'var(--primary)',
-              fontSize: '1.1rem',
-              fontFamily: 'var(--font-heading)',
-              textShadow: '0 0 10px var(--primary-glow)',
-              letterSpacing: '0.05em'
-            }}>
-              Loading Quantum Systems...
-            </div>
-          }>
+
+        <main style={styles.mainContent}>
+          <Suspense
+            fallback={
+              <div style={styles.loadingContainer}>
+                <div className="liquid-glass-pill">
+                  <span>Initialising Liquid Systems...</span>
+                </div>
+              </div>
+            }
+          >
             {renderPage()}
           </Suspense>
         </main>
-      </div>
 
-      <Footer />
+        <LiquidFooter setCurrentPage={handleNavPage} />
 
-      {toast && (
-        <div className="toast-animation">
-          <div className="toast-card" style={{
-            borderLeft: toast.type === 'error' ? '4px solid #ef4444' : '4px solid #10b981'
-          }}>
-            <span style={{ color: toast.type === 'error' ? '#ef4444' : '#10b981', display: 'flex', alignItems: 'center' }}>
-              {toast.type === 'error' ? '⚠️' : '✨'}
-            </span>
-            <span>{toast.message}</span>
-            <button className="toast-close-btn" onClick={() => setToast(null)}>×</button>
+        {toast && (
+          <div className="toast-animation">
+            <div
+              className="toast-card"
+              style={{
+                borderLeft: toast.type === 'error' ? '4px solid #ef4444' : '4px solid #10b981',
+              }}
+            >
+              <span style={{ fontSize: '1.2rem' }}>
+                {toast.type === 'error' ? '⚠️' : '✨'}
+              </span>
+              <span>{toast.message}</span>
+              <button className="toast-close-btn" onClick={() => setToast(null)}>
+                ×
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 }
 
-const styles = {
+const styles: Record<string, React.CSSProperties> = {
   appContainer: {
     display: 'flex',
     flexDirection: 'column' as const,
     minHeight: '100vh',
     position: 'relative' as const,
+    zIndex: 1,
+    width: '100%',
+    backgroundColor: 'transparent',
   },
   mainContent: {
     flexGrow: 1,
     display: 'flex',
     flexDirection: 'column' as const,
+    width: '100%',
   },
-
+  loadingContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '60vh',
+    fontSize: '1.1rem',
+    fontFamily: 'var(--font-heading)',
+    color: 'var(--primary)',
+  },
 };
 
 export default App;
