@@ -378,12 +378,12 @@ export const AdminBlogs: React.FC = () => {
     e.target.value = '';
   };
 
-  // Copy AI prompt template
+  // Copy tag format template
   const handleCopyAiPrompt = () => {
     navigator.clipboard.writeText(AI_PROMPT_TEMPLATE);
     setCopiedPrompt(true);
     setTimeout(() => setCopiedPrompt(false), 2500);
-    window.showToast?.('AI Prompt format copied to clipboard!', 'success');
+    window.showToast?.('Format structure copied to clipboard!', 'success');
   };
 
   // Optional: Generate with DeepSeek using the user's stored key
@@ -972,13 +972,13 @@ You MUST output the article using the following XML-like custom tag structure wi
                 </div>
               </div>
 
-              {/* Right: AI Prompt Template Box & Format Guide */}
+              {/* Right: Custom Tag Format Box */}
               <div style={styles.editorRightCol}>
                 <div className="liquid-glass-card" style={styles.aiPromptCard}>
                   <div style={styles.aiPromptHeader}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <Sparkles size={16} style={{ color: 'var(--primary)' }} />
-                      <strong style={{ fontSize: '0.9rem' }}>AI Prompt Format</strong>
+                      <strong style={{ fontSize: '0.9rem' }}>Required Tag Format</strong>
                     </div>
 
                     <button
@@ -987,12 +987,12 @@ You MUST output the article using the following XML-like custom tag structure wi
                       style={{ padding: '6px 12px', fontSize: '0.78rem' }}
                     >
                       {copiedPrompt ? <Check size={13} /> : <Copy size={13} />}
-                      <span>{copiedPrompt ? 'Copied!' : 'Copy AI Prompt'}</span>
+                      <span>{copiedPrompt ? 'Copied!' : 'Copy Format'}</span>
                     </button>
                   </div>
 
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '8px 0 12px' }}>
-                    Copy this prompt into any AI agent (ChatGPT, DeepSeek, Claude) to get formatted output:
+                    Copy this structure and ask any AI agent to write your article using this exact format:
                   </p>
 
                   <pre style={styles.aiPromptBox}>

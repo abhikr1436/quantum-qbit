@@ -9,16 +9,10 @@ export interface ParseResult {
 }
 
 /**
- * Standard AI Prompt Template that users can copy to clipboard and hand to any AI
+ * Standard Custom Tag Format that users can copy to clipboard
  */
-export const AI_PROMPT_TEMPLATE = `You are a world-class technical writer for the Quantum Qbit engineering blog.
-Write an in-depth, authoritative, engaging article on the topic: "[REPLACE WITH YOUR TOPIC]".
-
-IMPORTANT: You MUST format your entire response using the following XML-like custom tag structure.
-Do NOT enclose the whole response in triple backticks. Just output the tags directly:
-
-<title>Put an engaging, SEO-optimized title here</title>
-<category>Privacy & Security</category> <!-- Options: Privacy & Security | Image Studio | PDF Workflows | Web Tech | Tutorials -->
+export const AI_PROMPT_TEMPLATE = `<title>Put an engaging, SEO-optimized title here</title>
+<category>Privacy & Security</category> <!-- Options: Privacy & Security | Image Studio | PDF Workflows | Web Tech -->
 <summary>Write a concise, 2-sentence hook describing what this article covers and why it matters.</summary>
 <cover_image>https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe</cover_image> <!-- Optional image URL -->
 <tags>Browser Privacy, WebAssembly, Security, Image Processing</tags>
