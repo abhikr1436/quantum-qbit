@@ -1,9 +1,26 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Sliders, RotateCw, RefreshCw, Download, Upload, Image as ImageIcon, Sparkles, Activity } from 'lucide-react';
+import { 
+  Sliders, 
+  RotateCw, 
+  RefreshCw, 
+  Download, 
+  Upload, 
+  Image as ImageIcon, 
+  Sparkles, 
+  Activity,
+  Crop,
+  Maximize2,
+  Award,
+  Archive,
+  Wand2
+} from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { jsPDF } from 'jspdf';
 import { navigate } from '../../utils/router';
 import { updateSEO } from '../../utils/seo';
+import { createIcoBlob } from '../../utils/icoEncoder';
+import { isHeicFile, convertHeicToPngBlob } from '../../utils/heicHelper';
+import { SeoConverterLanding, type ConverterSeoData } from '../../components/SeoConverterLanding';
 
 // -------------------------------------------------------------
 // DPI Metadata Extraction & Injection Utilities (Client-Side)
@@ -274,9 +291,11 @@ const hexToRgb = (hex: string) => {
 
 interface ImageEditorProps {
   defaultTab?: 'adjust' | 'crop' | 'resize' | 'dpi' | 'compress' | 'bg-remove' | 'convert';
+  defaultConvertFormat?: 'png' | 'jpeg' | 'webp' | 'bmp' | 'pdf' | 'ico' | 'svg';
+  seoData?: ConverterSeoData;
 }
 
-export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
+export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab, defaultConvertFormat, seoData }) => {
   // Navigation tabs in sidebar
   const [activeTab, setActiveTab] = useState<'adjust' | 'crop' | 'resize' | 'dpi' | 'compress' | 'bg-remove' | 'convert'>(defaultTab || 'adjust');
 
@@ -288,8 +307,26 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
     }
   }, [defaultTab]);
 
-  // Synchronize SEO tags and JSON-LD schema on tab changes
+  // Synchronize SEO tags and JSON-LD schema on tab changes (skip if dedicated seoData provided)
   useEffect(() => {
+    if (seoData) {
+      const converterSchema = {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": seoData.headline,
+        "description": seoData.metaDescription,
+        "operatingSystem": "All",
+        "applicationCategory": "MultimediaApplication",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      };
+      updateSEO(seoData.title, seoData.metaDescription, `/${seoData.slug}`, converterSchema);
+      return;
+    }
+
     const imageFaqSchema = {
       "@context": "https://schema.org",
       "@type": "FAQPage",
@@ -416,8 +453,8 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
         : (isDpiConverterPath ? "/tools/dpi-converter" : "/tools/image-dpi");
     } else if (activeTab === 'convert') {
       const isConvertImagePath = window.location.pathname.includes('convert-image');
-      title = "Image Converter Online Free - WebP, PNG, JPG, BMP | Quantum Qbit";
-      description = "Convert images between WEBP, PNG, JPEG, BMP, and PDF formats online. Free client-side image file converter.";
+      title = "Image Converter Online Free - WebP, PNG, JPG, ICO, BMP | Quantum Qbit";
+      description = "Convert images between WEBP, PNG, JPEG, ICO, BMP, SVG, and PDF formats online. Free client-side image file converter.";
       canonicalPath = isConvertImagePath ? "/tools/convert-image" : "/tools/image-converter";
     } else if (activeTab === 'adjust') {
       title = "Adjust Image Online - Free Image Transform & Filters | Quantum Qbit";
@@ -426,10 +463,22 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
     }
 
     updateSEO(title, description, canonicalPath, imageFaqSchema);
-  }, [activeTab]);
+  }, [activeTab, seoData]);
 
   // Format Conversion states
-  const [convertFormat, setConvertFormat] = useState<'png' | 'jpeg' | 'webp' | 'bmp' | 'pdf'>('png');
+  const [convertFormat, setConvertFormat] = useState<'png' | 'jpeg' | 'webp' | 'bmp' | 'pdf' | 'ico' | 'svg'>(
+    defaultConvertFormat || 'png'
+  );
+  const [icoMultiSize, setIcoMultiSize] = useState<boolean>(true);
+  const [icoSingleSize, setIcoSingleSize] = useState<number>(32);
+  const [isDecodingHeic, setIsDecodingHeic] = useState<boolean>(false);
+  const [isDragOver, setIsDragOver] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (defaultConvertFormat) {
+      setConvertFormat(defaultConvertFormat);
+    }
+  }, [defaultConvertFormat]);
   const [convertQuality, setConvertQuality] = useState<number>(90);
   const [convertedBlob, setConvertedBlob] = useState<Blob | null>(null);
   const [convertedSizeStr, setConvertedSizeStr] = useState<string>('');
@@ -1006,13 +1055,28 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFilename(file.name.split('.')[0] + '-edited');
-      setFileSizeBytes(file.size);
-      setFileSizeStr(formatBytes(file.size));
-      setOriginalFileType(file.type || 'image/png');
+  const processInputFile = async (file: File) => {
+    try {
+      let targetFile = file;
+      if (isHeicFile(file)) {
+        setIsDecodingHeic(true);
+        try {
+          const pngBlob = await convertHeicToPngBlob(file);
+          targetFile = new File([pngBlob], file.name.replace(/\.(heic|heif)$/i, '.png'), { type: 'image/png' });
+        } catch (err) {
+          console.error('HEIC decoding failed:', err);
+          if (window.showToast) window.showToast('Could not decode HEIC image. Please try another format.');
+          setIsDecodingHeic(false);
+          return;
+        } finally {
+          setIsDecodingHeic(false);
+        }
+      }
+
+      setFilename(targetFile.name.split('.')[0] + '-edited');
+      setFileSizeBytes(targetFile.size);
+      setFileSizeStr(formatBytes(targetFile.size));
+      setOriginalFileType(targetFile.type || 'image/png');
       setOriginalImageSize({ width: 0, height: 0 }); // Reset uncropped dimensions tracker
       
       const reader = new FileReader();
@@ -1020,7 +1084,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
         setImage(reader.result as string);
         setOriginalImage(reader.result as string); // Save original uncropped source image
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(targetFile);
 
       // Parse metadata for DPI
       const bufferReader = new FileReader();
@@ -1031,7 +1095,16 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
           setOriginalDpi(parsed);
         }
       };
-      bufferReader.readAsArrayBuffer(file);
+      bufferReader.readAsArrayBuffer(targetFile);
+    } catch (err) {
+      console.error('Error reading input file:', err);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processInputFile(file);
     }
   };
 
@@ -1401,7 +1474,23 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
     const canvas = previewCanvasRef.current;
     let blob: Blob | null = null;
 
-    if (convertFormat === 'bmp') {
+    if (convertFormat === 'ico') {
+      try {
+        blob = await createIcoBlob(canvas, { multiSize: icoMultiSize, singleSize: icoSingleSize });
+      } catch (err) {
+        console.error('ICO Conversion failed:', err);
+      }
+    } else if (convertFormat === 'svg') {
+      try {
+        const pngDataUrl = canvas.toDataURL('image/png');
+        const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${canvas.width}" height="${canvas.height}" viewBox="0 0 ${canvas.width} ${canvas.height}">
+  <image width="${canvas.width}" height="${canvas.height}" xlink:href="${pngDataUrl}"/>
+</svg>`;
+        blob = new Blob([svgContent], { type: 'image/svg+xml' });
+      } catch (err) {
+        console.error('SVG Conversion failed:', err);
+      }
+    } else if (convertFormat === 'bmp') {
       try {
         blob = canvasToBmpBlob(canvas);
       } catch (err) {
@@ -1738,7 +1827,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
         type="file"
         ref={fileInputRef}
         onChange={handleFileChange}
-        accept="image/*"
+        accept="image/*,.heic,.heif,.ico,.svg,.webp,.png,.jpg,.jpeg,.bmp"
         style={{ display: 'none' }}
       />
 
@@ -1746,20 +1835,49 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
         /* Upload Area */
         <div 
           onClick={triggerUpload} 
-          className="glass-card image-upload-area"
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragOver(true);
+          }}
+          onDragLeave={() => setIsDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDragOver(false);
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+              processInputFile(e.dataTransfer.files[0]);
+            }
+          }}
+          className={`glass-card image-upload-area ${isDragOver ? 'drag-over' : ''}`}
+          style={{
+            borderColor: isDragOver ? 'var(--primary)' : undefined,
+            boxShadow: isDragOver ? '0 0 30px var(--primary-glow)' : undefined,
+            cursor: isDecodingHeic ? 'wait' : 'pointer',
+          }}
         >
           <div style={styles.uploadGlow}></div>
           <div style={styles.uploadBox}>
             <div style={styles.uploadIconWrapper}>
-              <Upload size={32} style={{ color: 'var(--primary)' }} />
+              {isDecodingHeic ? (
+                <RefreshCw size={32} className="spin-slow" style={{ color: 'var(--primary)' }} />
+              ) : (
+                <Upload size={32} style={{ color: 'var(--primary)' }} />
+              )}
             </div>
-            <h2 style={styles.uploadTitle}>Upload an Image</h2>
+            <h2 style={styles.uploadTitle}>
+              {isDecodingHeic ? 'Decoding Apple HEIC/HEIF Photo...' : 'Upload or Drop Your Image'}
+            </h2>
             <p style={styles.uploadSubtitle}>
-              Drag and drop your image here, or browse local files.<br />
-              Supports PNG, JPG, WEBP formats. Runs completely in-browser.
+              {isDecodingHeic ? (
+                'Converting high-efficiency photo to standard pixel buffer directly inside browser memory.'
+              ) : (
+                <>
+                  Drag and drop your image here, or browse local files.<br />
+                  Supports PNG, JPG, WEBP, HEIC, HEIF, ICO, SVG, BMP formats. 100% private in-browser execution.
+                </>
+              )}
             </p>
-            <button className="btn-primary" style={{ marginTop: '8px' }}>
-              Select File
+            <button className="btn-primary" style={{ marginTop: '8px' }} disabled={isDecodingHeic}>
+              {isDecodingHeic ? 'Processing...' : 'Select File'}
             </button>
           </div>
         </div>
@@ -1838,55 +1956,69 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
           <div className="glass-card" style={styles.sidebar}>
             {/* Categories tab container */}
             <div className="editor-tabs-container">
-              <a 
-                href="/tools/image-transform"
-                onClick={(e) => { e.preventDefault(); navigate('/tools/image-transform'); setActiveTab('adjust'); setEyeDropperActive(false); }} 
+              <button 
+                type="button"
+                onClick={() => { navigate('/tools/image-transform'); setActiveTab('adjust'); setEyeDropperActive(false); }} 
                 className={`editor-tab-btn ${activeTab === 'adjust' ? 'active' : ''}`}
+                title="Filters & Color Adjustments"
               >
-                Filters
-              </a>
-              <a 
-                href="/tools/image-crop"
-                onClick={(e) => { e.preventDefault(); navigate('/tools/image-crop'); setActiveTab('crop'); setEyeDropperActive(false); }} 
+                <Sliders size={14} />
+                <span>Filters</span>
+              </button>
+              <button 
+                type="button"
+                onClick={() => { navigate('/tools/image-crop'); setActiveTab('crop'); setEyeDropperActive(false); }} 
                 className={`editor-tab-btn ${activeTab === 'crop' ? 'active' : ''}`}
+                title="Interactive Image Cropper"
               >
-                Crop
-              </a>
-              <a 
-                href="/tools/image-resize"
-                onClick={(e) => { e.preventDefault(); navigate('/tools/image-resize'); setActiveTab('resize'); setEyeDropperActive(false); }} 
+                <Crop size={14} />
+                <span>Crop</span>
+              </button>
+              <button 
+                type="button"
+                onClick={() => { navigate('/tools/image-resize'); setActiveTab('resize'); setEyeDropperActive(false); }} 
                 className={`editor-tab-btn ${activeTab === 'resize' ? 'active' : ''}`}
+                title="Resize Dimensions & Scale"
               >
-                Resize
-              </a>
-              <a 
-                href="/tools/image-dpi"
-                onClick={(e) => { e.preventDefault(); navigate('/tools/image-dpi'); setActiveTab('dpi'); setEyeDropperActive(false); }} 
+                <Maximize2 size={14} />
+                <span>Resize</span>
+              </button>
+              <button 
+                type="button"
+                onClick={() => { navigate('/tools/image-dpi'); setActiveTab('dpi'); setEyeDropperActive(false); }} 
                 className={`editor-tab-btn ${activeTab === 'dpi' ? 'active' : ''}`}
+                title="Change Image DPI Density"
               >
-                DPI
-              </a>
-              <a 
-                href="/tools/image-compressor"
-                onClick={(e) => { e.preventDefault(); navigate('/tools/image-compressor'); setEyeDropperActive(false); }} 
+                <Award size={14} />
+                <span>DPI</span>
+              </button>
+              <button 
+                type="button"
+                onClick={() => { navigate('/tools/image-compressor'); setActiveTab('compress'); setEyeDropperActive(false); }} 
                 className={`editor-tab-btn ${activeTab === 'compress' ? 'active' : ''}`}
+                title="Target Size Compressor"
               >
-                Compress
-              </a>
-              <a 
-                href="/tools/remove-bg"
-                onClick={(e) => { e.preventDefault(); navigate('/tools/remove-bg'); setActiveTab('bg-remove'); }} 
+                <Archive size={14} />
+                <span>Compress</span>
+              </button>
+              <button 
+                type="button"
+                onClick={() => { navigate('/tools/remove-bg'); setActiveTab('bg-remove'); }} 
                 className={`editor-tab-btn ${activeTab === 'bg-remove' ? 'active' : ''}`}
+                title="Color-Key Background Remover"
               >
-                Remove BG
-              </a>
-              <a 
-                href="/tools/image-converter"
-                onClick={(e) => { e.preventDefault(); navigate('/tools/image-converter'); setActiveTab('convert'); setEyeDropperActive(false); }} 
+                <Wand2 size={14} />
+                <span>Remove BG</span>
+              </button>
+              <button 
+                type="button"
+                onClick={() => { navigate('/tools/image-converter'); setActiveTab('convert'); setEyeDropperActive(false); }} 
                 className={`editor-tab-btn ${activeTab === 'convert' ? 'active' : ''}`}
+                title="Format Converter (ICO, PNG, WebP, JPG, SVG, BMP, PDF)"
               >
-                Convert
-              </a>
+                <RefreshCw size={14} />
+                <span>Convert</span>
+              </button>
             </div>
 
             {/* TAB CONTENT: FILTERS */}
@@ -2506,7 +2638,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
                   <select
                     value={convertFormat}
                     onChange={(e) => {
-                      setConvertFormat(e.target.value as 'png' | 'jpeg' | 'webp' | 'bmp' | 'pdf');
+                      setConvertFormat(e.target.value as 'png' | 'jpeg' | 'webp' | 'bmp' | 'pdf' | 'ico' | 'svg');
                       setConvertedBlob(null);
                       setConvertedSizeStr('');
                     }}
@@ -2515,9 +2647,56 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
                     <option value="png">PNG (.png)</option>
                     <option value="jpeg">JPEG (.jpg)</option>
                     <option value="webp">WEBP (.webp)</option>
+                    <option value="ico">ICO (.ico — Windows &amp; Favicon Icon)</option>
+                    <option value="svg">SVG (.svg — Scalable Vector Wrapper)</option>
                     <option value="bmp">BMP (.bmp)</option>
                     <option value="pdf">PDF (.pdf)</option>
                   </select>
+
+                  {convertFormat === 'ico' && (
+                    <div style={{ marginBottom: '16px', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-primary)', marginBottom: '8px' }}>
+                        <input
+                          type="checkbox"
+                          checked={icoMultiSize}
+                          onChange={(e) => {
+                            setIcoMultiSize(e.target.checked);
+                            setConvertedBlob(null);
+                            setConvertedSizeStr('');
+                          }}
+                          style={styles.checkbox}
+                        />
+                        <span>Multi-Resolution Pack (16, 32, 48, 64, 128, 256px)</span>
+                      </label>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0 0 8px 24px' }}>
+                        {icoMultiSize 
+                          ? 'Generates high-compatibility Microsoft RFC standard ICO container with all icon mipmap sizes packed.' 
+                          : 'Output a single resolution icon file.'}
+                      </p>
+
+                      {!icoMultiSize && (
+                        <div style={{ marginLeft: '24px', marginTop: '6px' }}>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Icon Dimension:</span>
+                          <select
+                            value={icoSingleSize}
+                            onChange={(e) => {
+                              setIcoSingleSize(Number(e.target.value));
+                              setConvertedBlob(null);
+                              setConvertedSizeStr('');
+                            }}
+                            style={{ ...styles.selectInput, padding: '6px 10px', fontSize: '0.8rem' }}
+                          >
+                            <option value={16}>16 × 16 px (Browser Tab Favicon)</option>
+                            <option value={32}>32 × 32 px (Standard Favicon / Desktop)</option>
+                            <option value={48}>48 × 48 px (Windows Taskbar)</option>
+                            <option value={64}>64 × 64 px (High-DPI Desktop)</option>
+                            <option value={128}>128 × 128 px (Large App Icon)</option>
+                            <option value={256}>256 × 256 px (Full Ultra-HD Icon)</option>
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {(convertFormat === 'jpeg' || convertFormat === 'webp') && (
                     <div style={{ marginBottom: '16px' }}>
@@ -2832,6 +3011,9 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ defaultTab }) => {
           </div>
         </div>
       )}
+
+      {/* Dedicated SEO Converter Landing Content (for query routes like /png-to-ico, /heic-to-png, etc.) */}
+      {seoData && <SeoConverterLanding config={seoData} />}
 
       {/* ========================================================================= */}
       {/* Educational Guide, Features & FAQ Section (AdSense Rich Value Content)     */}

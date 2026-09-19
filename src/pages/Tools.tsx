@@ -9,9 +9,11 @@ interface ToolsProps {
   selectedTool: string;
   setSelectedTool: (toolId: string) => void;
   defaultTab?: string;
+  defaultConvertFormat?: 'png' | 'jpeg' | 'webp' | 'bmp' | 'pdf' | 'ico' | 'svg';
+  seoData?: any;
 }
 
-export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, defaultTab }) => {
+export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, defaultTab, defaultConvertFormat, seoData }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const toolsList = [
@@ -49,7 +51,11 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, def
     return (
       <div style={styles.toolContainer}>
         <React.Suspense fallback={<div style={styles.toolLoading}>Initialising Image Studio...</div>}>
-          <ImageEditor defaultTab={defaultTab as any} />
+          <ImageEditor 
+            defaultTab={defaultTab as any} 
+            defaultConvertFormat={defaultConvertFormat} 
+            seoData={seoData} 
+          />
         </React.Suspense>
       </div>
     );

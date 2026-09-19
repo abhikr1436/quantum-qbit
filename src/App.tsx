@@ -5,6 +5,7 @@ import LiquidGlassBackground from './components/LiquidGlassBackground';
 import LandingPage from './pages/LandingPage';
 import { usePath, navigate } from './utils/router';
 import { updateSEO } from './utils/seo';
+import { CONVERTER_SEO_CONFIGS } from './components/SeoConverterLanding';
 
 declare global {
   interface Window {
@@ -94,9 +95,71 @@ function App() {
   let page = 'landing';
   let tool = 'none';
   let toolTab: string | undefined = undefined;
+  let toolConvertFormat: 'png' | 'jpeg' | 'webp' | 'bmp' | 'pdf' | 'ico' | 'svg' | undefined = undefined;
+  let converterSeo: any = undefined;
   let blogPostId: string | undefined = undefined;
 
-  if (path === '/image-studio' || path === '/image-editor' || path === '/image-transform' || path === '/tools/image-editor' || path === '/tools/image-transform') {
+  if (path === '/png-to-ico' || path === '/pngtoico') {
+    page = 'image-studio';
+    tool = 'image-editor';
+    toolTab = 'convert';
+    toolConvertFormat = 'ico';
+    converterSeo = CONVERTER_SEO_CONFIGS['png-to-ico'];
+  } else if (path === '/heic-to-png' || path === '/heif-to-png' || path === '/heicto-png' || path === '/heifto-png') {
+    page = 'image-studio';
+    tool = 'image-editor';
+    toolTab = 'convert';
+    toolConvertFormat = 'png';
+    converterSeo = CONVERTER_SEO_CONFIGS['heic-to-png'];
+  } else if (path === '/heic-to-jpg' || path === '/heif-to-jpg' || path === '/heic-to-jpeg' || path === '/heif-to-jpeg') {
+    page = 'image-studio';
+    tool = 'image-editor';
+    toolTab = 'convert';
+    toolConvertFormat = 'jpeg';
+    converterSeo = CONVERTER_SEO_CONFIGS['heic-to-jpg'];
+  } else if (path === '/png-to-webp' || path === '/pngtowebp') {
+    page = 'image-studio';
+    tool = 'image-editor';
+    toolTab = 'convert';
+    toolConvertFormat = 'webp';
+    converterSeo = CONVERTER_SEO_CONFIGS['png-to-webp'];
+  } else if (path === '/webp-to-png' || path === '/webptopng') {
+    page = 'image-studio';
+    tool = 'image-editor';
+    toolTab = 'convert';
+    toolConvertFormat = 'png';
+    converterSeo = CONVERTER_SEO_CONFIGS['webp-to-png'];
+  } else if (path === '/webp-to-jpg' || path === '/webp-to-jpeg' || path === '/webptojpeg' || path === '/webptojpg') {
+    page = 'image-studio';
+    tool = 'image-editor';
+    toolTab = 'convert';
+    toolConvertFormat = 'jpeg';
+    converterSeo = CONVERTER_SEO_CONFIGS['webp-to-jpg'];
+  } else if (path === '/jpg-to-png' || path === '/jpeg-to-png' || path === '/jpgtopng') {
+    page = 'image-studio';
+    tool = 'image-editor';
+    toolTab = 'convert';
+    toolConvertFormat = 'png';
+    converterSeo = CONVERTER_SEO_CONFIGS['jpg-to-png'];
+  } else if (path === '/png-to-jpg' || path === '/png-to-jpeg' || path === '/pngtojpg') {
+    page = 'image-studio';
+    tool = 'image-editor';
+    toolTab = 'convert';
+    toolConvertFormat = 'jpeg';
+    converterSeo = CONVERTER_SEO_CONFIGS['png-to-jpg'];
+  } else if (path === '/svg-to-png' || path === '/svgtopng') {
+    page = 'image-studio';
+    tool = 'image-editor';
+    toolTab = 'convert';
+    toolConvertFormat = 'png';
+    converterSeo = CONVERTER_SEO_CONFIGS['svg-to-png'];
+  } else if (path === '/image-converter' || path === '/imgconverter' || path === '/convert-image' || path === '/tools/image-converter') {
+    page = 'image-studio';
+    tool = 'image-editor';
+    toolTab = 'convert';
+    toolConvertFormat = 'png';
+    converterSeo = CONVERTER_SEO_CONFIGS['image-converter'];
+  } else if (path === '/image-studio' || path === '/image-editor' || path === '/image-transform' || path === '/tools/image-editor' || path === '/tools/image-transform') {
     page = 'image-studio';
     tool = 'image-editor';
     toolTab = 'adjust';
@@ -120,10 +183,6 @@ function App() {
     page = 'image-studio';
     tool = 'image-editor';
     toolTab = 'dpi';
-  } else if (path === '/image-converter' || path === '/convert-image' || path === '/tools/image-converter') {
-    page = 'image-studio';
-    tool = 'image-editor';
-    toolTab = 'convert';
   } else if (path === '/pdf-workshop' || path === '/pdf-editor' || path === '/tools/pdf-editor') {
     page = 'pdf-workshop';
     tool = 'pdf-editor';
@@ -166,7 +225,27 @@ function App() {
 
   // SEO Updates
   useEffect(() => {
-    if (page === 'landing') {
+    if (converterSeo) {
+      const converterSchema = {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": converterSeo.headline,
+        "description": converterSeo.metaDescription,
+        "operatingSystem": "All",
+        "applicationCategory": "MultimediaApplication",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      };
+      updateSEO(
+        converterSeo.title,
+        converterSeo.metaDescription,
+        `/${converterSeo.slug}`,
+        converterSchema
+      );
+    } else if (page === 'landing') {
       updateSEO(
         "Quantum Qbit | Liquid Glass Media Studio & Local Utilities",
         "Studio-grade media utilities with liquid glass design. Edit photos, compress images, and manage PDFs 100% locally in your browser with zero cloud uploads.",
@@ -256,6 +335,8 @@ function App() {
               }
             }}
             defaultTab={toolTab}
+            defaultConvertFormat={toolConvertFormat}
+            seoData={converterSeo}
           />
         );
       case 'blogs':
