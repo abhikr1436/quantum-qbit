@@ -12,7 +12,7 @@ export interface ParseResult {
  * Standard Custom Tag Format that users can copy to clipboard
  */
 export const AI_PROMPT_TEMPLATE = `<title>Put an engaging, SEO-optimized title here</title>
-<category>Privacy & Security</category> <!-- Options: Privacy & Security | Image Studio | PDF Workflows | Web Tech -->
+<category>Your Category (e.g. AI Safety, Web Tech, Privacy, Geopolitics)</category>
 <summary>Write a concise, 2-sentence hook describing what this article covers and why it matters.</summary>
 <cover_image>https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe</cover_image> <!-- Optional image URL -->
 <tags>Browser Privacy, WebAssembly, Security, Image Processing</tags>
@@ -131,28 +131,18 @@ export function parseBlogMarkup(rawMarkup: string, existingId?: string): ParseRe
   }
   const title = rawTitle ? rawTitle.replace(/<[^>]*>/g, '').trim() : 'Untitled Article';
 
-  // 2. Category Extraction
+  // 2. Category Extraction (Unlimited - accepts any category without limitation)
   const rawCategory = extractTag(rawMarkup, ['category', 'cat', 'topic']);
-  let categoryLabel = rawCategory ? rawCategory.replace(/<[^>]*>/g, '').trim() : 'Web Tech';
-  let categoryKey: 'privacy' | 'image' | 'pdf' | 'tech' = 'tech';
-  
-  const lowerCat = categoryLabel.toLowerCase();
-  if (lowerCat.includes('priv') || lowerCat.includes('secu')) {
-    categoryKey = 'privacy';
-    categoryLabel = 'Privacy & Security';
-  } else if (lowerCat.includes('img') || lowerCat.includes('photo') || lowerCat.includes('dpi')) {
-    categoryKey = 'image';
-    categoryLabel = 'Image Studio';
-  } else if (lowerCat.includes('pdf') || lowerCat.includes('doc')) {
-    categoryKey = 'pdf';
-    categoryLabel = 'PDF Workflows';
-  } else {
-    categoryKey = 'tech';
-    if (!rawCategory) {
-      categoryLabel = 'Web Tech';
-      warnings.push('No <category> tag found; defaulted to "Web Tech".');
+  let categoryLabel = 'General';
+  if (rawCategory) {
+    categoryLabel = rawCategory.replace(/<[^>]*>/g, '').trim();
+    if (!categoryLabel) {
+      categoryLabel = 'General';
     }
+  } else {
+    warnings.push('No <category> tag found; defaulted to "General".');
   }
+  const categoryKey = generateSlug(categoryLabel) || 'general';
 
   // 3. Body Extraction
   let rawBody = extractTag(rawMarkup, ['body', 'content', 'article']);

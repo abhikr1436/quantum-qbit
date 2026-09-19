@@ -14,7 +14,8 @@ import {
   Tag, 
   Sliders, 
   FileText, 
-  Image as ImageIcon 
+  Image as ImageIcon,
+  X
 } from 'lucide-react';
 import { navigate } from '../utils/router';
 import { updateSEO } from '../utils/seo';
@@ -24,7 +25,7 @@ export interface BlogPost {
   id: string;
   slug: string;
   title: string;
-  category: 'privacy' | 'image' | 'pdf' | 'tech' | string;
+  category: string;
   categoryLabel: string;
   summary: string;
   readTime: string;
@@ -244,7 +245,6 @@ interface BlogsProps {
 
 export const Blogs: React.FC<BlogsProps> = ({ postId, setPostId }) => {
   const [posts, setPosts] = useState<BlogPost[]>(() => blogStorage.getBlogs());
-  const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activePost, setActivePost] = useState<BlogPost | null>(null);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
@@ -307,12 +307,14 @@ export const Blogs: React.FC<BlogsProps> = ({ postId, setPostId }) => {
   };
 
   const filteredPosts = posts.filter((post) => {
-    const matchesCat = activeCategory === 'all' || post.category === activeCategory;
-    const matchesSearch = 
-      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesCat && matchesSearch;
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    return (
+      post.title.toLowerCase().includes(q) ||
+      post.summary.toLowerCase().includes(q) ||
+      (post.categoryLabel && post.categoryLabel.toLowerCase().includes(q)) ||
+      (post.tags && post.tags.some(t => t.toLowerCase().includes(q)))
+    );
   });
 
   // =========================================================================
@@ -466,74 +468,56 @@ export const Blogs: React.FC<BlogsProps> = ({ postId, setPostId }) => {
           Technical deep-dives on browser-native media pipelines, client-side privacy, image optimization, and document engineering.
         </p>
 
-        {/* Search & Category Filter Controls */}
+        {/* Search Bar */}
         <div style={styles.filterControls}>
-          {/* Search Box */}
           <div className="liquid-glass-card" style={styles.searchBox}>
-            <Search size={16} style={{ color: 'var(--primary)' }} />
+            <Search size={17} style={{ color: 'var(--primary)', flexShrink: 0 }} />
             <input
               type="text"
-              placeholder="Search tutorials, privacy guides, DPI, WebAssembly..."
+              placeholder="Search by topic, keyword, category, or WebAssembly..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={styles.searchInput}
             />
-          </div>
-
-          {/* Category Filter Pills */}
-          <div style={styles.categoryPills}>
-            <button
-              onClick={() => setActiveCategory('all')}
-              style={{
-                ...styles.categoryBtn,
-                ...(activeCategory === 'all' ? styles.categoryBtnActive : {}),
-              }}
-            >
-              All Articles
-            </button>
-            <button
-              onClick={() => setActiveCategory('privacy')}
-              style={{
-                ...styles.categoryBtn,
-                ...(activeCategory === 'privacy' ? styles.categoryBtnActive : {}),
-              }}
-            >
-              Privacy & Security
-            </button>
-            <button
-              onClick={() => setActiveCategory('image')}
-              style={{
-                ...styles.categoryBtn,
-                ...(activeCategory === 'image' ? styles.categoryBtnActive : {}),
-              }}
-            >
-              Image Studio
-            </button>
-            <button
-              onClick={() => setActiveCategory('pdf')}
-              style={{
-                ...styles.categoryBtn,
-                ...(activeCategory === 'pdf' ? styles.categoryBtnActive : {}),
-              }}
-            >
-              PDF Workflows
-            </button>
-            <button
-              onClick={() => setActiveCategory('tech')}
-              style={{
-                ...styles.categoryBtn,
-                ...(activeCategory === 'tech' ? styles.categoryBtnActive : {}),
-              }}
-            >
-              Web Tech
-            </button>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: '4px 6px',
+                  cursor: 'pointer',
+                  color: 'var(--text-muted)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '50%',
+                  transition: 'color 0.2s ease'
+                }}
+                title="Clear search"
+              >
+                <X size={15} />
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Blog Cards Grid */}
-      <div style={styles.grid}>
-        {filteredPosts.map((post) => (
+      {/* Blog Cards Grid or Empty Search State */}
+      {filteredPosts.length === 0 ? (
+        <div className="liquid-glass-card" style={{ padding: '60px 24px', textAlign: 'center', maxWidth: '520px', margin: '20px auto', borderRadius: 'var(--radius-xl)' }}>
+          <Search size={36} style={{ color: 'var(--text-muted)', marginBottom: '14px', opacity: 0.6 }} />
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '8px' }}>No matching articles</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: 1.5, marginBottom: '18px' }}>
+            We couldn't find any articles matching &ldquo;{searchQuery}&rdquo;. Try another keyword, category, or clear your query.
+          </p>
+          <button onClick={() => setSearchQuery('')} className="liquid-glass-btn-primary" style={{ padding: '8px 20px', fontSize: '0.85rem' }}>
+            Clear Search
+          </button>
+        </div>
+      ) : (
+        <div style={styles.grid}>
+          {filteredPosts.map((post) => (
           <div
             key={post.id}
             className="liquid-glass-card liquid-glass-card-interactive"
@@ -563,6 +547,7 @@ export const Blogs: React.FC<BlogsProps> = ({ postId, setPostId }) => {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 };
@@ -598,11 +583,10 @@ const styles: Record<string, React.CSSProperties> = {
   },
   filterControls: {
     width: '100%',
-    maxWidth: '820px',
-    marginTop: '20px',
+    maxWidth: '720px',
+    marginTop: '16px',
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '14px',
     alignItems: 'center',
   },
   searchBox: {
@@ -610,7 +594,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    padding: '12px 20px',
+    padding: '12px 22px',
     borderRadius: 'var(--radius-full)',
   },
   searchInput: {
@@ -621,31 +605,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--text-primary)',
     fontSize: '0.95rem',
     fontFamily: 'var(--font-body)',
-  },
-  categoryPills: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexWrap: 'wrap' as const,
-    gap: '8px',
-  },
-  categoryBtn: {
-    background: 'var(--glass-bg)',
-    border: '1px solid var(--glass-border)',
-    color: 'var(--text-secondary)',
-    padding: '6px 16px',
-    borderRadius: 'var(--radius-full)',
-    fontSize: '0.84rem',
-    fontWeight: 600,
-    fontFamily: 'var(--font-heading)',
-    cursor: 'pointer',
-    transition: 'var(--transition-tactile)',
-  },
-  categoryBtnActive: {
-    background: 'rgba(0, 240, 255, 0.12)',
-    color: 'var(--primary)',
-    borderColor: 'var(--primary)',
-    boxShadow: '0 0 14px var(--primary-glow)',
   },
   grid: {
     display: 'grid',

@@ -27,7 +27,8 @@ import {
   Lock,
   Unlock,
   EyeOff,
-  Key
+  Key,
+  Tag
 } from 'lucide-react';
 import type { BlogPost } from './Blogs';
 import { blogStorage } from '../services/blogStorage';
@@ -182,6 +183,22 @@ export const AdminBlogs: React.FC = () => {
     });
   }, []);
 
+  // Dynamic Categories from existing articles
+  const availableCategories = useMemo(() => {
+    const map = new Map<string, { key: string; label: string; count: number }>();
+    blogs.forEach((b) => {
+      const key = b.category || 'general';
+      const label = b.categoryLabel || b.category || 'General';
+      const existing = map.get(key);
+      if (existing) {
+        existing.count++;
+      } else {
+        map.set(key, { key, label, count: 1 });
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [blogs]);
+
   // Filtered blogs for table
   const filteredBlogs = useMemo(() => {
     return blogs.filter((b) => {
@@ -189,23 +206,24 @@ export const AdminBlogs: React.FC = () => {
         !searchQuery.trim() ||
         b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         b.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (b.categoryLabel && b.categoryLabel.toLowerCase().includes(searchQuery.toLowerCase())) ||
         b.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
 
       const matchesCat =
-        selectedCategoryFilter === 'all' || b.category === selectedCategoryFilter;
+        selectedCategoryFilter === 'all' ||
+        b.category === selectedCategoryFilter ||
+        b.categoryLabel?.toLowerCase() === selectedCategoryFilter.toLowerCase();
 
       return matchesQuery && matchesCat;
     });
   }, [blogs, searchQuery, selectedCategoryFilter]);
 
-  // Categories count
+  // Dynamic stats
   const stats = useMemo(() => {
     const total = blogs.length;
-    const privacyCount = blogs.filter((b) => b.category === 'privacy').length;
-    const imageCount = blogs.filter((b) => b.category === 'image').length;
-    const pdfCount = blogs.filter((b) => b.category === 'pdf').length;
-    const techCount = blogs.filter((b) => b.category === 'tech').length;
-    return { total, privacyCount, imageCount, pdfCount, techCount };
+    const uniqueCategories = new Set(blogs.map((b) => b.categoryLabel || b.category).filter(Boolean)).size;
+    const tagsCount = new Set(blogs.flatMap((b) => b.tags || []).filter(Boolean)).size;
+    return { total, uniqueCategories, tagsCount };
   }, [blogs]);
 
   // Selection handlers
@@ -227,7 +245,7 @@ export const AdminBlogs: React.FC = () => {
   const handleOpenNewBlog = () => {
     setEditingBlogId(null);
     setMarkupInput(`<title>Title of Your Article</title>
-<category>Privacy & Security</category>
+<category>Your Custom Category</category>
 <summary>A concise two-sentence overview highlighting key benefits and insights.</summary>
 <tags>Browser Privacy, Client-Side, Security</tags>
 <body>
@@ -398,7 +416,7 @@ export const AdminBlogs: React.FC = () => {
 You MUST output the article using the following XML-like custom tag structure with NO markdown fences around outer tags:
 
 <title>Put an engaging, SEO-optimized title here</title>
-<category>Privacy & Security | Image Studio | PDF Workflows | Web Tech</category>
+<category>Your Custom Category</category>
 <summary>Concise 2-sentence summary hook</summary>
 <cover_image>https://images.unsplash.com/... (optional)</cover_image>
 <tags>Tag1, Tag2, Tag3, Tag4</tags>
@@ -636,31 +654,31 @@ You MUST output the article using the following XML-like custom tag structure wi
 
           <div className="liquid-glass-card" style={styles.statCard}>
             <div style={{ ...styles.statIconWrapper, background: 'rgba(16, 185, 129, 0.15)' }}>
-              <Shield size={20} style={{ color: 'var(--emerald)' }} />
+              <Layers size={20} style={{ color: 'var(--emerald)' }} />
             </div>
             <div>
-              <div style={styles.statValue}>{stats.privacyCount}</div>
-              <div style={styles.statLabel}>Privacy & Security</div>
+              <div style={styles.statValue}>{stats.uniqueCategories}</div>
+              <div style={styles.statLabel}>Active Categories</div>
             </div>
           </div>
 
           <div className="liquid-glass-card" style={styles.statCard}>
             <div style={{ ...styles.statIconWrapper, background: 'rgba(168, 85, 247, 0.15)' }}>
-              <Sliders size={20} style={{ color: '#A855F7' }} />
+              <Tag size={20} style={{ color: '#A855F7' }} />
             </div>
             <div>
-              <div style={styles.statValue}>{stats.imageCount}</div>
-              <div style={styles.statLabel}>Image Studio</div>
+              <div style={styles.statValue}>{stats.tagsCount}</div>
+              <div style={styles.statLabel}>Tags Indexed</div>
             </div>
           </div>
 
           <div className="liquid-glass-card" style={styles.statCard}>
-            <div style={{ ...styles.statIconWrapper, background: 'rgba(249, 115, 22, 0.15)' }}>
-              <Layers size={20} style={{ color: '#F97316' }} />
+            <div style={{ ...styles.statIconWrapper, background: 'rgba(0, 242, 254, 0.15)' }}>
+              <Shield size={20} style={{ color: 'var(--primary)' }} />
             </div>
             <div>
-              <div style={styles.statValue}>{stats.pdfCount + stats.techCount}</div>
-              <div style={styles.statLabel}>PDF & Web Tech</div>
+              <div style={{ ...styles.statValue, fontSize: '1.3rem' }}>Live API</div>
+              <div style={styles.statLabel}>Hostinger Cloud Sync</div>
             </div>
           </div>
         </div>
@@ -722,17 +740,18 @@ You MUST output the article using the following XML-like custom tag structure wi
               />
             </div>
 
-            {/* Category Filter */}
+            {/* Dynamic Category Filter */}
             <select
               value={selectedCategoryFilter}
               onChange={(e) => setSelectedCategoryFilter(e.target.value)}
               style={styles.categorySelect}
             >
-              <option value="all">All Categories</option>
-              <option value="privacy">Privacy & Security</option>
-              <option value="image">Image Studio</option>
-              <option value="pdf">PDF Workflows</option>
-              <option value="tech">Web Tech</option>
+              <option value="all">All Categories ({blogs.length})</option>
+              {availableCategories.map((cat) => (
+                <option key={cat.key} value={cat.key}>
+                  {cat.label} ({cat.count})
+                </option>
+              ))}
             </select>
           </div>
         </div>

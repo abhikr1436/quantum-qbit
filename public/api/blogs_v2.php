@@ -86,7 +86,7 @@ if ($method === 'GET') {
 
         try {
             $stmt = $pdo->query("
-                SELECT b.id, b.title, b.excerpt, b.content, b.author, b.date, b.read_time AS readTime, b.category_id, c.name AS category, b.image_glow AS imageGlow, b.created_at, b.updated_at
+                SELECT b.id, b.title, b.excerpt, b.content, b.author, b.date, b.read_time AS readTime, b.category_id, COALESCE(c.name, b.category_id) AS category, b.image_glow AS imageGlow, b.created_at, b.updated_at
                 FROM blogs b
                 LEFT JOIN categories c ON b.category_id = c.id
                 ORDER BY COALESCE(b.updated_at, b.created_at) DESC, STR_TO_DATE(b.date, '%b %d, %Y') DESC, b.id DESC
@@ -254,15 +254,7 @@ function getFallbackCategoryName($id, $categoriesFile) {
                 if ($cat['id'] === $id) return $cat['name'];
             }
         }
-    }
-    // Default mapped fallbacks
-    switch($id) {
-        case 'privacy-security': return 'Privacy & Security';
-        case 'computer-science': return 'Computer Science';
-        case 'creative-tech': return 'Creative Tech';
-        case 'general-utilities': return 'General Utilities';
-        default: return ucfirst(str_replace('-', ' ', $id));
-    }
+    return ucwords(str_replace(['-', '_'], ' ', $id));
 }
 
 // 2. POST ROUTE (Create)
@@ -270,7 +262,11 @@ if ($method === 'POST') {
     $title = isset($input['title']) ? trim($input['title']) : '';
     $excerpt = isset($input['excerpt']) ? trim($input['excerpt']) : '';
     $author = isset($input['author']) ? trim($input['author']) : 'Admin';
-    $categoryId = isset($input['category_id']) ? trim($input['category_id']) : 'privacy-security';
+    $categoryName = isset($input['category']) ? trim($input['category']) : (isset($input['categoryLabel']) ? trim($input['categoryLabel']) : 'General');
+    $categoryId = isset($input['category_id']) && !empty($input['category_id']) ? trim($input['category_id']) : createCategorySlugHelper($categoryName);
+    if (empty($categoryId)) {
+        $categoryId = 'general';
+    }
     $imageGlow = isset($input['imageGlow']) ? trim($input['imageGlow']) : 'rgba(0, 242, 254, 0.1)';
     $content = isset($input['content']) ? trim($input['content']) : ''; // HTML String
     
@@ -302,6 +298,10 @@ if ($method === 'POST') {
             $readTime = calculateReadTimeHtml($content);
             $date = date('M d, Y');
             
+            // Ensure category exists in categories table to satisfy foreign key
+            $stmtCat = $pdo->prepare("INSERT IGNORE INTO categories (id, name) VALUES (:id, :name)");
+            $stmtCat->execute(['id' => $categoryId, 'name' => $categoryName]);
+
             $stmt = $pdo->prepare("
                 INSERT INTO blogs (id, title, excerpt, content, author, date, read_time, category_id, image_glow) 
                 VALUES (:id, :title, :excerpt, :content, :author, :date, :read_time, :category_id, :image_glow)
@@ -381,7 +381,11 @@ if ($method === 'PUT') {
     $title = isset($input['title']) ? trim($input['title']) : '';
     $excerpt = isset($input['excerpt']) ? trim($input['excerpt']) : '';
     $author = isset($input['author']) ? trim($input['author']) : '';
-    $categoryId = isset($input['category_id']) ? trim($input['category_id']) : '';
+    $categoryName = isset($input['category']) ? trim($input['category']) : (isset($input['categoryLabel']) ? trim($input['categoryLabel']) : 'General');
+    $categoryId = isset($input['category_id']) && !empty($input['category_id']) ? trim($input['category_id']) : createCategorySlugHelper($categoryName);
+    if (empty($categoryId)) {
+        $categoryId = 'general';
+    }
     $imageGlow = isset($input['imageGlow']) ? trim($input['imageGlow']) : '';
     $content = isset($input['content']) ? trim($input['content']) : '';
     
@@ -398,6 +402,10 @@ if ($method === 'PUT') {
             
             $readTime = calculateReadTimeHtml($content);
             
+            // Ensure category exists in categories table
+            $stmtCat = $pdo->prepare("INSERT IGNORE INTO categories (id, name) VALUES (:id, :name)");
+            $stmtCat->execute(['id' => $categoryId, 'name' => $categoryName]);
+
             $stmt = $pdo->prepare("
                 UPDATE blogs 
                 SET title = :title, excerpt = :excerpt, content = :content, author = :author, 
