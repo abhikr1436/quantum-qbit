@@ -1,5 +1,3 @@
-import heic2any from 'heic2any';
-
 /**
  * Checks if a file or blob is in HEIC / HEIF format
  */
@@ -24,6 +22,10 @@ export function isHeicFile(file: File | Blob): boolean {
  */
 export async function convertHeicToPngBlob(file: File | Blob): Promise<Blob> {
   try {
+    // Dynamically import heic2any so it only loads in browser contexts on demand
+    const heic2anyModule = await import('heic2any');
+    const heic2any = (heic2anyModule.default || heic2anyModule) as any;
+
     const result = await heic2any({
       blob: file,
       toType: 'image/png',
