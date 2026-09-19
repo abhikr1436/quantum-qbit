@@ -3,6 +3,7 @@ Hostinger SFTP & FTP Deploy Script
 Tries SFTP first (ports 65002, 22), falls back to FTP (port 21).
 Uploads all files from local ./dist/ to remote directory.
 Detects the correct web root by probing for known files.
+Includes robust retry logic, 90s socket timeouts, and automatic reconnection.
 """
 import ftplib
 import os
@@ -37,19 +38,54 @@ def get_candidate_hosts(host):
             result.append(ch)
     return result
 
-def upload_dir_ftp(ftp, local_path, verbose=True):
-    """Upload all files from local_path to current FTP directory"""
+def upload_file_ftp(ftp_state, item, lp, verbose=True, max_retries=3):
+    """Upload a single file with retries and automatic session reconnection on timeout"""
+    size = os.path.getsize(lp)
+    for attempt in range(1, max_retries + 1):
+        try:
+            with open(lp, 'rb') as f:
+                ftp_state['ftp'].storbinary(f'STOR {item}', f, blocksize=32768)
+            if verbose:
+                suffix = f' [after retry {attempt}]' if attempt > 1 else ''
+                print(f'  ✓ {item} ({size:,} bytes){suffix}')
+            return True
+        except Exception as e:
+            err_str = str(e)
+            print(f'  ⚠️ Warning: attempt {attempt}/{max_retries} for {item} failed: {e}')
+
+            # Clean up stale temp file if Hostinger FTP server created .in.filename.
+            try:
+                temp_name = f".in.{item}."
+                ftp_state['ftp'].delete(temp_name)
+                print(f'  Cleaned stale temp file: {temp_name}')
+            except Exception:
+                pass
+
+            if attempt < max_retries:
+                time.sleep(2)
+                # If network timeout or disconnect occurred, re-establish connection
+                if any(term in err_str.lower() for term in ['time', 'timed out', 'connect', 'broken', 'eof', 'closed', 'socket', '10054']):
+                    print('  Re-establishing FTP session after timeout/disconnect...')
+                    try:
+                        ftp_state['reconnect']()
+                    except Exception as rc_err:
+                        print(f'  Reconnection error: {rc_err}')
+            else:
+                print(f'  ✗ FAILED {item} after {max_retries} attempts: {e}')
+                return False
+    return False
+
+def upload_dir_ftp(ftp_state, local_path, verbose=True):
+    """Upload all files from local_path to current FTP directory with stateful recovery"""
     success = 0
     failed = 0
     
-    is_github_actions = os.environ.get('GITHUB_ACTIONS') == 'true'
     protected_files = ['keys.json', 'config.json', 'live_updates.json', 'app-ads.txt', 'blogs.json', 'blogs_v2.json', 'categories.json', 'db.json']
         
-    # Get listing once to check for file existence reliably
     remote_files = []
     try:
-        remote_files = ftp.nlst()
-    except:
+        remote_files = ftp_state['ftp'].nlst()
+    except Exception:
         pass
 
     for item in sorted(os.listdir(local_path)):
@@ -60,55 +96,36 @@ def upload_dir_ftp(ftp, local_path, verbose=True):
                 if item in remote_files or f"./{item}" in remote_files:
                     exists = True
                 else:
-                    # Fallback to size check
                     try:
-                        ftp.size(item)
+                        ftp_state['ftp'].size(item)
                         exists = True
-                    except:
+                    except Exception:
                         pass
                 if exists:
                     print(f'  ➖ skipping protected file: {item} (already exists on server)')
                     success += 1
                     continue
-            try:
-                with open(lp, 'rb') as f:
-                    ftp.storbinary(f'STOR {item}', f)
-                if verbose:
-                    size = os.path.getsize(lp)
-                    print(f'  ✓ {item} ({size:,} bytes)')
+
+            ok = upload_file_ftp(ftp_state, item, lp, verbose=verbose)
+            if ok:
                 success += 1
-            except Exception as e:
-                err_str = str(e)
-                if "already exists" in err_str and ".in." in err_str:
-                    print(f'  ⚠️ Stale temp file detected for {item}. Attempting to clean and retry...')
-                    try:
-                        temp_name = f".in.{item}."
-                        ftp.delete(temp_name)
-                        print(f'  Deleted stale temp file: {temp_name}')
-                        with open(lp, 'rb') as f:
-                            ftp.storbinary(f'STOR {item}', f)
-                        if verbose:
-                            size = os.path.getsize(lp)
-                            print(f'  ✓ {item} ({size:,} bytes) [after cleanup retry]')
-                        success += 1
-                        continue
-                    except Exception as retry_err:
-                        print(f'  ✗ Retry failed for {item}: {retry_err}')
-                print(f'  ✗ FAILED {item}: {e}')
+            else:
                 failed += 1
         elif os.path.isdir(lp):
             # Create remote dir if it doesn't exist
             try:
-                ftp.mkd(item)
+                ftp_state['ftp'].mkd(item)
             except ftplib.error_perm:
                 pass  # Directory already exists
             try:
-                ftp.cwd(item)
+                ftp_state['ftp'].cwd(item)
+                ftp_state['cwd'] = ftp_state['ftp'].pwd()
                 print(f'  → entering {item}/')
-                s, f = upload_dir_ftp(ftp, lp, verbose)
+                s, f = upload_dir_ftp(ftp_state, lp, verbose)
                 success += s
                 failed += f
-                ftp.cwd('..')
+                ftp_state['ftp'].cwd('..')
+                ftp_state['cwd'] = ftp_state['ftp'].pwd()
             except Exception as e:
                 print(f'  ✗ FAILED entering dir {item}: {e}')
                 failed += 1
@@ -119,13 +136,12 @@ def upload_dir_sftp(sftp, local_path, remote_path, verbose=True):
     success = 0
     failed = 0
     
-    is_github_actions = os.environ.get('GITHUB_ACTIONS') == 'true'
     protected_files = ['keys.json', 'config.json', 'live_updates.json', 'app-ads.txt', 'blogs.json', 'blogs_v2.json', 'categories.json', 'db.json']
 
     remote_files = []
     try:
         remote_files = sftp.listdir(remote_path or '.')
-    except:
+    except Exception:
         pass
 
     for item in sorted(os.listdir(local_path)):
@@ -141,27 +157,36 @@ def upload_dir_sftp(sftp, local_path, remote_path, verbose=True):
                     try:
                         sftp.stat(rp)
                         exists = True
-                    except:
+                    except Exception:
                         pass
                 if exists:
                     print(f'  ➖ skipping protected file: {item} (already exists on server)')
                     success += 1
                     continue
-            try:
-                sftp.put(lp, rp)
-                if verbose:
-                    size = os.path.getsize(lp)
-                    print(f'  ✓ {item} ({size:,} bytes) -> {rp}')
-                success += 1
-            except Exception as e:
-                print(f'  ✗ FAILED {item}: {e}')
-                failed += 1
+
+            # SFTP put with retries
+            uploaded = False
+            for attempt in range(1, 4):
+                try:
+                    sftp.put(lp, rp)
+                    if verbose:
+                        size = os.path.getsize(lp)
+                        suffix = f' [retry {attempt}]' if attempt > 1 else ''
+                        print(f'  ✓ {item} ({size:,} bytes) -> {rp}{suffix}')
+                    success += 1
+                    uploaded = True
+                    break
+                except Exception as e:
+                    if attempt < 3:
+                        time.sleep(2)
+                    else:
+                        print(f'  ✗ FAILED {item}: {e}')
+                        failed += 1
         elif os.path.isdir(lp):
-            # Create remote directory
             try:
                 sftp.mkdir(rp)
             except IOError:
-                pass  # Already exists
+                pass
             try:
                 print(f'  → entering {item}/')
                 s, f = upload_dir_sftp(sftp, lp, rp, verbose)
@@ -173,11 +198,6 @@ def upload_dir_sftp(sftp, local_path, remote_path, verbose=True):
     return success, failed
 
 def find_web_root_sftp(sftp):
-    """
-    Detect the correct web root by trying known paths and checking for our
-    marker file (index.html) or standard Hostinger layouts.
-    Returns the absolute path to the web root.
-    """
     candidate_paths = [
         'domains/quantumqbit.in/public_html/dist',
         'domains/quantumqbit.in/public_html',
@@ -210,7 +230,7 @@ def find_web_root_sftp(sftp):
 
     try:
         sftp.chdir(original_dir)
-    except:
+    except Exception:
         pass
 
     if best_match:
@@ -223,10 +243,6 @@ def find_web_root_sftp(sftp):
     return sftp.getcwd() or '.'
 
 def find_web_root_ftp(ftp):
-    """
-    Detect the correct FTP web root.
-    Returns True if successfully navigated.
-    """
     candidate_paths = [
         'domains/quantumqbit.in/public_html/dist',
         'domains/quantumqbit.in/public_html',
@@ -252,7 +268,7 @@ def find_web_root_ftp(ftp):
             listing = []
             try:
                 ftp.retrlines('NLST', listing.append)
-            except:
+            except Exception:
                 pass
             print(f"  Path '{p}' -> cwd={cwd}, files={listing[:10]}")
             
@@ -263,7 +279,7 @@ def find_web_root_ftp(ftp):
             print(f"  Path '{p}' not accessible: {e}")
             try:
                 ftp.cwd('/')
-            except:
+            except Exception:
                 pass
 
     print("WARNING: Could not find web root, deploying to current directory.")
@@ -287,7 +303,7 @@ def deploy_sftp(host, user, password, dist_path):
         for port in (65002, 22):
             try:
                 print(f"  Connecting to {current_host}:{port} via SFTP...")
-                ssh.connect(current_host, port=port, username=user, password=password, timeout=5)
+                ssh.connect(current_host, port=port, username=user, password=password, timeout=30, banner_timeout=45, auth_timeout=30)
                 print("  SFTP Login successful!")
                 connected = True
                 break
@@ -302,6 +318,10 @@ def deploy_sftp(host, user, password, dist_path):
         
     try:
         sftp = ssh.open_sftp()
+        try:
+            sftp.get_channel().settimeout(90)
+        except Exception:
+            pass
         print(f"SFTP Connection established. CWD: {sftp.getcwd()}")
         
         target_dir = find_web_root_sftp(sftp)
@@ -325,7 +345,7 @@ def deploy_sftp(host, user, password, dist_path):
         print(f"SFTP Error occurred during deployment: {e}")
         try:
             ssh.close()
-        except:
+        except Exception:
             pass
         return False
 
@@ -335,33 +355,39 @@ def deploy_ftp(host, user, password, dist_path):
     
     ftp = None
     connected = False
+    chosen_host = None
+    is_ftps = False
     
     for current_host in candidate_hosts:
         print(f"Trying FTP/FTPS Host: {current_host}:21")
-        # 1. Try standard FTP
+        # 1. Try standard FTP with 90-second socket timeout
         try:
-            print(f"  [Attempt FTP] Connecting to {current_host}:21...")
+            print(f"  [Attempt FTP] Connecting to {current_host}:21 (timeout 90s)...")
             f = ftplib.FTP()
-            f.connect(current_host, 21, timeout=5)
+            f.connect(current_host, 21, timeout=90)
             f.login(user, password)
             f.set_pasv(True)
             print("  FTP Login successful!")
             ftp = f
+            chosen_host = current_host
+            is_ftps = False
             connected = True
             break
         except Exception as e:
             print(f"  FTP connection error on {current_host}: {e}")
 
-        # 2. Try FTPS (FTP over TLS)
+        # 2. Try FTPS (FTP over TLS) with 90-second socket timeout
         try:
-            print(f"  [Attempt FTPS] Connecting to {current_host}:21 via TLS...")
+            print(f"  [Attempt FTPS] Connecting to {current_host}:21 via TLS (timeout 90s)...")
             ftps = ftplib.FTP_TLS()
-            ftps.connect(current_host, 21, timeout=5)
+            ftps.connect(current_host, 21, timeout=90)
             ftps.login(user, password)
             ftps.prot_p()
             ftps.set_pasv(True)
             print("  FTPS Login successful!")
             ftp = ftps
+            chosen_host = current_host
+            is_ftps = True
             connected = True
             break
         except Exception as e:
@@ -371,8 +397,45 @@ def deploy_ftp(host, user, password, dist_path):
         print("FTP/FTPS Connection failed on all candidate hosts.")
         return False
 
+    ftp_state = {
+        'ftp': ftp,
+        'host': chosen_host,
+        'user': user,
+        'password': password,
+        'is_ftps': is_ftps,
+        'cwd': ''
+    }
+
+    def reconnect():
+        try:
+            ftp_state['ftp'].close()
+        except Exception:
+            pass
+        time.sleep(1)
+        if ftp_state['is_ftps']:
+            nf = ftplib.FTP_TLS()
+            nf.connect(ftp_state['host'], 21, timeout=90)
+            nf.login(ftp_state['user'], ftp_state['password'])
+            nf.prot_p()
+            nf.set_pasv(True)
+        else:
+            nf = ftplib.FTP()
+            nf.connect(ftp_state['host'], 21, timeout=90)
+            nf.login(ftp_state['user'], ftp_state['password'])
+            nf.set_pasv(True)
+        if ftp_state['cwd']:
+            try:
+                nf.cwd(ftp_state['cwd'])
+            except Exception as e:
+                print(f"  Could not restore CWD {ftp_state['cwd']}: {e}")
+        ftp_state['ftp'] = nf
+        return nf
+
+    ftp_state['reconnect'] = reconnect
+
     try:
         find_web_root_ftp(ftp)
+        ftp_state['cwd'] = ftp.pwd()
 
         print("\n=== FTP CURRENT FILES ===")
         ftp.retrlines('LIST')
@@ -382,7 +445,7 @@ def deploy_ftp(host, user, password, dist_path):
         print(f"Uploading {file_count} files from: {dist_path}")
         print("=" * 50)
 
-        ok, err = upload_dir_ftp(ftp, dist_path)
+        ok, err = upload_dir_ftp(ftp_state, dist_path)
 
         print()
         print("=" * 50)
@@ -392,7 +455,10 @@ def deploy_ftp(host, user, password, dist_path):
             print("WARNING: Some files failed to upload!")
             sys.exit(1)
 
-        ftp.quit()
+        try:
+            ftp_state['ftp'].quit()
+        except Exception:
+            pass
         print("FTP connection closed. Deploy done!")
         return True
     except Exception as e:
