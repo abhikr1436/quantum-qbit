@@ -67,19 +67,18 @@ export const LandingPage: React.FC = () => {
         <div style={styles.badgeWrapper}>
           <div className="liquid-glass-pill" style={styles.pillBadge}>
             <Sparkles size={14} style={{ color: 'var(--primary)' }} />
-            <span>IN-BROWSER WORKSHOP • 100% PRIVATE</span>
+            <span>Free Online Image & PDF Tools</span>
           </div>
         </div>
 
         <h1 style={styles.heroTitle}>
-          Studio-Grade Media Utilities. <br />
-          <span className="liquid-gradient-text">Zero Cloud Uploads.</span>
+          Smart, Fast Media Utilities. <br />
+          <span className="liquid-gradient-text">Edit Photos & Manage PDFs Free.</span>
         </h1>
 
         <p style={styles.heroSubtitle}>
-          Run high-performance image editing, dimension tuning, smart compression, and 
-          multi-document PDF workflows 100% locally in your browser’s engine.
-          Zero files sent to remote servers. Uncompromising privacy.
+          Easily crop, resize, compress photos, and manage PDF documents directly in your browser.
+          Fast, free to use, and completely private with no signup required.
         </p>
 
         {/* Primary CTAs */}
@@ -109,22 +108,22 @@ export const LandingPage: React.FC = () => {
         <div style={styles.metricsBar}>
           <div style={styles.metricItem}>
             <Lock size={15} style={{ color: 'var(--emerald)' }} />
-            <span>100% Client-Side Privacy</span>
+            <span>Private & Secure</span>
           </div>
           <div style={styles.metricDivider} />
           <div style={styles.metricItem}>
             <Zap size={15} style={{ color: 'var(--primary)' }} />
-            <span>Instant WebAssembly Speed</span>
+            <span>Lightning Fast</span>
           </div>
           <div style={styles.metricDivider} />
           <div style={styles.metricItem}>
             <Layers size={15} style={{ color: 'var(--secondary)' }} />
-            <span>No File Size Restrictions</span>
+            <span>No File Limits</span>
           </div>
           <div style={styles.metricDivider} />
           <div style={styles.metricItem}>
             <ShieldCheck size={15} style={{ color: 'var(--accent)' }} />
-            <span>Zero Sign-Up Required</span>
+            <span>No Account Needed</span>
           </div>
         </div>
       </section>
@@ -162,7 +161,7 @@ export const LandingPage: React.FC = () => {
           <div style={styles.dropTextGroup}>
             <h3 style={styles.dropTitle}>Drag & drop an image or PDF here</h3>
             <p style={styles.dropSub}>
-              Instantly launches the corresponding Studio • Processed locally in memory
+              Instant processing right in your browser • Safe, fast, and free
             </p>
           </div>
           <div className="liquid-glass-pill" style={styles.browsePill}>
@@ -175,7 +174,7 @@ export const LandingPage: React.FC = () => {
       <section style={styles.pillarsSection}>
         <div style={styles.sectionHeader}>
           <h2 style={styles.sectionTitle}>
-            Two Powerful Pillars. <span className="liquid-gradient-text">Pure Local Power.</span>
+            Two Powerful Studios. <span className="liquid-gradient-text">Complete Media Freedom.</span>
           </h2>
           <p style={styles.sectionDesc}>
             Everything you need for creative image editing and document management without subscription walls.

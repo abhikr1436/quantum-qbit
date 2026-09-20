@@ -63,7 +63,7 @@ $payload = [
     'model' => 'deepseek-chat',
     'messages' => $input['messages'],
     'temperature' => isset($input['temperature']) ? floatval($input['temperature']) : 0.7,
-    'max_tokens' => isset($input['max_tokens']) ? intval($input['max_tokens']) : 4000
+    'max_tokens' => isset($input['max_tokens']) ? intval($input['max_tokens']) : 8192
 ];
 
 $ch = curl_init('https://api.deepseek.com/chat/completions');
@@ -74,7 +74,7 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, [
     'Content-Type: application/json',
     'Authorization: Bearer ' . $apiKey
 ]);
-curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+curl_setopt($ch, CURLOPT_TIMEOUT, 120);
 
 $response = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);

@@ -74,7 +74,7 @@ payload = {
   <p>Exploring the frontier of browser-native client processing...</p>
   <h2>Zero Server Footprint</h2>
   <p>All memory allocations remain local to the user session.</p>
-  <tip>Pro-Tip: Always verify zero network payload transit via DevTools.</tip>
+  <tip>Security Advisory: Always verify zero network payload transit via DevTools.</tip>
 </body>"""
 }
 

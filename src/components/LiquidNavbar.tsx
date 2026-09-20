@@ -108,14 +108,8 @@ export const LiquidNavbar: React.FC<LiquidNavbarProps> = ({
           </button>
         </nav>
 
-        {/* Right Actions: Local Privacy Badge & Theme Switcher */}
+        {/* Right Actions: Theme Switcher & Mobile Menu */}
         <div style={styles.rightActions}>
-          <div style={styles.privacyBadge} title="All image and PDF processing occurs 100% locally in your browser memory">
-            <span style={styles.pulseDot} />
-            <ShieldCheck size={14} style={{ color: 'var(--emerald)' }} />
-            <span style={styles.privacyText}>100% Local</span>
-          </div>
-
           <button
             onClick={toggleTheme}
             style={styles.iconButton}

@@ -14,9 +14,9 @@ import {
   Tag, 
   Sliders, 
   FileText, 
-  Image as ImageIcon,
   X,
-  Terminal
+  Terminal,
+  ChevronsDown
 } from 'lucide-react';
 import { navigate } from '../utils/router';
 import { updateSEO } from '../utils/seo';
@@ -396,7 +396,17 @@ export const Blogs: React.FC<BlogsProps> = ({ postId, setPostId }) => {
                     <div style={styles.tipCard}>
                       <Sparkles size={18} style={{ color: 'var(--primary)', flexShrink: 0, marginTop: '2px' }} />
                       <div style={styles.tipText}>
-                        <strong>Pro-Tip:</strong> {sec.tip}
+                        {(() => {
+                          const raw = sec.tip.trim();
+                          const clean = raw.replace(/^(?:(?:Pro-Tip|Tip|Insight|Note|Advisory|Takeaway):\s*)+/i, '').trim();
+                          const prefixMatch = raw.match(/^([A-Za-z0-9\s'’/&-]{2,30}):\s*([\s\S]*)$/);
+                          const label = prefixMatch ? prefixMatch[1].trim() : 'Strategic Insight';
+                          return (
+                            <>
+                              <strong>{label}:</strong> {clean}
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
                   )}
@@ -460,34 +470,11 @@ export const Blogs: React.FC<BlogsProps> = ({ postId, setPostId }) => {
     <div style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
-          <div className="liquid-glass-pill">
-            <BookOpen size={14} style={{ color: 'var(--primary)' }} />
-            <span>ENGINEERING JOURNAL & GUIDES</span>
-          </div>
-          <button
-            onClick={() => setIsApiModalOpen(true)}
-            className="liquid-glass-pill"
-            style={{
-              cursor: 'pointer',
-              background: 'rgba(56, 189, 248, 0.1)',
-              borderColor: 'rgba(56, 189, 248, 0.35)',
-              color: '#38bdf8',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-            title="Remote Blog Publishing API Documentation"
-          >
-            <Terminal size={14} />
-            <span>Publishing API</span>
-          </button>
-        </div>
         <h1 style={styles.title}>
-          Quantum Qbit <span className="liquid-gradient-text">Insights</span>
+          Quantum Qbit <span className="liquid-gradient-text">Articles</span>
         </h1>
         <p style={styles.subtitle}>
-          Technical deep-dives on browser-native media pipelines, client-side privacy, image optimization, and document engineering.
+          In-depth guides, practical tutorials, and articles on digital media, productivity, and modern technology.
         </p>
 
         {/* Search Bar */}
@@ -538,37 +525,54 @@ export const Blogs: React.FC<BlogsProps> = ({ postId, setPostId }) => {
           </button>
         </div>
       ) : (
-        <div style={styles.grid}>
-          {filteredPosts.map((post) => (
-          <div
-            key={post.id}
-            className="liquid-glass-card liquid-glass-card-interactive"
-            style={styles.postCard}
-            onClick={() => handleOpenPost(post)}
-          >
-            <div style={styles.cardHeader}>
-              <span className="liquid-badge">{post.categoryLabel}</span>
-              <span style={styles.cardReadTime}>
-                <Clock size={12} /> {post.readTime}
+        <div className="articles-frame-wrapper" style={styles.frameWrapper}>
+          <div style={styles.frameHeaderBar}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="liquid-badge" style={{ fontSize: '0.74rem', padding: '3px 10px' }}>
+                {filteredPosts.length} {filteredPosts.length === 1 ? 'Article' : 'Articles'} Available
               </span>
+              <span style={styles.frameSubtext}>Scroll inside container to explore all publications</span>
             </div>
-
-            <h2 style={styles.cardTitle}>{post.title}</h2>
-            <p style={styles.cardSummary}>{post.summary}</p>
-
-            <div style={styles.cardFooter}>
-              <div style={styles.cardDate}>
-                <Calendar size={13} />
-                <span>{post.date}</span>
-              </div>
-              <span style={styles.readMoreLink}>
-                <span>Read Article</span>
-                <ArrowRight size={14} />
-              </span>
+            <div style={styles.scrollIndicator}>
+              <ChevronsDown size={14} style={{ color: 'var(--primary)' }} />
+              <span>Scrollable Viewport</span>
             </div>
           </div>
-        ))}
-      </div>
+
+          <div className="articles-scroll-frame" style={styles.scrollFrame}>
+            <div style={styles.grid}>
+              {filteredPosts.map((post) => (
+                <div
+                  key={post.id}
+                  className="liquid-glass-card liquid-glass-card-interactive"
+                  style={styles.postCard}
+                  onClick={() => handleOpenPost(post)}
+                >
+                  <div style={styles.cardHeader}>
+                    <span className="liquid-badge">{post.categoryLabel}</span>
+                    <span style={styles.cardReadTime}>
+                      <Clock size={12} /> {post.readTime}
+                    </span>
+                  </div>
+
+                  <h2 style={styles.cardTitle}>{post.title}</h2>
+                  <p style={styles.cardSummary}>{post.summary}</p>
+
+                  <div style={styles.cardFooter}>
+                    <div style={styles.cardDate}>
+                      <Calendar size={13} />
+                      <span>{post.date}</span>
+                    </div>
+                    <span style={styles.readMoreLink}>
+                      <span>Read Article</span>
+                      <ArrowRight size={14} />
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Remote Publishing API Documentation Modal */}
@@ -634,6 +638,35 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--text-primary)',
     fontSize: '0.95rem',
     fontFamily: 'var(--font-body)',
+  },
+  frameWrapper: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '12px',
+  },
+  frameHeaderBar: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 8px',
+    flexWrap: 'wrap' as const,
+    gap: '8px',
+  },
+  frameSubtext: {
+    fontSize: '0.82rem',
+    color: 'var(--text-muted)',
+  },
+  scrollIndicator: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '0.78rem',
+    color: 'var(--primary)',
+    fontWeight: 500,
+  },
+  scrollFrame: {
+    width: '100%',
   },
   grid: {
     display: 'grid',

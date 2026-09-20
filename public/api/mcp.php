@@ -209,11 +209,11 @@ switch ($method) {
                                 ],
                                 'content' => [
                                     'type' => 'string',
-                                    'description' => 'HTML content of the article body. Use <h2> for subheadings, <p> for paragraphs, <table> for tables, and <tip>Pro-Tip: ...</tip> for recommendations.'
+                                    'description' => 'HTML content of the article body (must be exhaustive 2,000+ words). Use <h2> for subheadings, <p> for paragraphs, <table> for tables, and <tip>Strategic Insight / Gamer Intel / Security Advisory: ...</tip> for contextual takeaways.'
                                 ],
                                 'format' => [
                                     'type' => 'string',
-                                    'description' => 'Optional: The complete raw Quantum Qbit XML-like tag markup (<title>...</title><category>...</category><body>...</body>). If provided, title/content will be parsed from it.'
+                                    'description' => 'Optional: The complete raw Quantum Qbit XML-like tag markup (<title>...</title><category>...</category><body>...</body>). Articles should be comprehensive 2,000+ words.'
                                 ],
                                 'tags' => [
                                     'type' => 'array',
@@ -238,7 +238,7 @@ switch ($method) {
                     ],
                     [
                         'name' => 'get_blog_format_template',
-                        'description' => 'Get the official Quantum Qbit writing template and markup guidelines for drafting high-quality articles.',
+                        'description' => 'Get the official Quantum Qbit writing template and markup guidelines for drafting high-quality articles of 2,000+ words.',
                         'inputSchema' => [
                             'type' => 'object',
                             'properties' => (object)[]
@@ -269,7 +269,8 @@ switch ($method) {
 
         // Check tool name
         if ($toolName === 'get_blog_format_template') {
-            $template = "<title>Put an engaging, SEO-optimized title here</title>\n"
+            $template = "<!-- QUANTUM QBIT LONG-FORM FORMAT (2,000+ WORDS REQUIRED) -->\n"
+                . "<title>Put an engaging, SEO-optimized title here</title>\n"
                 . "<category>Your Category (e.g. AI Safety, Web Tech, Privacy, Geopolitics)</category>\n"
                 . "<summary>Write a concise, 2-sentence hook describing what this article covers and why it matters.</summary>\n"
                 . "<cover_image>https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe</cover_image>\n"
@@ -277,8 +278,8 @@ switch ($method) {
                 . "<body>\n"
                 . "  <p>Start with a strong, insightful introduction setting up the problem or landscape...</p>\n\n"
                 . "  <h2>Deep Dive: Core Concepts & Architecture</h2>\n"
-                . "  <p>Explain how the technology works under the hood with technical rigor and clarity.</p>\n\n"
-                . "  <tip>Pro-Tip: Highlight an actionable engineering takeaway or best practice.</tip>\n\n"
+                . "  <p>Explain the topic with analytical depth, comprehensive background, and practical rigor across multiple detailed paragraphs...</p>\n\n"
+                . "  <tip>Strategic Insight: Highlight a nuanced, contextual takeaway specific to this topic.</tip>\n\n"
                 . "  <h2>Comparative Analysis & Benchmarks</h2>\n"
                 . "  <table>\n"
                 . "    <thead><tr><th>Metric</th><th>Client-Side (Quantum Qbit)</th><th>Legacy Cloud</th></tr></thead>\n"

@@ -18,17 +18,17 @@ export const LiquidFooter: React.FC<LiquidFooterProps> = ({ setCurrentPage, onOp
               <span style={styles.brandTitle} className="liquid-gradient-text">Quantum Qbit</span>
             </div>
             <p style={styles.brandDesc}>
-              A pure client-side media workshop engineered with liquid glass aesthetics.
-              All image manipulation and PDF rendering run 100% locally in your device's memory.
+              Modern, free image editing and document utilities designed for speed and ease of use.
+              Edit photos, compress files, and manage PDF documents right in your browser.
             </p>
             <div style={styles.badgeRow}>
               <span className="liquid-glass-pill" style={styles.specBadge}>
                 <ShieldCheck size={14} style={{ color: 'var(--emerald)' }} />
-                <span>Zero Server Uploads</span>
+                <span>Private & Safe</span>
               </span>
               <span className="liquid-glass-pill" style={styles.specBadge}>
                 <Cpu size={14} style={{ color: 'var(--primary)' }} />
-                <span>WebAssembly Speed</span>
+                <span>Fast & Free</span>
               </span>
             </div>
           </div>

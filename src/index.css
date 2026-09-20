@@ -757,30 +757,135 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 /* Custom Tip & Callout Cards */
 .blog-custom-tip-card {
+  background: rgba(0, 240, 255, 0.06);
+  border: 1px solid rgba(0, 240, 255, 0.28);
+  border-radius: 14px;
   display: flex;
   align-items: flex-start;
   gap: 14px;
   padding: 18px 22px;
-  background: rgba(0, 240, 255, 0.06);
-  border: 1px solid rgba(0, 240, 255, 0.28);
-  border-radius: 14px;
   margin: 24px 0;
-  box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 4px 16px rgba(0, 240, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 16px rgba(0, 240, 255, 0.08);
+  transition: var(--transition-smooth);
 }
-
 .blog-custom-tip-card .tip-icon {
   font-size: 1.25rem;
-  color: var(--primary);
   flex-shrink: 0;
   margin-top: 2px;
+  color: var(--primary);
 }
-
 .blog-custom-tip-card .tip-body {
+  color: var(--text-primary);
   font-size: 0.94rem;
   line-height: 1.6;
-  color: var(--text-primary);
+}
+.blog-custom-tip-card .tip-body strong {
+  color: var(--primary);
+  margin-right: 4px;
+}
+
+/* Contextual Callout Variants Based on Subject Matter */
+.blog-custom-tip-card.tip-strategic {
+  background: rgba(168, 85, 247, 0.08);
+  border-color: rgba(168, 85, 247, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 20px rgba(168, 85, 247, 0.12);
+}
+.blog-custom-tip-card.tip-strategic .tip-icon,
+.blog-custom-tip-card.tip-strategic .tip-body strong {
+  color: #c084fc;
+}
+
+.blog-custom-tip-card.tip-gaming {
+  background: rgba(236, 72, 153, 0.08);
+  border-color: rgba(236, 72, 153, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 20px rgba(236, 72, 153, 0.12);
+}
+.blog-custom-tip-card.tip-gaming .tip-icon,
+.blog-custom-tip-card.tip-gaming .tip-body strong {
+  color: #f472b6;
+}
+
+.blog-custom-tip-card.tip-security {
+  background: rgba(244, 63, 94, 0.08);
+  border-color: rgba(244, 63, 94, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 20px rgba(244, 63, 94, 0.12);
+}
+.blog-custom-tip-card.tip-security .tip-icon,
+.blog-custom-tip-card.tip-security .tip-body strong {
+  color: #fb7185;
+}
+
+.blog-custom-tip-card.tip-finance {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 20px rgba(16, 185, 129, 0.12);
+}
+.blog-custom-tip-card.tip-finance .tip-icon,
+.blog-custom-tip-card.tip-finance .tip-body strong {
+  color: #34d399;
+}
+
+.blog-custom-tip-card.tip-engineering {
+  background: rgba(0, 240, 255, 0.08);
+  border-color: rgba(0, 240, 255, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 20px rgba(0, 240, 255, 0.12);
+}
+.blog-custom-tip-card.tip-engineering .tip-icon,
+.blog-custom-tip-card.tip-engineering .tip-body strong {
+  color: #38bdf8;
+}
+
+.blog-custom-tip-card.tip-insight {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 20px rgba(245, 158, 11, 0.12);
+}
+.blog-custom-tip-card.tip-insight .tip-icon,
+.blog-custom-tip-card.tip-insight .tip-body strong {
+  color: #fbbf24;
+}
+
+/* Dedicated Scrollable Frame for Articles */
+.articles-scroll-frame {
+  max-height: 820px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-radius: var(--radius-2xl);
+  background: rgba(12, 16, 26, 0.45);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-skeuo-concave), inset 0 1px 1px rgba(255, 255, 255, 0.06);
+  padding: 24px;
+  scrollbar-gutter: stable;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+
+.articles-scroll-frame::-webkit-scrollbar {
+  width: 9px;
+}
+.articles-scroll-frame::-webkit-scrollbar-track {
+  background: rgba(5, 7, 11, 0.5);
+  border-radius: 999px;
+  margin: 14px 0;
+}
+.articles-scroll-frame::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(0, 240, 255, 0.45), rgba(168, 85, 247, 0.45));
+  border-radius: 999px;
+  border: 2px solid rgba(5, 7, 11, 0.5);
+}
+.articles-scroll-frame::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--primary), var(--secondary));
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
+@media (max-width: 768px) {
+  .articles-scroll-frame {
+    max-height: 640px;
+    padding: 16px 10px;
+  }
 }
 
 .blog-custom-callout-card {

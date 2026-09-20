@@ -376,7 +376,7 @@ export const AnimatedStudioDemo: React.FC = () => {
                   {currentStep === 4 && (
                     <div style={styles.downloadSuccessToast}>
                       <Check size={13} style={{ color: 'var(--emerald)' }} />
-                      <span>Saved 100% locally in 0.08s</span>
+                      <span>Saved instantly in 0.08s</span>
                     </div>
                   )}
                 </div>

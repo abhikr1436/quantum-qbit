@@ -11,8 +11,9 @@ export interface ParseResult {
 /**
  * Standard Custom Tag Format that users can copy to clipboard
  */
-export const AI_PROMPT_TEMPLATE = `<title>Put an engaging, SEO-optimized title here</title>
-<category>Your Category (e.g. AI Safety, Web Tech, Privacy, Geopolitics)</category>
+export const AI_PROMPT_TEMPLATE = `<!-- Quantum Qbit Long-Form Article Format (2,000+ Words Required) -->
+<title>Put an engaging, SEO-optimized title here</title>
+<category>Your Category (e.g. AI Safety, Web Tech, Privacy, Geopolitics, Gaming & Tech)</category>
 <summary>Write a concise, 2-sentence hook describing what this article covers and why it matters.</summary>
 <cover_image>https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe</cover_image> <!-- Optional image URL -->
 <tags>Browser Privacy, WebAssembly, Security, Image Processing</tags>
@@ -21,12 +22,13 @@ export const AI_PROMPT_TEMPLATE = `<title>Put an engaging, SEO-optimized title h
   <p>Start with a strong, insightful introduction setting up the problem, historical context, or technical landscape...</p>
 
   <h2>Deep Dive: Core Concepts & Architecture</h2>
-  <p>Explain how the technology works under the hood with technical rigor and clarity.</p>
+  <p>Explain the topic with analytical rigor, comprehensive background, and practical depth across multiple detailed paragraphs...</p>
 
-  <tip>Pro-Tip: Highlight an actionable engineering takeaway, optimization technique, or best practice for the reader.</tip>
+  <!-- Contextual highlight box: Tailor the label to your article (e.g. Strategic Insight, Gamer's Intel, Security Advisory, Market Signal, Engineering Advisory) -->
+  <tip>Strategic Insight: Provide a nuanced, actionable takeaway specific to this topic.</tip>
 
   <h2>Comparative Analysis & Benchmarks</h2>
-  <p>Compare local client-side processing vs legacy cloud alternatives:</p>
+  <p>Compare key dimensions with analytical tables:</p>
 
   <table>
     <thead>
@@ -231,10 +233,79 @@ export function parseBlogMarkup(rawMarkup: string, existingId?: string): ParseRe
     ];
   }
 
-  // 10. Transform custom <tip> tags into skeuomorphic glass tip callouts
+  // 10. Transform custom <tip> tags into contextual skeuomorphic glass tip callouts
   let processedHtml = bodyWithoutTakeaways.replace(
-    /<tip[^>]*>([\s\S]*?)<\/tip>/gi,
-    '<div class="blog-custom-tip-card"><div class="tip-icon">✨</div><div class="tip-body"><strong>Pro-Tip:</strong> $1</div></div>'
+    /<tip(?:\s+label=["']([^"']*)["'])?[^>]*>([\s\S]*?)<\/tip>/gi,
+    (_match, attrLabel, body) => {
+      const rawText = (body || '').trim();
+      let detectedLabel = (attrLabel || '').trim();
+      let cleanText = rawText;
+
+      // Strip duplicate prefixes like "Pro-Tip: Pro-Tip:" or "Tip: Tip:"
+      cleanText = cleanText.replace(/^(?:(?:Pro-Tip|Tip|Insight|Note|Advisory|Takeaway):\s*)+/i, '');
+
+      // Check if text already starts with a custom label like "Strategic Insight: ..." or "Gamer's Intel: ..."
+      const labelMatch = rawText.match(/^([A-Za-z0-9\s'’/&-]{2,30}):\s*([\s\S]*)$/);
+      if (labelMatch) {
+        if (!detectedLabel) {
+          detectedLabel = labelMatch[1].trim();
+        }
+        cleanText = labelMatch[2].trim();
+        // Prevent any remaining duplicate label in cleanText
+        const dupRegex = new RegExp(`^${detectedLabel}:\\s*`, 'i');
+        cleanText = cleanText.replace(dupRegex, '').trim();
+      }
+
+      // If still no label, intelligently infer from category or content keywords
+      if (!detectedLabel) {
+        const lower = (categoryLabel + ' ' + rawText).toLowerCase();
+        if (lower.includes('geopolit') || lower.includes('defense') || lower.includes('diploma') || lower.includes('war') || lower.includes('sanction') || lower.includes('treaty') || lower.includes('iran') || lower.includes('foreign')) {
+          detectedLabel = 'Strategic Insight';
+        } else if (lower.includes('gaming') || lower.includes('game') || lower.includes('shooter') || lower.includes('remedy') || lower.includes('pre-order') || lower.includes('dlc') || lower.includes('steam')) {
+          detectedLabel = "Gamer's Intel";
+        } else if (lower.includes('secur') || lower.includes('privac') || lower.includes('threat') || lower.includes('vulnerab') || lower.includes('leak') || lower.includes('alert')) {
+          detectedLabel = 'Security Advisory';
+        } else if (lower.includes('market') || lower.includes('finance') || lower.includes('econom') || lower.includes('tariff') || lower.includes('price')) {
+          detectedLabel = 'Market Signal';
+        } else if (lower.includes('image') || lower.includes('pdf') || lower.includes('compress') || lower.includes('dpi') || lower.includes('convert')) {
+          detectedLabel = 'Pro-Tip';
+        } else if (lower.includes('code') || lower.includes('wasm') || lower.includes('webassembly') || lower.includes('developer') || lower.includes('engine')) {
+          detectedLabel = 'Engineering Advisory';
+        } else {
+          detectedLabel = 'Key Insight';
+        }
+      }
+
+      // Pick appropriate theme class & icon
+      let icon = '✨';
+      let themeClass = '';
+      const lblLower = detectedLabel.toLowerCase();
+
+      if (lblLower.includes('strateg') || lblLower.includes('geopolit') || lblLower.includes('diplom')) {
+        icon = '🌐';
+        themeClass = 'tip-strategic';
+      } else if (lblLower.includes('game') || lblLower.includes('intel') || lblLower.includes('pre-order') || lblLower.includes('player')) {
+        icon = '🎮';
+        themeClass = 'tip-gaming';
+      } else if (lblLower.includes('secur') || lblLower.includes('threat') || lblLower.includes('advis') || lblLower.includes('alert')) {
+        icon = '🛡️';
+        themeClass = 'tip-security';
+      } else if (lblLower.includes('market') || lblLower.includes('econom') || lblLower.includes('financ') || lblLower.includes('signal')) {
+        icon = '📊';
+        themeClass = 'tip-finance';
+      } else if (lblLower.includes('pro-tip') || lblLower.includes('tip') || lblLower.includes('engineer')) {
+        icon = '⚡';
+        themeClass = 'tip-engineering';
+      } else {
+        icon = '💡';
+        themeClass = 'tip-insight';
+      }
+
+      return `<div class="blog-custom-tip-card ${themeClass}">
+        <div class="tip-icon">${icon}</div>
+        <div class="tip-body"><strong>${detectedLabel}:</strong> ${cleanText}</div>
+      </div>`;
+    }
   );
 
   // Transform <callout> tags
