@@ -60,12 +60,6 @@ function App() {
       window.removeEventListener('mousemove', loadScripts);
       window.removeEventListener('touchstart', loadScripts);
 
-      // Google Analytics
-      const gaScript = document.createElement('script');
-      gaScript.async = true;
-      gaScript.src = "https://www.googletagmanager.com/gtag/js?id=G-8T0PECJQD7";
-      document.head.appendChild(gaScript);
-
       // Google AdSense
       const adScript = document.createElement('script');
       adScript.async = true;

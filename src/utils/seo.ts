@@ -43,4 +43,13 @@ export function updateSEO(
     schemaScript.textContent = JSON.stringify(jsonLdSchema);
     document.head.appendChild(schemaScript);
   }
+
+  // 5. Google Analytics (gtag.js) page tracking for SPA client-side route changes
+  if (typeof window !== 'undefined' && typeof (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag === 'function') {
+    (window as unknown as { gtag: (...args: unknown[]) => void }).gtag('config', 'G-8T0PECJQD7', {
+      page_title: title,
+      page_path: path,
+      page_location: `${siteUrl}${path}`,
+    });
+  }
 }
