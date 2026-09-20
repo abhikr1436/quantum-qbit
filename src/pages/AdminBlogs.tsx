@@ -28,7 +28,8 @@ import {
   Unlock,
   EyeOff,
   Key,
-  Tag
+  Tag,
+  Terminal
 } from 'lucide-react';
 import type { BlogPost } from './Blogs';
 import { blogStorage } from '../services/blogStorage';
@@ -63,6 +64,14 @@ export const AdminBlogs: React.FC = () => {
   const [showChangePassModal, setShowChangePassModal] = useState(false);
   const [newPasscode, setNewPasscode] = useState('');
 
+  // Remote Publishing API Key states
+  const [apiKey, setApiKey] = useState<string>('');
+  const [showApiKeyModal, setShowApiKeyModal] = useState<boolean>(false);
+  const [isApiKeyRevealed, setIsApiKeyRevealed] = useState<boolean>(false);
+  const [copiedKey, setCopiedKey] = useState<boolean>(false);
+  const [isRegeneratingKey, setIsRegeneratingKey] = useState<boolean>(false);
+  const [showRegenerateConfirm, setShowRegenerateConfirm] = useState<boolean>(false);
+
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [aiTopicInput, setAiTopicInput] = useState('');
   const [showAiTopicModal, setShowAiTopicModal] = useState(false);
@@ -84,6 +93,42 @@ export const AdminBlogs: React.FC = () => {
       })
       .catch(() => {});
   }, []);
+
+  // Fetch remote publishing API key when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetch('/api/auth.php?action=get_api_key', { credentials: 'include' })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.api_key) {
+            setApiKey(data.api_key);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isAuthenticated]);
+
+  const handleRegenerateApiKey = async () => {
+    setIsRegeneratingKey(true);
+    try {
+      const res = await fetch('/api/auth.php?action=regenerate_api_key', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.success && data.api_key) {
+        setApiKey(data.api_key);
+        setShowRegenerateConfirm(false);
+        window.showToast?.('Remote API Key regenerated successfully!', 'success');
+      } else {
+        window.showToast?.(data.error || 'Failed to rotate API key.', 'error');
+      }
+    } catch (e) {
+      window.showToast?.('Error communicating with server.', 'error');
+    } finally {
+      setIsRegeneratingKey(false);
+    }
+  };
 
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -570,6 +615,16 @@ You MUST output the article using the following XML-like custom tag structure wi
         </div>
 
         <div style={styles.topBarRight}>
+          <button
+            onClick={() => setShowApiKeyModal(true)}
+            className="liquid-glass-btn-secondary"
+            style={{ padding: '8px 14px', fontSize: '0.85rem', color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.35)' }}
+            title="View and manage secret Remote Publishing API Key"
+          >
+            <Terminal size={14} />
+            <span>Publishing API Key</span>
+          </button>
+
           <button
             onClick={() => setShowChangePassModal(true)}
             className="liquid-glass-btn-secondary"
@@ -1214,6 +1269,186 @@ You MUST output the article using the following XML-like custom tag structure wi
                 disabled={!newPasscode.trim() || newPasscode.trim().length < 6}
               >
                 Save New Passcode
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* =================================================================== */}
+      {/* REMOTE PUBLISHING API KEY MODAL                                     */}
+      {/* =================================================================== */}
+      {showApiKeyModal && (
+        <div style={styles.modalOverlay} onClick={() => setShowApiKeyModal(false)}>
+          <div
+            className="liquid-glass-card"
+            style={{ ...styles.confirmModal, maxWidth: '640px', textAlign: 'left' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(56, 189, 248, 0.15)', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+                  <Terminal size={20} style={{ color: '#38bdf8' }} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.2rem', margin: 0, color: '#ffffff' }}>Remote Publishing API Key</h3>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Publish articles from any terminal, AI agent, or device</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowApiKeyModal(false)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '14px', lineHeight: 1.5 }}>
+              This secret key allows you or any automated AI agent to publish blogs directly into Quantum Qbit without browser logins.
+              Author is automatically locked to <strong>Quantum Qbit Team</strong>.
+            </p>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
+                SECRET API KEY (X-API-Key)
+              </label>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <input
+                    type={isApiKeyRevealed ? 'text' : 'password'}
+                    readOnly
+                    value={apiKey || 'Loading secret key...'}
+                    style={{
+                      ...styles.topicInput,
+                      fontFamily: 'monospace',
+                      fontSize: '0.88rem',
+                      letterSpacing: isApiKeyRevealed ? '0.02em' : '0.2em',
+                      paddingRight: '40px',
+                      color: '#38bdf8',
+                      background: 'rgba(0, 0, 0, 0.4)'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setIsApiKeyRevealed(!isApiKeyRevealed)}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'var(--text-muted)',
+                      cursor: 'pointer',
+                      padding: '4px'
+                    }}
+                    title={isApiKeyRevealed ? 'Hide secret key' : 'Reveal secret key'}
+                  >
+                    {isApiKeyRevealed ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(apiKey);
+                    setCopiedKey(true);
+                    setTimeout(() => setCopiedKey(false), 2000);
+                  }}
+                  className="liquid-glass-btn-primary"
+                  style={{ padding: '10px 16px', fontSize: '0.82rem', whiteSpace: 'nowrap' }}
+                  disabled={!apiKey}
+                >
+                  {copiedKey ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
+                  <span>{copiedKey ? 'Copied' : 'Copy Key'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Ready-to-copy cURL tester */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                  READY-TO-USE cURL COMMAND (Pre-authenticated)
+                </span>
+                <button
+                  onClick={() => {
+                    const cmd = `curl -X POST https://quantumqbit.in/api/publish.php \\\n  -H "Content-Type: application/json" \\\n  -H "X-API-Key: ${apiKey}" \\\n  -d '{\\n    "format": "<title>My Remote Article</title>\\\\n<category>Technology</category>\\\\n<body><p>Article content...</p></body>"\\n  }'`;
+                    navigator.clipboard.writeText(cmd);
+                    window.showToast?.('cURL command copied to clipboard!', 'success');
+                  }}
+                  style={{ background: 'transparent', border: 'none', color: '#38bdf8', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  Copy cURL
+                </button>
+              </div>
+              <pre
+                style={{
+                  margin: 0,
+                  padding: '12px',
+                  borderRadius: '10px',
+                  background: '#090d16',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  fontSize: '0.75rem',
+                  fontFamily: 'monospace',
+                  color: '#93c5fd',
+                  overflowX: 'auto',
+                  lineHeight: 1.45
+                }}
+              >
+{`curl -X POST https://quantumqbit.in/api/publish.php \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: ${apiKey || 'YOUR_KEY'}" \\
+  -d '{
+    "format": "<title>My Remote Article</title>\\n<category>Technology</category>\\n<body><p>Article content...</p></body>"
+  }'`}
+              </pre>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', paddingTop: '14px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <button
+                onClick={() => setShowRegenerateConfirm(true)}
+                className="liquid-glass-btn-secondary"
+                style={{ fontSize: '0.8rem', color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.3)' }}
+              >
+                <RefreshCw size={13} />
+                <span>Rotate / Regenerate Key</span>
+              </button>
+
+              <button
+                onClick={() => setShowApiKeyModal(false)}
+                className="liquid-glass-btn-secondary"
+                style={{ fontSize: '0.85rem' }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* REGENERATE API KEY CONFIRMATION MODAL */}
+      {showRegenerateConfirm && (
+        <div style={styles.modalOverlay}>
+          <div className="liquid-glass-card" style={styles.confirmModal}>
+            <AlertTriangle size={36} style={{ color: '#f59e0b', marginBottom: '12px' }} />
+            <h3 style={{ fontSize: '1.2rem', marginBottom: '8px', color: '#f59e0b' }}>
+              Rotate Publishing API Key?
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginBottom: '20px', lineHeight: 1.5 }}>
+              Rotating this key will immediately revoke the current key. Any external AI agents, scripts, or shortcuts using the previous key will be denied access until updated with the new key.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                onClick={() => setShowRegenerateConfirm(false)}
+                className="liquid-glass-btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRegenerateApiKey}
+                className="liquid-glass-btn-primary"
+                style={{ background: '#f59e0b', borderColor: '#f59e0b' }}
+                disabled={isRegeneratingKey}
+              >
+                {isRegeneratingKey ? 'Regenerating...' : 'Yes, Generate New Key'}
               </button>
             </div>
           </div>

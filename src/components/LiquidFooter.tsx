@@ -3,9 +3,10 @@ import { ShieldCheck, Cpu, ArrowUpRight, Heart } from 'lucide-react';
 
 interface LiquidFooterProps {
   setCurrentPage: (page: string) => void;
+  onOpenApiModal?: () => void;
 }
 
-export const LiquidFooter: React.FC<LiquidFooterProps> = ({ setCurrentPage }) => {
+export const LiquidFooter: React.FC<LiquidFooterProps> = ({ setCurrentPage, onOpenApiModal }) => {
   return (
     <footer style={styles.footerWrapper}>
       <div style={styles.footerCard} className="liquid-glass-card">
@@ -86,6 +87,15 @@ export const LiquidFooter: React.FC<LiquidFooterProps> = ({ setCurrentPage }) =>
               <li>
                 <button onClick={() => setCurrentPage('terms')} style={styles.linkBtn}>
                   Terms of Service
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onOpenApiModal ? onOpenApiModal() : setCurrentPage('blogs')}
+                  style={{ ...styles.linkBtn, color: '#38bdf8' }}
+                  title="Remote Blog Publishing API Documentation"
+                >
+                  Developer API
                 </button>
               </li>
               <li>

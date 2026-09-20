@@ -15,11 +15,13 @@ import {
   Sliders, 
   FileText, 
   Image as ImageIcon,
-  X
+  X,
+  Terminal
 } from 'lucide-react';
 import { navigate } from '../utils/router';
 import { updateSEO } from '../utils/seo';
 import { blogStorage } from '../services/blogStorage';
+import { BlogApiModal } from '../components/BlogApiModal';
 
 export interface BlogPost {
   id: string;
@@ -248,6 +250,7 @@ export const Blogs: React.FC<BlogsProps> = ({ postId, setPostId }) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activePost, setActivePost] = useState<BlogPost | null>(null);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
+  const [isApiModalOpen, setIsApiModalOpen] = useState<boolean>(false);
 
   // Subscribe to storage changes from admin
   useEffect(() => {
@@ -457,9 +460,28 @@ export const Blogs: React.FC<BlogsProps> = ({ postId, setPostId }) => {
     <div style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
-        <div className="liquid-glass-pill" style={{ marginBottom: '12px' }}>
-          <BookOpen size={14} style={{ color: 'var(--primary)' }} />
-          <span>ENGINEERING JOURNAL & GUIDES</span>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
+          <div className="liquid-glass-pill">
+            <BookOpen size={14} style={{ color: 'var(--primary)' }} />
+            <span>ENGINEERING JOURNAL & GUIDES</span>
+          </div>
+          <button
+            onClick={() => setIsApiModalOpen(true)}
+            className="liquid-glass-pill"
+            style={{
+              cursor: 'pointer',
+              background: 'rgba(56, 189, 248, 0.1)',
+              borderColor: 'rgba(56, 189, 248, 0.35)',
+              color: '#38bdf8',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+            title="Remote Blog Publishing API Documentation"
+          >
+            <Terminal size={14} />
+            <span>Publishing API</span>
+          </button>
         </div>
         <h1 style={styles.title}>
           Quantum Qbit <span className="liquid-gradient-text">Insights</span>
@@ -548,6 +570,13 @@ export const Blogs: React.FC<BlogsProps> = ({ postId, setPostId }) => {
         ))}
       </div>
       )}
+
+      {/* Remote Publishing API Documentation Modal */}
+      <BlogApiModal
+        isOpen={isApiModalOpen}
+        onClose={() => setIsApiModalOpen(false)}
+        onOpenAdmin={() => navigate('/admin')}
+      />
     </div>
   );
 };

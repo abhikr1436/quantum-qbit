@@ -190,6 +190,40 @@ switch ($action) {
         }
         break;
         
+    case 'get_api_key':
+        if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'error' => 'Unauthorized']);
+            break;
+        }
+        
+        $apiKey = isset($config['api_key']) ? trim($config['api_key']) : '';
+        if (empty($apiKey)) {
+            $apiKey = 'qq_live_' . bin2hex(random_bytes(16));
+            $config['api_key'] = $apiKey;
+            file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT));
+        }
+        
+        echo json_encode(['success' => true, 'api_key' => $apiKey]);
+        break;
+
+    case 'regenerate_api_key':
+        if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'error' => 'Unauthorized']);
+            break;
+        }
+        
+        $newKey = 'qq_live_' . bin2hex(random_bytes(16));
+        $config['api_key'] = $newKey;
+        if (file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT))) {
+            echo json_encode(['success' => true, 'api_key' => $newKey]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Failed to save new API key']);
+        }
+        break;
+
     default:
         http_response_code(400);
         echo json_encode(['error' => 'Invalid action']);

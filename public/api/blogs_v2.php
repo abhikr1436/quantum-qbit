@@ -238,8 +238,37 @@ if ($method === 'GET') {
     exit;
 }
 
-// All modifying routes require session authentication
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+// All modifying routes require session authentication or valid API key
+$isAuthorized = false;
+if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
+    $isAuthorized = true;
+} else {
+    $suppliedKey = '';
+    if (isset($_SERVER['HTTP_X_API_KEY'])) {
+        $suppliedKey = trim($_SERVER['HTTP_X_API_KEY']);
+    } elseif (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+        $authHeader = trim($_SERVER['HTTP_AUTHORIZATION']);
+        if (stripos($authHeader, 'Bearer ') === 0) {
+            $suppliedKey = trim(substr($authHeader, 7));
+        }
+    } elseif (isset($_GET['api_key'])) {
+        $suppliedKey = trim($_GET['api_key']);
+    } elseif (is_array($input) && isset($input['api_key'])) {
+        $suppliedKey = trim($input['api_key']);
+    }
+    
+    if (!empty($suppliedKey)) {
+        $persistentConfig = getQuantumDataDir() . '/config.json';
+        if (file_exists($persistentConfig)) {
+            $cfg = json_decode(file_get_contents($persistentConfig), true);
+            if (isset($cfg['api_key']) && hash_equals($cfg['api_key'], $suppliedKey)) {
+                $isAuthorized = true;
+            }
+        }
+    }
+}
+
+if (!$isAuthorized) {
     http_response_code(401);
     echo json_encode(['error' => 'Unauthorized']);
     exit;

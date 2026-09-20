@@ -6,6 +6,7 @@ import LandingPage from './pages/LandingPage';
 import { usePath, navigate } from './utils/router';
 import { updateSEO } from './utils/seo';
 import { CONVERTER_SEO_CONFIGS } from './components/SeoConverterLanding';
+import { BlogApiModal } from './components/BlogApiModal';
 
 declare global {
   interface Window {
@@ -26,6 +27,7 @@ function App() {
   const rawPath = usePath();
   const path = rawPath.endsWith('/') && rawPath.length > 1 ? rawPath.slice(0, -1) : rawPath;
 
+  const [isGlobalApiModalOpen, setIsGlobalApiModalOpen] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('theme');
     return (saved === 'light' || saved === 'dark') ? saved : 'dark';
@@ -386,7 +388,16 @@ function App() {
           </Suspense>
         </main>
 
-        <LiquidFooter setCurrentPage={handleNavPage} />
+        <LiquidFooter
+          setCurrentPage={handleNavPage}
+          onOpenApiModal={() => setIsGlobalApiModalOpen(true)}
+        />
+
+        <BlogApiModal
+          isOpen={isGlobalApiModalOpen}
+          onClose={() => setIsGlobalApiModalOpen(false)}
+          onOpenAdmin={() => handleNavPage('admin')}
+        />
 
         {toast && (
           <div className="toast-animation">
