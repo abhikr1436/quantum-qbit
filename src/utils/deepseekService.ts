@@ -1,5 +1,6 @@
-const KEY_SEGMENTS = ['sk-09b31c8d4675', '4036b0c8d6c1', 'c70a15c5'];
-export const DEEPSEEK_API_KEY = KEY_SEGMENTS.join('');
+export const DEEPSEEK_API_KEY =
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_DEEPSEEK_API_KEY) ||
+  '';
 export const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions';
 
 export interface ChatMessage {
@@ -28,12 +29,10 @@ export async function sendDeepSeekChat(
   messages: ChatMessage[],
   apiKey: string = DEEPSEEK_API_KEY
 ): Promise<string> {
-  const payload = {
-    model: 'deepseek-chat',
-    messages: [
-      {
-        role: 'system',
-        content: `You are DeepSeek AI Helper, a world-class AI content assistant integrated directly into the Quantum Qbit Developer Console.
+  const fullMessages = [
+    {
+      role: 'system' as const,
+      content: `You are DeepSeek AI Helper, a world-class AI content assistant integrated directly into the Quantum Qbit Developer Console.
 Your main job is to assist the developer/editor with:
 1. Conducting in-depth technical & general topic research for blog posts.
 2. Generating rich, clean HTML content (headings, paragraphs, lists, callout boxes, code blocks).
@@ -47,9 +46,31 @@ Your main job is to assist the developer/editor with:
 4. Outlining blog articles, drafting introductions, writing tutorials, and summarizing research.
 
 Always format your outputs cleanly in Markdown or clean HTML so the user can easily copy and paste or directly insert your response into the WordPress-style rich blog editor.`
-      },
-      ...messages
-    ],
+    },
+    ...messages
+  ];
+
+  // 1. Try server-side proxy on Hostinger first (reads key from config.json)
+  try {
+    const proxyRes = await fetch('/api/ai.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: fullMessages })
+    });
+    if (proxyRes.ok) {
+      const data: DeepSeekChatResponse = await proxyRes.json();
+      if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+        return data.choices[0].message.content;
+      }
+    }
+  } catch (proxyErr) {
+    // Fallback to direct client-side call
+  }
+
+  // 2. Direct fallback to DeepSeek API endpoint
+  const payload = {
+    model: 'deepseek-chat',
+    messages: fullMessages,
     temperature: 0.7,
     max_tokens: 4000
   };
