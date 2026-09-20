@@ -10,7 +10,9 @@ import {
   Send,
   ExternalLink,
   Sparkles,
-  FileCode
+  FileCode,
+  Cpu,
+  Bot
 } from 'lucide-react';
 import { AI_PROMPT_TEMPLATE } from '../utils/blogMarkupParser';
 
@@ -21,7 +23,7 @@ interface BlogApiModalProps {
 }
 
 export const BlogApiModal: React.FC<BlogApiModalProps> = ({ isOpen, onClose, onOpenAdmin }) => {
-  const [activeTab, setActiveTab] = useState<'format' | 'curl' | 'python' | 'json'>('format');
+  const [activeTab, setActiveTab] = useState<'mcp' | 'format' | 'curl' | 'python' | 'json'>('mcp');
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -33,6 +35,22 @@ export const BlogApiModal: React.FC<BlogApiModalProps> = ({ isOpen, onClose, onO
       setCopiedSection(null);
     }, 2000);
   };
+
+  const mcpUrlExample = `https://quantumqbit.in/api/mcp.php?api_key=YOUR_SECRET_API_KEY`;
+
+  const mcpConfigExample = `{
+  "mcpServers": {
+    "quantum-qbit-blogs": {
+      "url": "https://quantumqbit.in/api/mcp.php?api_key=YOUR_SECRET_API_KEY"
+    }
+  }
+}`;
+
+  const mcpPromptExample = `You are connected to the Quantum Qbit Blog MCP server.
+When asked to create an article:
+1. Optionally call get_blog_format_template to review formatting rules.
+2. Draft a rigorous, SEO-optimized technical article with headings, tables, and <tip> tags.
+3. Call publish_blog to publish the article live on https://quantumqbit.in.`;
 
   const curlExample = `curl -X POST https://quantumqbit.in/api/publish.php \\
   -H "Content-Type: application/json" \\
@@ -146,6 +164,16 @@ print("Response:", response.json())`;
         {/* Tabs */}
         <div style={styles.tabsRow}>
           <button
+            onClick={() => setActiveTab('mcp')}
+            style={{
+              ...styles.tabBtn,
+              ...(activeTab === 'mcp' ? styles.tabBtnActive : {})
+            }}
+          >
+            <Cpu size={15} />
+            <span>MCP Server (AI Agent)</span>
+          </button>
+          <button
             onClick={() => setActiveTab('format')}
             style={{
               ...styles.tabBtn,
@@ -189,6 +217,70 @@ print("Response:", response.json())`;
 
         {/* Tab Content */}
         <div style={styles.codeContainer}>
+          {activeTab === 'mcp' && (
+            <div>
+              <div style={styles.codeHeader}>
+                <span style={styles.codeLabel}>Model Context Protocol (MCP) Configuration</span>
+                <button
+                  onClick={() => handleCopy(mcpUrlExample, 'mcpUrl')}
+                  style={styles.codeCopyBtn}
+                >
+                  {copiedSection === 'mcpUrl' ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
+                  <span>{copiedSection === 'mcpUrl' ? 'Copied URL' : 'Copy MCP URL'}</span>
+                </button>
+              </div>
+              <div style={{ padding: '16px' }}>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
+                    REMOTE MCP SERVER URL (Compatible with Claude Desktop, Cursor, Antigravity)
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <code style={{ ...styles.endpointUrl, flex: 1, padding: '8px 12px', background: 'rgba(0,0,0,0.5)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      {mcpUrlExample}
+                    </code>
+                    <button
+                      onClick={() => handleCopy(mcpUrlExample, 'mcpUrl2')}
+                      style={styles.btnSmCopy}
+                    >
+                      {copiedSection === 'mcpUrl2' ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
+                      <span>Copy</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                      CLAUDE DESKTOP / CURSOR CONFIG (claude_desktop_config.json)
+                    </label>
+                    <button
+                      onClick={() => handleCopy(mcpConfigExample, 'mcpConfig')}
+                      style={{ background: 'transparent', border: 'none', color: '#38bdf8', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600 }}
+                    >
+                      {copiedSection === 'mcpConfig' ? 'Copied Config!' : 'Copy Config'}
+                    </button>
+                  </div>
+                  <pre style={{ ...styles.codeBlock, maxHeight: '140px', borderRadius: '8px', background: 'rgba(0,0,0,0.45)' }}>{mcpConfigExample}</pre>
+                </div>
+
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                      AI AGENT INSTRUCTION PROMPT
+                    </label>
+                    <button
+                      onClick={() => handleCopy(mcpPromptExample, 'mcpPrompt')}
+                      style={{ background: 'transparent', border: 'none', color: '#38bdf8', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600 }}
+                    >
+                      {copiedSection === 'mcpPrompt' ? 'Copied Prompt!' : 'Copy Prompt'}
+                    </button>
+                  </div>
+                  <pre style={{ ...styles.codeBlock, maxHeight: '110px', borderRadius: '8px', background: 'rgba(0,0,0,0.45)', whiteSpace: 'pre-wrap' }}>{mcpPromptExample}</pre>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'format' && (
             <div>
               <div style={styles.codeHeader}>

@@ -1402,6 +1402,33 @@ You MUST output the article using the following XML-like custom tag structure wi
               </pre>
             </div>
 
+            {/* Model Context Protocol (MCP) Server for AI Agents */}
+            <div style={{ marginBottom: '16px', padding: '14px', borderRadius: '12px', background: 'rgba(0, 240, 255, 0.04)', border: '1px solid rgba(0, 240, 255, 0.15)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Terminal size={14} /> MODEL CONTEXT PROTOCOL (MCP) LINK FOR AI AGENTS
+                </span>
+                <button
+                  onClick={() => {
+                    const mcpUrl = `https://quantumqbit.in/api/mcp.php?api_key=${apiKey}`;
+                    navigator.clipboard.writeText(mcpUrl);
+                    window.showToast?.('Pre-authenticated MCP Server URL copied!', 'success');
+                  }}
+                  style={{ background: 'transparent', border: 'none', color: '#38bdf8', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  Copy MCP URL
+                </button>
+              </div>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 8px 0', lineHeight: 1.4 }}>
+                Connect directly into Claude Desktop, Cursor, Antigravity, or custom LLM agents to let the AI write, format, and publish articles with tool calling:
+              </p>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <code style={{ fontSize: '0.78rem', color: '#00f2fe', fontFamily: 'monospace', flex: 1, padding: '8px 10px', background: 'rgba(0,0,0,0.4)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)', overflowX: 'auto', whiteSpace: 'nowrap' }}>
+                  {`https://quantumqbit.in/api/mcp.php?api_key=${apiKey || 'YOUR_KEY'}`}
+                </code>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', paddingTop: '14px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
               <button
                 onClick={() => setShowRegenerateConfirm(true)}
