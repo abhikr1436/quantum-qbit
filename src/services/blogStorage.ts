@@ -230,6 +230,55 @@ class BlogStorageService {
     }
   }
 
+  private getAuthHeaders(): Record<string, string> {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const apiKey = localStorage.getItem('qq_api_key');
+      if (apiKey) {
+        headers['X-API-Key'] = apiKey;
+      }
+      const passcode = localStorage.getItem('qq_admin_passcode');
+      if (passcode) {
+        headers['X-Passcode'] = passcode;
+      }
+    }
+    return headers;
+  }
+
+  public async pushLocalBlogsToServer(blogsToPush: BlogPost[]): Promise<void> {
+    const headers = this.getAuthHeaders();
+    for (const blog of blogsToPush) {
+      try {
+        const res = await fetch('/api/blogs_v2.php', {
+          method: 'POST',
+          headers,
+          credentials: 'include',
+          body: JSON.stringify({
+            id: blog.id,
+            slug: blog.slug,
+            title: blog.title,
+            excerpt: blog.summary,
+            content: blog.htmlContent || blog.summary,
+            author: blog.author || 'Quantum Qbit Team',
+            category_id: blog.category,
+            category: blog.categoryLabel,
+            tags: blog.tags,
+            coverImage: blog.coverImage,
+            rawMarkup: blog.rawMarkup,
+            takeaways: blog.content?.takeaways || []
+          })
+        });
+        if (res.ok) {
+          console.log('✓ Successfully synced article to cloud:', blog.title);
+        } else {
+          console.warn('⚠️ Server cloud rejected push for:', blog.title, res.status);
+        }
+      } catch (err) {
+        console.warn('Failed to background sync article to server:', blog.title, err);
+      }
+    }
+  }
+
   public async syncWithServer(): Promise<BlogPost[]> {
     try {
       const res = await fetch('/api/blogs_v2.php', {
@@ -240,9 +289,7 @@ class BlogStorageService {
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {
-          // If server returned data (even empty array from deletions)
           const mappedPosts: BlogPost[] = data.map((item: any) => {
-            // Support both our schema and PHP legacy schema
             const id = item.id || Date.now().toString();
             const slug = item.slug || id;
             const title = item.title || 'Untitled';
@@ -281,6 +328,26 @@ class BlogStorageService {
             };
           });
 
+          // Safeguard: Preserve any locally created custom articles that aren't in the server response
+          const localBlogs = this.getBlogs();
+          const serverTitles = new Set(mappedPosts.map((p) => p.title.toLowerCase().trim()));
+          const serverIds = new Set(mappedPosts.map((p) => p.id));
+          const defaultIds = new Set(['1', '2', '3', '4']);
+
+          const unsyncedLocal = localBlogs.filter(
+            (local) =>
+              !serverIds.has(local.id) &&
+              !serverTitles.has(local.title.toLowerCase().trim()) &&
+              !defaultIds.has(local.id)
+          );
+
+          if (unsyncedLocal.length > 0) {
+            // Include local custom articles at the front so they are never lost
+            mappedPosts.unshift(...unsyncedLocal);
+            // Automatically push them to the server database in background
+            this.pushLocalBlogsToServer(unsyncedLocal);
+          }
+
           this.saveBlogsToStorage(mappedPosts);
           this.hasSynced = true;
           this.notifyListeners();
@@ -293,7 +360,7 @@ class BlogStorageService {
     return this.getBlogs();
   }
 
-  public async saveBlog(blog: BlogPost): Promise<void> {
+  public async saveBlog(blog: BlogPost): Promise<{ success: boolean; error?: string }> {
     const blogs = this.getBlogs();
     const existingIndex = blogs.findIndex((b) => b.id === blog.id || b.slug === blog.slug);
 
@@ -306,11 +373,12 @@ class BlogStorageService {
     this.saveBlogsToStorage(blogs);
     this.notifyListeners();
 
-    // Persist to Hostinger server
+    // Persist to Hostinger server / Cloud
     try {
-      await fetch('/api/blogs_v2.php', {
+      const headers = this.getAuthHeaders();
+      const res = await fetch('/api/blogs_v2.php', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         credentials: 'include',
         body: JSON.stringify({
           id: blog.id,
@@ -324,15 +392,26 @@ class BlogStorageService {
           tags: blog.tags,
           coverImage: blog.coverImage,
           rawMarkup: blog.rawMarkup,
-          takeaways: blog.content.takeaways
+          takeaways: blog.content?.takeaways || []
         })
       });
-    } catch (e) {
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        const msg = errJson.error || `Server HTTP ${res.status}`;
+        console.warn('⚠️ Cloud sync returned non-OK status:', msg);
+        return { success: false, error: msg };
+      }
+
+      console.log('✓ Article saved and published live to cloud:', blog.title);
+      return { success: true };
+    } catch (e: any) {
       console.warn('Could not sync save with server, saved locally:', e);
+      return { success: false, error: e?.message || 'Network sync error' };
     }
   }
 
-  public async updateBlog(id: string, updates: Partial<BlogPost>): Promise<void> {
+  public async updateBlog(id: string, updates: Partial<BlogPost>): Promise<{ success: boolean; error?: string }> {
     const blogs = this.getBlogs();
     const idx = blogs.findIndex((b) => b.id === id);
     if (idx >= 0) {
@@ -342,9 +421,10 @@ class BlogStorageService {
 
       try {
         const blog = blogs[idx];
-        await fetch('/api/blogs_v2.php', {
+        const headers = this.getAuthHeaders();
+        const res = await fetch('/api/blogs_v2.php', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           credentials: 'include',
           body: JSON.stringify({
             id: blog.id,
@@ -358,13 +438,21 @@ class BlogStorageService {
             tags: blog.tags,
             coverImage: blog.coverImage,
             rawMarkup: blog.rawMarkup,
-            takeaways: blog.content.takeaways
+            takeaways: blog.content?.takeaways || []
           })
         });
-      } catch (e) {
+
+        if (!res.ok) {
+          const errJson = await res.json().catch(() => ({}));
+          return { success: false, error: errJson.error || `Server HTTP ${res.status}` };
+        }
+        return { success: true };
+      } catch (e: any) {
         console.warn('Could not sync update with server, updated locally:', e);
+        return { success: false, error: e?.message || 'Network sync error' };
       }
     }
+    return { success: false, error: 'Article not found' };
   }
 
   public async deleteBlog(id: string): Promise<void> {
@@ -373,8 +461,10 @@ class BlogStorageService {
     this.notifyListeners();
 
     try {
+      const headers = this.getAuthHeaders();
       await fetch(`/api/blogs_v2.php?id=${encodeURIComponent(id)}`, {
         method: 'DELETE',
+        headers,
         credentials: 'include'
       });
     } catch (e) {
@@ -389,9 +479,10 @@ class BlogStorageService {
     this.notifyListeners();
 
     try {
+      const headers = this.getAuthHeaders();
       await fetch('/api/blogs_v2.php', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         credentials: 'include',
         body: JSON.stringify({ ids })
       });
@@ -405,8 +496,10 @@ class BlogStorageService {
     this.notifyListeners();
 
     try {
+      const headers = this.getAuthHeaders();
       await fetch('/api/blogs_v2.php?action=delete_all', {
         method: 'DELETE',
+        headers,
         credentials: 'include'
       });
     } catch (e) {

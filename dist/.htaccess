@@ -1,3 +1,29 @@
+# Disable directory listings
+Options -Indexes
+
+# Security: Block direct web access to sensitive and configuration files
+<FilesMatch "(^\..*|\.(json|sql|log|ini|env.*|bak|old|swp|md|yml|yaml|sh|lock))$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# Core HTTP Security Headers
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set X-XSS-Protection "1; mode=block"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header set Permissions-Policy "geolocation=(), camera=(), microphone=()"
+  
+  # HTTP Strict Transport Security for HTTPS requests
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" "expr=%{HTTPS} == 'on'"
+</IfModule>
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
@@ -10,7 +36,6 @@
 # Cache-Control and Expires headers for Static Assets (PageSpeed optimization)
 <IfModule mod_expires.c>
   ExpiresActive On
-  # Do not use ExpiresDefault to prevent caching HTML/PHP/JSON files by default
   ExpiresByType image/x-icon "access plus 1 year"
   ExpiresByType image/png "access plus 1 year"
   ExpiresByType image/jpeg "access plus 1 year"
@@ -29,8 +54,8 @@
   <FilesMatch "\.(ico|pdf|jpg|jpeg|png|gif|js|css|webp|svg|woff2)$">
     Header set Cache-Control "max-age=31536000, public"
   </FilesMatch>
-  # Explicitly prevent caching of HTML, PHP, and JSON files to force dynamic updates
-  <FilesMatch "\.(html|htm|php|json)$">
+  # Explicitly prevent caching of HTML and PHP files to force dynamic updates
+  <FilesMatch "\.(html|htm|php)$">
     Header set Cache-Control "no-cache, no-store, must-revalidate"
     Header set Pragma "no-cache"
     Header set Expires 0

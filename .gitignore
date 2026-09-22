@@ -11,12 +11,20 @@ node_modules
 dist-ssr
 *.local
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
-# Keys configuration
+# Confidential Configuration & Secret Keys
+public/api/data/config.json
+dist/api/data/config.json
+**/data/config.json
+**/data/config.local.json
 public/api/data/keys.json
 dist/api/data/keys.json
+**/data/keys.json
+*.pem
+*.key
+*.cert
 
 # Editor directories and files
 .vscode/*
@@ -32,4 +40,3 @@ dist/api/data/keys.json
 # Python cache
 __pycache__/
 *.pyc
-

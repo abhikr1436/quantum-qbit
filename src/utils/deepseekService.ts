@@ -1,8 +1,3 @@
-export const DEEPSEEK_API_KEY =
-  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_DEEPSEEK_API_KEY) ||
-  '';
-export const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions';
-
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
@@ -23,11 +18,11 @@ export interface DeepSeekChatResponse {
 }
 
 /**
- * Send a multi-turn chat request to DeepSeek API
+ * Send a multi-turn chat request to the secure server-side DeepSeek proxy.
+ * Secret API keys are kept strictly in server-side storage and never exposed to the client browser.
  */
 export async function sendDeepSeekChat(
-  messages: ChatMessage[],
-  apiKey: string = DEEPSEEK_API_KEY
+  messages: ChatMessage[]
 ): Promise<string> {
   const fullMessages = [
     {
@@ -48,49 +43,25 @@ CRITICAL MANDATORY INSTRUCTIONS:
     ...messages
   ];
 
-  // 1. Try server-side proxy on Hostinger first (reads key from config.json)
-  try {
-    const proxyRes = await fetch('/api/ai.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: fullMessages, max_tokens: 8192 })
-    });
-    if (proxyRes.ok) {
-      const data: DeepSeekChatResponse = await proxyRes.json();
-      if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-        return data.choices[0].message.content;
-      }
-    }
-  } catch (proxyErr) {
-    // Fallback to direct client-side call
-  }
-
-  // 2. Direct fallback to DeepSeek API endpoint
-  const payload = {
-    model: 'deepseek-chat',
-    messages: fullMessages,
-    temperature: 0.7,
-    max_tokens: 8192
-  };
-
-  const response = await fetch(DEEPSEEK_API_URL, {
+  const proxyRes = await fetch('/api/ai.php', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey.trim()}`
-    },
-    body: JSON.stringify(payload)
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ messages: fullMessages, max_tokens: 8192 })
   });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    const msg = errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`;
-    throw new Error(`DeepSeek API Error: ${msg}`);
+  const rawJson = await proxyRes.json().catch(() => ({}));
+
+  if (!proxyRes.ok) {
+    const errorMsg =
+      rawJson.error ||
+      `Server proxy returned HTTP ${proxyRes.status} (${proxyRes.statusText || 'Error'})`;
+    throw new Error(errorMsg);
   }
 
-  const data: DeepSeekChatResponse = await response.json();
+  const data: DeepSeekChatResponse = rawJson;
   if (!data.choices || data.choices.length === 0 || !data.choices[0].message) {
-    throw new Error('Received an empty response from DeepSeek API.');
+    throw new Error('Received an empty response from the AI server.');
   }
 
   return data.choices[0].message.content;

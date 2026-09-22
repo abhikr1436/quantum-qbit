@@ -87,7 +87,14 @@ function getDBStatus() {
             $schemaFile = __DIR__ . '/data/schema.sql';
             if (file_exists($schemaFile)) {
                 $sql = file_get_contents($schemaFile);
-                $pdo->exec($sql);
+                $statements = array_filter(array_map('trim', explode(';', $sql)));
+                foreach ($statements as $statement) {
+                    if (!empty($statement)) {
+                        try {
+                            $pdo->exec($statement);
+                        } catch (PDOException $e) {}
+                    }
+                }
             }
         }
         

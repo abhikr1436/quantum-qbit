@@ -36,6 +36,3 @@ CREATE TABLE IF NOT EXISTS mock_test_attempts (
     time_spent VARCHAR(50) DEFAULT NULL,
     submitted_at TIMESTAMP NULL DEFAULT NULL
 );
-
-
-

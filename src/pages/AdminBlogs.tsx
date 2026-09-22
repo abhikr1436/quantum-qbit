@@ -72,6 +72,13 @@ export const AdminBlogs: React.FC = () => {
   const [isRegeneratingKey, setIsRegeneratingKey] = useState<boolean>(false);
   const [showRegenerateConfirm, setShowRegenerateConfirm] = useState<boolean>(false);
 
+  // DeepSeek AI Server Configuration states
+  const [showAiKeyModal, setShowAiKeyModal] = useState<boolean>(false);
+  const [aiKeyConfigured, setAiKeyConfigured] = useState<boolean>(false);
+  const [maskedAiKey, setMaskedAiKey] = useState<string>('');
+  const [inputAiKey, setInputAiKey] = useState<string>('');
+  const [isSavingAiKey, setIsSavingAiKey] = useState<boolean>(false);
+
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [aiTopicInput, setAiTopicInput] = useState('');
   const [showAiTopicModal, setShowAiTopicModal] = useState(false);
@@ -89,12 +96,33 @@ export const AdminBlogs: React.FC = () => {
         if (data.authenticated) {
           setIsAuthenticated(true);
           sessionStorage.setItem('qq_admin_auth', 'true');
+          if (data.api_key) {
+            setApiKey(data.api_key);
+            localStorage.setItem('qq_api_key', data.api_key);
+          }
+          // Push any pending local drafts to cloud
+          blogStorage.syncWithServer();
+        }
+        if (data.ai_configured !== undefined) {
+          setAiKeyConfigured(data.ai_configured);
         }
       })
       .catch(() => {});
   }, []);
 
-  // Fetch remote publishing API key when authenticated
+  const fetchAiKeyStatus = () => {
+    fetch('/api/auth.php?action=get_ai_status', { credentials: 'include' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setAiKeyConfigured(data.configured);
+          setMaskedAiKey(data.masked_key || '');
+        }
+      })
+      .catch(() => {});
+  };
+
+  // Fetch remote publishing API key and AI key status when authenticated
   useEffect(() => {
     if (isAuthenticated) {
       fetch('/api/auth.php?action=get_api_key', { credentials: 'include' })
@@ -102,11 +130,43 @@ export const AdminBlogs: React.FC = () => {
         .then((data) => {
           if (data.success && data.api_key) {
             setApiKey(data.api_key);
+            localStorage.setItem('qq_api_key', data.api_key);
           }
         })
         .catch(() => {});
+
+      fetchAiKeyStatus();
     }
   }, [isAuthenticated]);
+
+  const handleSaveAiKey = async () => {
+    if (!inputAiKey.trim() && !aiKeyConfigured) {
+      window.showToast?.('Please enter your DeepSeek API key.', 'error');
+      return;
+    }
+    setIsSavingAiKey(true);
+    try {
+      const res = await fetch('/api/auth.php?action=save_ai_key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ deepseek_api_key: inputAiKey.trim() })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        window.showToast?.(data.message || 'API key saved securely on server!', 'success');
+        setInputAiKey('');
+        fetchAiKeyStatus();
+        setShowAiKeyModal(false);
+      } else {
+        window.showToast?.(data.error || 'Failed to save API key.', 'error');
+      }
+    } catch {
+      window.showToast?.('Error saving API key to server.', 'error');
+    } finally {
+      setIsSavingAiKey(false);
+    }
+  };
 
   const handleRegenerateApiKey = async () => {
     setIsRegeneratingKey(true);
@@ -150,9 +210,16 @@ export const AdminBlogs: React.FC = () => {
         const data = await res.json();
         if (data.success) {
           sessionStorage.setItem('qq_admin_auth', 'true');
+          localStorage.setItem('qq_admin_passcode', passcode.trim());
+          if (data.api_key) {
+            localStorage.setItem('qq_api_key', data.api_key);
+            setApiKey(data.api_key);
+          }
           setIsAuthenticated(true);
-          window.showToast?.('Welcome back, Admin!', 'success');
+          window.showToast?.('Welcome back, Admin! Cloud sync active.', 'success');
           setIsLoggingIn(false);
+          // Immediately sync with server in background to push any local articles to cloud
+          blogStorage.syncWithServer();
           return;
         }
       }
@@ -162,8 +229,10 @@ export const AdminBlogs: React.FC = () => {
     const savedLocalPass = localStorage.getItem('qq_admin_passcode') || 'quantumqbit2026';
     if (passcode.trim() === savedLocalPass || passcode.trim() === 'quantumqbit2026') {
       sessionStorage.setItem('qq_admin_auth', 'true');
+      localStorage.setItem('qq_admin_passcode', passcode.trim());
       setIsAuthenticated(true);
-      window.showToast?.('Authenticated successfully!', 'success');
+      window.showToast?.('Authenticated successfully! Cloud sync active.', 'success');
+      blogStorage.syncWithServer();
     } else {
       setLoginError('Incorrect passcode. Access denied.');
     }
@@ -341,7 +410,7 @@ export const AdminBlogs: React.FC = () => {
   };
 
   // Save / Publish
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!parsedPreview || !parsedPreview.isValid || !parsedPreview.parsedBlog) {
       window.showToast?.(
         parsedPreview?.errors[0] || 'Please fix markup errors before publishing.',
@@ -361,14 +430,22 @@ export const AdminBlogs: React.FC = () => {
       blogToSave.publishedAt = timestamp;
     }
 
-    blogStorage.saveBlog(blogToSave);
+    const saveResult = await blogStorage.saveBlog(blogToSave);
     setIsEditorOpen(false);
     setEditingBlogId(null);
     setMarkupInput('');
-    window.showToast?.(
-      editingBlogId ? 'Article updated successfully!' : 'Article published successfully!',
-      'success'
-    );
+
+    if (saveResult.success) {
+      window.showToast?.(
+        editingBlogId ? 'Article updated & published live everywhere!' : 'Article published live to cloud everywhere!',
+        'success'
+      );
+    } else {
+      window.showToast?.(
+        `Article saved locally, but cloud reported: ${saveResult.error || 'Sync warning'}. Check server connection.`,
+        'error'
+      );
+    }
   };
 
   // Single delete
@@ -525,7 +602,12 @@ You MUST output the article using the following XML-like custom tag structure wi
       setAiTopicInput('');
       window.showToast?.('2000+ word article generated by DeepSeek! Review and publish.', 'success');
     } catch (err: any) {
-      window.showToast?.(err.message || 'DeepSeek generation failed.', 'error');
+      const msg = err.message || 'DeepSeek generation failed.';
+      window.showToast?.(msg, 'error');
+      if (msg.toLowerCase().includes('not configured') || msg.toLowerCase().includes('api key')) {
+        setShowAiTopicModal(false);
+        setShowAiKeyModal(true);
+      }
     } finally {
       setIsGeneratingAi(false);
     }
@@ -649,6 +731,33 @@ You MUST output the article using the following XML-like custom tag structure wi
         </div>
 
         <div style={styles.topBarRight}>
+          <button
+            onClick={() => setShowAiKeyModal(true)}
+            className="liquid-glass-btn-secondary"
+            style={{
+              padding: '8px 14px',
+              fontSize: '0.85rem',
+              color: aiKeyConfigured ? 'var(--emerald)' : '#F59E0B',
+              borderColor: aiKeyConfigured ? 'rgba(16, 185, 129, 0.35)' : 'rgba(245, 158, 11, 0.35)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+            title="Configure or rotate server-side DeepSeek AI API key"
+          >
+            <Sparkles size={14} />
+            <span>DeepSeek Key</span>
+            <span
+              style={{
+                width: '7px',
+                height: '7px',
+                borderRadius: '50%',
+                background: aiKeyConfigured ? '#10B981' : '#F59E0B',
+                boxShadow: aiKeyConfigured ? '0 0 6px #10B981' : '0 0 6px #F59E0B'
+              }}
+            />
+          </button>
+
           <button
             onClick={() => setShowApiKeyModal(true)}
             className="liquid-glass-btn-secondary"
@@ -1479,6 +1588,89 @@ You MUST output the article using the following XML-like custom tag structure wi
                 style={{ fontSize: '0.85rem' }}
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =================================================================== */}
+      {/* DEEPSEEK AI SERVER KEY CONFIGURATION MODAL                           */}
+      {/* =================================================================== */}
+      {showAiKeyModal && (
+        <div style={styles.modalOverlay} onClick={() => setShowAiKeyModal(false)}>
+          <div
+            className="liquid-glass-card"
+            style={{ ...styles.confirmModal, maxWidth: '560px', textAlign: 'left' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                  <Sparkles size={20} style={{ color: 'var(--emerald)' }} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.2rem', margin: 0, color: '#ffffff' }}>DeepSeek AI Server Configuration</h3>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Secure server-side API key for AI Autopilot blog drafting</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAiKeyModal(false)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ padding: '12px 14px', borderRadius: '10px', background: 'rgba(0, 240, 255, 0.05)', border: '1px solid rgba(0, 240, 255, 0.15)', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#e2e8f0' }}>Server Key Status:</span>
+                <span style={{ fontSize: '0.78rem', fontWeight: 600, color: aiKeyConfigured ? '#10B981' : '#F59E0B' }}>
+                  {aiKeyConfigured ? '✓ Configured & Active' : '⚠️ Not Configured'}
+                </span>
+              </div>
+              {aiKeyConfigured && maskedAiKey && (
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
+                  Active Key: <span style={{ color: '#38bdf8' }}>{maskedAiKey}</span>
+                </div>
+              )}
+            </div>
+
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: '14px', lineHeight: 1.5 }}>
+              Your DeepSeek key is stored in server-side configuration outside the public web root (<code>quantum_data/config.json</code>). It is <strong>never exposed</strong> to client browsers, visitors, or Git repositories.
+            </p>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
+                {aiKeyConfigured ? 'UPDATE / ROTATE DEEPSEEK API KEY' : 'ENTER DEEPSEEK API KEY (sk-...)'}
+              </label>
+              <input
+                type="password"
+                placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                value={inputAiKey}
+                onChange={(e) => setInputAiKey(e.target.value)}
+                style={{ ...styles.topicInput, fontFamily: 'monospace', fontSize: '0.88rem' }}
+                autoFocus
+              />
+              <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Get or regenerate your key anytime at <a href="https://platform.deepseek.com/" target="_blank" rel="noreferrer" style={{ color: '#38bdf8' }}>platform.deepseek.com</a>
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+              <button
+                onClick={() => setShowAiKeyModal(false)}
+                className="liquid-glass-btn-secondary"
+                disabled={isSavingAiKey}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveAiKey}
+                className="liquid-glass-btn-primary"
+                disabled={isSavingAiKey || (!inputAiKey.trim() && !aiKeyConfigured)}
+              >
+                {isSavingAiKey ? 'Saving...' : 'Save to Server Config'}
               </button>
             </div>
           </div>
