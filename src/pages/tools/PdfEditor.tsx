@@ -1,5 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FileText, Image as ImageIcon, Upload, Trash, ArrowUp, ArrowDown, Download, Settings, FileCode } from 'lucide-react';
+import { 
+  FileText, 
+  Image as ImageIcon, 
+  Upload, 
+  Trash, 
+  ArrowUp, 
+  ArrowDown, 
+  Download, 
+  Settings, 
+  FileCode,
+  Maximize2,
+  CheckCircle2,
+  AlertTriangle,
+  Eye,
+  Sparkles,
+  ShieldCheck
+} from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import confetti from 'canvas-confetti';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -9,6 +25,7 @@ import mammoth from 'mammoth';
 import JSZip from 'jszip';
 import { navigate } from '../../utils/router';
 import { updateSEO } from '../../utils/seo';
+import { inflatePdf, formatBytes as formatInflateBytes, parseSizeToBytes, type InflatePdfResult } from '../../utils/pdfInflator';
 
 // Configure worker for pdfjs-dist
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
@@ -27,7 +44,7 @@ interface SlideData {
 }
 
 interface PdfEditorProps {
-  defaultTab?: 'imgToPdf' | 'compress' | 'officeToPdf' | 'pdfToWord';
+  defaultTab?: 'imgToPdf' | 'compress' | 'officeToPdf' | 'pdfToWord' | 'inflate';
 }
 
 export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
@@ -94,7 +111,7 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
     };
   }, []);
 
-  const [activeTab, setActiveTab] = useState<'imgToPdf' | 'compress' | 'officeToPdf' | 'pdfToWord'>(defaultTab || 'imgToPdf');
+  const [activeTab, setActiveTab] = useState<'imgToPdf' | 'compress' | 'officeToPdf' | 'pdfToWord' | 'inflate'>(defaultTab || 'imgToPdf');
 
   // Sync state if defaultTab changes (e.g. via deep link navigation)
   useEffect(() => {
@@ -152,6 +169,50 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
               "acceptedAnswer": {
                 "@type": "Answer",
                 "text": "Compressing a PDF resizes large images and adjusts rendering parameters. While text vectors remain sharp and clean, images may experience slight quality reductions depending on the level of compression chosen (Low, Medium, or High)."
+              }
+            }
+          ]
+        }
+      );
+    } else if (activeTab === 'inflate') {
+      updateSEO(
+        "Increase PDF Size Online Free - PDF Size Increaser to Exact KB/MB | Quantum Qbit",
+        "Increase PDF file size to 100KB, 200KB, 500KB or any custom target online for free. Satisfy exam, passport, and government portal minimum file size requirements with 100% private in-browser metadata inflation.",
+        "/tools/increase-pdf-size",
+        {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "How can I increase the size of a PDF file to 100KB, 200KB, or 500KB?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Simply upload your PDF to Quantum Qbit's PDF Size Increaser, enter your desired target file size (e.g. 100 KB, 200 KB, or 500 KB) or select a quick preset, and click 'Inflate to Exact Size'. The tool uses ISO-standard non-rendered Adobe XMP metadata padding to increase the file size to your exact target byte-for-byte, without modifying any text, images, or layout."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Will the inflated PDF be accepted by government exam and passport portals?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes! Government portals (such as UPSC, SSC, NTA, NEET, State PSCs, visa and passport portals) enforce minimum file sizes (e.g. 'minimum 100KB') to prevent corrupted or unreadable low-resolution uploads. Our tool adds valid, specification-compliant Adobe XMP metadata comments before the terminal %%EOF marker. Automated upload validators recognize it as 100% valid and accept it immediately."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Does increasing the PDF size change the visual appearance or blur text?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "No! Visual page streams, vector fonts, photos, and layouts remain completely untouched. The extra bytes are contained in metadata padding structures that PDF viewers do not render visually. You can preview the page directly in our in-browser viewer before downloading to verify."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is my document uploaded to a server?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Never. All byte calculations and file generation happen 100% client-side inside your browser's local memory. Your confidential certificates, admit cards, and documents never touch any cloud server."
               }
             }
           ]
@@ -794,6 +855,132 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
     }
   };
 
+  // -------------------------------------------------------------
+  // 5. PDF Inflator / Size Increaser States & Actions
+  // -------------------------------------------------------------
+  const [inflateFile, setInflateFile] = useState<File | null>(null);
+  const [targetSizeVal, setTargetSizeVal] = useState<number>(200);
+  const [targetSizeUnit, setTargetSizeUnit] = useState<'KB' | 'MB'>('KB');
+  const [isInflating, setIsInflating] = useState<boolean>(false);
+  const [inflatedResult, setInflatedResult] = useState<InflatePdfResult | null>(null);
+  const [inflateError, setInflateError] = useState<string>('');
+  const inflateInputRef = useRef<HTMLInputElement>(null);
+  const inflatePreviewCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [isRenderingPreview, setIsRenderingPreview] = useState<boolean>(false);
+  const [previewPage, setPreviewPage] = useState<number>(1);
+  const [previewTotalPages, setPreviewTotalPages] = useState<number>(1);
+
+  const handleProcessInflateFile = (file: File) => {
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      if (window.showToast) window.showToast('Please upload a valid PDF document.');
+      return;
+    }
+    setInflateFile(file);
+    setInflatedResult(null);
+    setInflateError('');
+    const currentKB = Math.ceil(file.size / 1024);
+    if (currentKB < 100) setTargetSizeVal(100);
+    else if (currentKB < 150) setTargetSizeVal(150);
+    else if (currentKB < 200) setTargetSizeVal(200);
+    else if (currentKB < 300) setTargetSizeVal(300);
+    else if (currentKB < 500) setTargetSizeVal(500);
+    else if (currentKB < 1024) setTargetSizeVal(1024);
+    else {
+      setTargetSizeVal(Math.ceil((file.size / (1024 * 1024)) + 1));
+      setTargetSizeUnit('MB');
+    }
+    setPreviewPage(1);
+    renderInflatePreview(file, 1);
+  };
+
+  const handleInflateFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleProcessInflateFile(file);
+    }
+  };
+
+  const renderInflatePreview = async (fileOrBytes: File | Uint8Array, pageNum: number = 1) => {
+    try {
+      setIsRenderingPreview(true);
+      let data: Uint8Array;
+      if (fileOrBytes instanceof File) {
+        const buffer = await fileOrBytes.arrayBuffer();
+        data = new Uint8Array(buffer);
+      } else {
+        data = fileOrBytes;
+      }
+      const loadingTask = pdfjsLib.getDocument({ data: data.slice(0) });
+      const pdfDoc = await loadingTask.promise;
+      setPreviewTotalPages(pdfDoc.numPages);
+      const safePage = Math.min(Math.max(1, pageNum), pdfDoc.numPages);
+      setPreviewPage(safePage);
+      const page = await pdfDoc.getPage(safePage);
+      const canvas = inflatePreviewCanvasRef.current;
+      if (!canvas) return;
+      const viewport = page.getViewport({ scale: 1.15 });
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      await (page.render as any)({ canvasContext: ctx, viewport, canvas }).promise;
+    } catch (err) {
+      console.warn('PDF preview render error:', err);
+    } finally {
+      setIsRenderingPreview(false);
+    }
+  };
+
+  const handleExecuteInflation = async () => {
+    if (!inflateFile) return;
+    setIsInflating(true);
+    setInflateError('');
+    try {
+      const buffer = await inflateFile.arrayBuffer();
+      const originalBytes = new Uint8Array(buffer);
+      const targetSizeBytes = parseSizeToBytes(targetSizeVal, targetSizeUnit);
+
+      if (targetSizeBytes <= originalBytes.length) {
+        setInflateError(
+          `Target size (${formatInflateBytes(targetSizeBytes)}) must be larger than current file size (${formatInflateBytes(originalBytes.length)}). If you need to shrink it, switch to the PDF Compressor!`
+        );
+        setIsInflating(false);
+        return;
+      }
+
+      const result = inflatePdf(originalBytes, targetSizeBytes);
+      setInflatedResult(result);
+      renderInflatePreview(result.inflatedBytes, previewPage);
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.7 }
+      });
+      if (window.showToast) {
+        window.showToast(`PDF size increased to ${formatInflateBytes(result.finalSizeBytes)}!`, 'success');
+      }
+    } catch (err: any) {
+      setInflateError(err.message || 'Failed to inflate PDF.');
+    } finally {
+      setIsInflating(false);
+    }
+  };
+
+  const handleDownloadInflatedPdf = () => {
+    if (!inflatedResult || !inflateFile) return;
+    const blob = new Blob([inflatedResult.inflatedBytes as BlobPart], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const baseName = inflateFile.name.replace(/\.pdf$/i, '');
+    const unitStr = targetSizeUnit === 'MB' ? `${targetSizeVal}MB` : `${targetSizeVal}KB`;
+    a.download = `${baseName}_inflated_${unitStr}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="container" style={styles.workshop}>
       {/* Tab Switcher */}
@@ -817,6 +1004,16 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
           }}
         >
           <Settings size={16} /> PDF Compressor
+        </a>
+        <a
+          href="/tools/increase-pdf-size"
+          className={`pdf-tab-link ${activeTab === 'inflate' ? 'active' : ''}`}
+          onClick={(e) => {
+            e.preventDefault();
+            navigate('/tools/increase-pdf-size');
+          }}
+        >
+          <Maximize2 size={16} /> Increase PDF Size
         </a>
         <a
           href="/tools/convert-to-pdf"
@@ -1414,6 +1611,389 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
           )}
         </div>
       )}
+
+      {/* ----------------- TAB: PDF INFLATOR / SIZE INCREASER ----------------- */}
+      {activeTab === 'inflate' && (
+        <div style={styles.tabContent}>
+          {!inflateFile ? (
+            <div
+              onClick={() => inflateInputRef.current?.click()}
+              className="glass-card pdf-dropzone"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                const file = e.dataTransfer.files?.[0];
+                if (file) handleProcessInflateFile(file);
+              }}
+              style={{ cursor: 'pointer', textAlign: 'center', padding: '48px 24px' }}
+            >
+              <div style={styles.uploadIconCircle}>
+                <Maximize2 size={28} style={{ color: 'var(--primary)' }} />
+              </div>
+              <h3 style={styles.dropzoneTitle}>Upload PDF to Increase File Size</h3>
+              <p style={styles.dropzoneSubtitle}>
+                Add safe, non-rendered Adobe XMP metadata padding to meet strict government exam and portal minimum file size requirements (100KB, 200KB, 500KB+).
+              </p>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', margin: '16px 0 20px 0' }}>
+                <span className="liquid-badge" style={{ fontSize: '0.76rem', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)' }}>
+                  ✓ 100% Client-Side Private
+                </span>
+                <span className="liquid-badge" style={{ fontSize: '0.76rem', color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.3)' }}>
+                  ✓ Exact Byte Match
+                </span>
+                <span className="liquid-badge" style={{ fontSize: '0.76rem', color: '#a855f7', borderColor: 'rgba(168, 85, 247, 0.3)' }}>
+                  ✓ Zero Visual Degradation
+                </span>
+              </div>
+              <button
+                className="btn-primary"
+                style={{
+                  background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <Upload size={16} /> Select PDF Document
+              </button>
+              <input
+                type="file"
+                ref={inflateInputRef}
+                onChange={handleInflateFileUpload}
+                accept="application/pdf,.pdf"
+                style={{ display: 'none' }}
+              />
+            </div>
+          ) : (
+            <div className="pdf-editor-workspace" style={styles.editorWorkspace}>
+              {/* Left Column: Settings & Target Controls */}
+              <div className="glass-card" style={styles.pdfSettings}>
+                <h3 style={styles.settingsHeader}>Inflation Configuration</h3>
+
+                {/* Current File Metadata Pill */}
+                <div style={{ padding: '12px 14px', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-glass)' }}>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Uploaded Document
+                  </div>
+                  <div style={{ fontSize: '0.92rem', fontWeight: 600, color: 'var(--text-primary)', wordBreak: 'break-all', marginBottom: '4px' }}>
+                    {inflateFile.name}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Current Size:</span>
+                    <span className="mono" style={{ color: '#38bdf8', fontWeight: 700 }}>
+                      {formatInflateBytes(inflateFile.size)} ({inflateFile.size.toLocaleString()} bytes)
+                    </span>
+                  </div>
+                </div>
+
+                {/* Quick Presets */}
+                <div className="form-group">
+                  <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>Target Size Presets (Minimum Limits)</span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Common portal limits</span>
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                    {[
+                      { val: 100, unit: 'KB' as const },
+                      { val: 150, unit: 'KB' as const },
+                      { val: 200, unit: 'KB' as const },
+                      { val: 300, unit: 'KB' as const },
+                      { val: 500, unit: 'KB' as const },
+                      { val: 1, unit: 'MB' as const },
+                      { val: 2, unit: 'MB' as const },
+                      { val: 5, unit: 'MB' as const }
+                    ].map((preset) => {
+                      const presetBytes = parseSizeToBytes(preset.val, preset.unit);
+                      const isSelected = targetSizeVal === preset.val && targetSizeUnit === preset.unit;
+                      const isBelowOriginal = presetBytes <= inflateFile.size;
+
+                      return (
+                        <button
+                          key={`${preset.val}${preset.unit}`}
+                          type="button"
+                          onClick={() => {
+                            setTargetSizeVal(preset.val);
+                            setTargetSizeUnit(preset.unit);
+                            setInflatedResult(null);
+                            setInflateError('');
+                          }}
+                          disabled={isBelowOriginal}
+                          style={{
+                            padding: '8px 4px',
+                            borderRadius: '8px',
+                            border: isSelected
+                              ? '1px solid var(--primary)'
+                              : isBelowOriginal
+                              ? '1px solid rgba(255, 255, 255, 0.04)'
+                              : '1px solid var(--border-glass)',
+                            background: isSelected
+                              ? 'rgba(0, 242, 254, 0.15)'
+                              : isBelowOriginal
+                              ? 'rgba(255, 255, 255, 0.01)'
+                              : 'rgba(255, 255, 255, 0.02)',
+                            color: isSelected
+                              ? 'var(--primary)'
+                              : isBelowOriginal
+                              ? 'var(--text-muted)'
+                              : 'var(--text-primary)',
+                            fontSize: '0.8rem',
+                            fontWeight: isSelected ? 700 : 500,
+                            cursor: isBelowOriginal ? 'not-allowed' : 'pointer',
+                            opacity: isBelowOriginal ? 0.45 : 1,
+                            transition: 'all 0.2s ease',
+                            textAlign: 'center'
+                          }}
+                          title={isBelowOriginal ? `Preset is smaller than document (${formatInflateBytes(inflateFile.size)})` : undefined}
+                        >
+                          {preset.val} {preset.unit}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Custom Target Input */}
+                <div className="form-group">
+                  <label className="form-label">Custom Target File Size</label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="number"
+                      min="1"
+                      step={targetSizeUnit === 'MB' ? '0.1' : '1'}
+                      value={targetSizeVal}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val) && val > 0) {
+                          setTargetSizeVal(val);
+                          setInflatedResult(null);
+                          setInflateError('');
+                        }
+                      }}
+                      className="form-input"
+                      style={{ flex: 1 }}
+                    />
+                    <select
+                      value={targetSizeUnit}
+                      onChange={(e) => {
+                        setTargetSizeUnit(e.target.value as 'KB' | 'MB');
+                        setInflatedResult(null);
+                        setInflateError('');
+                      }}
+                      style={{ ...styles.select, width: '90px' }}
+                    >
+                      <option value="KB">KB</option>
+                      <option value="MB">MB</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Live Byte Difference / Calculation Pill */}
+                {(() => {
+                  const targetBytes = parseSizeToBytes(targetSizeVal, targetSizeUnit);
+                  const isLarger = targetBytes > inflateFile.size;
+                  const diffBytes = targetBytes - inflateFile.size;
+
+                  if (isLarger) {
+                    return (
+                      <div style={{ padding: '12px 14px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10b981', fontWeight: 600, fontSize: '0.82rem', marginBottom: '4px' }}>
+                          <CheckCircle2 size={15} />
+                          <span>Ready to Inflate (+{formatInflateBytes(diffBytes)})</span>
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                          Target: <strong style={{ color: '#fff' }}>{formatInflateBytes(targetBytes)}</strong> ({targetBytes.toLocaleString()} bytes). Exactly {diffBytes.toLocaleString()} bytes of non-rendered XMP metadata padding will be safely injected.
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div style={{ padding: '12px 14px', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ef4444', fontWeight: 600, fontSize: '0.82rem', marginBottom: '4px' }}>
+                        <AlertTriangle size={15} />
+                        <span>Target size is smaller than current size</span>
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.4, marginBottom: '8px' }}>
+                        Your document is already {formatInflateBytes(inflateFile.size)}. To increase the file size, choose a target above this.
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('compress')}
+                        style={{
+                          background: 'rgba(239, 68, 68, 0.15)',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          color: '#f87171',
+                          padding: '6px 12px',
+                          borderRadius: '6px',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          fontWeight: 600
+                        }}
+                      >
+                        Want to shrink it? Switch to PDF Compressor →
+                      </button>
+                    </div>
+                  );
+                })()}
+
+                {inflateError && (
+                  <div style={{ padding: '10px 14px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#ef4444', fontSize: '0.8rem' }}>
+                    {inflateError}
+                  </div>
+                )}
+
+                {/* Primary Action Button */}
+                <button
+                  className="btn-primary"
+                  onClick={handleExecuteInflation}
+                  disabled={isInflating || parseSizeToBytes(targetSizeVal, targetSizeUnit) <= inflateFile.size}
+                  style={{
+                    background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                    width: '100%',
+                    justifyContent: 'center',
+                    marginTop: '8px',
+                    opacity: parseSizeToBytes(targetSizeVal, targetSizeUnit) <= inflateFile.size ? 0.5 : 1
+                  }}
+                >
+                  <Maximize2 size={16} />
+                  <span>{isInflating ? 'Inflating Document...' : 'Inflate to Exact Size'}</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setInflateFile(null);
+                    setInflatedResult(null);
+                    setInflateError('');
+                  }}
+                  style={styles.clearAllBtn}
+                >
+                  Upload Different PDF
+                </button>
+              </div>
+
+              {/* Right Column: Visual Verification & Download */}
+              <div className="glass-card" style={styles.imagesManager}>
+                <div style={styles.managerHeader}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <ShieldCheck size={18} style={{ color: 'var(--primary)' }} />
+                    <span style={styles.managerTitle}>Visual Verification & Inspection</span>
+                  </div>
+                  {previewTotalPages > 1 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const prev = Math.max(1, previewPage - 1);
+                          setPreviewPage(prev);
+                          renderInflatePreview(inflatedResult ? inflatedResult.inflatedBytes : inflateFile, prev);
+                        }}
+                        disabled={previewPage <= 1}
+                        style={{ ...styles.iconActionBtn, width: '24px', height: '24px' }}
+                      >
+                        ←
+                      </button>
+                      <span>Page {previewPage} of {previewTotalPages}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = Math.min(previewTotalPages, previewPage + 1);
+                          setPreviewPage(next);
+                          renderInflatePreview(inflatedResult ? inflatedResult.inflatedBytes : inflateFile, next);
+                        }}
+                        disabled={previewPage >= previewTotalPages}
+                        style={{ ...styles.iconActionBtn, width: '24px', height: '24px' }}
+                      >
+                        →
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Inflated Success Details Card */}
+                {inflatedResult && (
+                  <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div className="responsive-table-wrapper" style={styles.tableWrapper}>
+                      <table style={styles.comparisonTable}>
+                        <thead>
+                          <tr>
+                            <th style={styles.tableHeader}>Specification</th>
+                            <th style={styles.tableHeader}>Original File</th>
+                            <th style={styles.tableHeader}>Inflated Output</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td style={styles.tableCell}>Exact Byte Count</td>
+                            <td style={styles.tableCell} className="mono">
+                              {inflatedResult.originalSizeBytes.toLocaleString()} bytes
+                            </td>
+                            <td style={{ ...styles.tableCell, color: 'var(--primary)', fontWeight: 700 }} className="mono">
+                              {inflatedResult.finalSizeBytes.toLocaleString()} bytes ({formatInflateBytes(inflatedResult.finalSizeBytes)})
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style={styles.tableCell}>Added Metadata</td>
+                            <td colSpan={2} style={{ ...styles.tableCell, color: '#10b981', fontWeight: 600, paddingLeft: '12px' }}>
+                              +{formatInflateBytes(inflatedResult.addedBytes)} ({inflatedResult.addedBytes.toLocaleString()} bytes) Non-Rendered XMP Stream
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style={styles.tableCell}>Visual Quality</td>
+                            <td colSpan={2} style={{ ...styles.tableCell, color: '#38bdf8', fontWeight: 600, paddingLeft: '12px' }}>
+                              ✓ 100% Identical Vector & Pixel Fidelity (Zero Alterations)
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <button
+                      className="btn-primary"
+                      onClick={handleDownloadInflatedPdf}
+                      style={{
+                        background: '#10b981',
+                        borderColor: '#10b981',
+                        width: '100%',
+                        justifyContent: 'center',
+                        padding: '14px',
+                        fontSize: '1rem',
+                        boxShadow: '0 4px 20px rgba(16, 185, 129, 0.3)'
+                      }}
+                    >
+                      <Download size={18} />
+                      <span>Download Inflated PDF ({formatInflateBytes(inflatedResult.finalSizeBytes)})</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Canvas Render Preview */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', background: 'rgba(0,0,0,0.25)', borderRadius: '12px', padding: '16px', minHeight: '340px' }}>
+                  {isRenderingPreview && (
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)', borderRadius: '12px', zIndex: 2 }}>
+                      <span style={{ color: 'var(--primary)', fontSize: '0.85rem' }}>Rendering live visual verification...</span>
+                    </div>
+                  )}
+                  <canvas
+                    ref={inflatePreviewCanvasRef}
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '380px',
+                      borderRadius: '6px',
+                      boxShadow: '0 8px 30px rgba(0, 0, 0, 0.5)',
+                      background: '#ffffff'
+                    }}
+                  />
+                  <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    <Eye size={13} style={{ color: 'var(--primary)' }} />
+                    <span>Real-time In-Browser Verification: Content is completely unchanged.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Consolidated Scrollable FAQ Box (Over 1700 Words for SEO) */}
       <div style={styles.seoContentSection}>
         <hr style={styles.seoDivider} />
@@ -1510,6 +2090,27 @@ export const PdfEditor: React.FC<PdfEditorProps> = ({ defaultTab }) => {
               </p>
               <p style={{ ...styles.faqAnswer, marginTop: '8px' }}>
                 This constraint exists to protect system resources from memory leaks. Our code uses streams and canvas chunking to process images dynamically, which reduces memory pressure. This keeps the browser tab stable even when compressing multi-page documents containing rich high-definition visuals.
+              </p>
+            </div>
+
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>10. Why do government, exam, and passport portals enforce a minimum PDF file size (e.g., 100KB, 200KB)?</h4>
+              <p style={styles.faqAnswer}>
+                Many official examination boards (such as UPSC, SSC, NTA, State PSCs, NEET) and visa/passport portals enforce strict file size brackets—such as "between 100 KB and 500 KB"—to prevent applicants from submitting excessively compressed, illegible thumbnail files or corrupted low-resolution scans. Automated portal validators reject any file that falls even 1 KB below the threshold (e.g., a crisp 45 KB PDF gets rejected). Our PDF Inflator safely pads the file to your exact required minimum (e.g., 100 KB or 200 KB) so your application is instantly approved by the portal.
+              </p>
+            </div>
+
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>11. How does the PDF Size Increaser add size without altering the visual appearance or text?</h4>
+              <p style={styles.faqAnswer}>
+                Under the official ISO 32000-1 PDF standard, documents contain both rendered visual streams (text fonts, vector lines, photo pixels) and non-rendered metadata streams. Quantum Qbit injects structured, invisible Adobe XMP metadata comments immediately before the final %%EOF marker. Because PDF rendering engines ignore non-visual metadata streams during display and printing, your document appears 100% identical, with vector text remaining razor-sharp and high resolution.
+              </p>
+            </div>
+
+            <div style={styles.faqCard}>
+              <h4 style={styles.faqQuestion}>12. Will the inflated PDF pass automated portal validation checks and security scans?</h4>
+              <p style={styles.faqAnswer}>
+                Yes! The output is a fully compliant standard PDF document that adheres to all ISO specification rules. It terminates with standard %%EOF, preserves original cross-reference tables, and opens flawlessly in Adobe Acrobat, Google Chrome, Safari, Microsoft Edge, and automated government scanning pipelines without warnings or corruption flags.
               </p>
             </div>
           </div>

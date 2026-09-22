@@ -198,6 +198,16 @@ function App() {
     page = 'pdf-workshop';
     tool = 'pdf-editor';
     toolTab = 'pdfToWord';
+  } else if (
+    path === '/increase-pdf-size' ||
+    path === '/pdf-size-increaser' ||
+    path === '/inflate-pdf' ||
+    path === '/tools/increase-pdf-size' ||
+    path === '/pdf-inflator'
+  ) {
+    page = 'pdf-workshop';
+    tool = 'pdf-editor';
+    toolTab = 'inflate';
   } else if (path === '/tools') {
     page = 'tools';
     tool = 'none';
@@ -240,6 +250,18 @@ function App() {
         converterSeo.metaDescription,
         `/${converterSeo.slug}`,
         converterSchema
+      );
+    } else if (
+      path === '/increase-pdf-size' ||
+      path === '/pdf-size-increaser' ||
+      path === '/inflate-pdf' ||
+      path === '/tools/increase-pdf-size' ||
+      path === '/pdf-inflator'
+    ) {
+      updateSEO(
+        "Increase PDF Size Online Free - PDF Size Increaser to Exact KB/MB | Quantum Qbit",
+        "Increase PDF file size to 100KB, 200KB, 500KB or any custom target online for free. Satisfy exam, passport, and government portal minimum file size requirements with 100% private in-browser metadata inflation.",
+        "/increase-pdf-size"
       );
     } else if (page === 'landing') {
       updateSEO(

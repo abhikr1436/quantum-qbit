@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Image as ImageIcon, FileText, ArrowLeft, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { Search, Image as ImageIcon, FileText, ArrowLeft, ArrowRight, ShieldCheck, Sparkles, Maximize2 } from 'lucide-react';
 import { navigate } from '../utils/router';
 
 const ImageEditor = React.lazy(() => import('./tools/ImageEditor').then(m => ({ default: m.ImageEditor })));
@@ -34,8 +34,20 @@ export const Tools: React.FC<ToolsProps> = ({ selectedTool, setSelectedTool, def
       title: 'PDF Workshop',
       description: 'Comprehensive client-side PDF document manipulation. Merge multiple files, extract pages, convert images to PDF, run local OCR, and convert Office docs.',
       keywords: ['pdf', 'merge', 'split', 'convert', 'extract', 'ocr', 'images to pdf', 'compress'],
-      tabCount: '6 Document Utilities',
+      tabCount: '5 Document Utilities',
       action: () => setSelectedTool('pdf-editor'),
+    },
+    {
+      id: 'pdf-inflator',
+      icon: <Maximize2 size={26} style={{ color: 'var(--primary)' }} />,
+      badge: 'NEW • EXAM & PORTALS',
+      title: 'PDF Size Increaser (Inflator)',
+      description: 'Safely increase PDF file size to exact limits (100KB, 200KB, 500KB, 1MB+) to meet government, visa, and university portal requirements without visual degradation.',
+      keywords: ['inflate', 'increase pdf size', 'pdf size increaser', 'pdf inflator', 'upsc', 'ssc', 'nta', 'minimum file size', 'expand pdf'],
+      tabCount: 'Exact Target KB/MB',
+      action: () => {
+        navigate('/tools/increase-pdf-size');
+      },
     },
   ];
 

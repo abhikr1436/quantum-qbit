@@ -40,3 +40,6 @@ dist/api/data/keys.json
 # Python cache
 __pycache__/
 *.pyc
+
+# Local scratch directory
+scratch/
