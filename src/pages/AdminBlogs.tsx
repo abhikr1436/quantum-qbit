@@ -29,7 +29,15 @@ import {
   EyeOff,
   Key,
   Tag,
-  Terminal
+  Terminal,
+  Bot,
+  Zap,
+  TrendingUp,
+  BarChart3,
+  Play,
+  CheckCircle2,
+  AlertCircle,
+  Cpu
 } from 'lucide-react';
 import type { BlogPost } from './Blogs';
 import { blogStorage } from '../services/blogStorage';
@@ -39,7 +47,12 @@ import {
   blogToMarkup,
   getAutoPublishedDate
 } from '../utils/blogMarkupParser';
-import { sendDeepSeekChat } from '../utils/deepseekService';
+import {
+  sendDeepSeekChat,
+  triggerAutonomousPublish,
+  fetchAutomationLogs,
+  type AutomationLogEntry
+} from '../utils/deepseekService';
 import { navigate } from '../utils/router';
 
 export const AdminBlogs: React.FC = () => {
@@ -72,12 +85,24 @@ export const AdminBlogs: React.FC = () => {
   const [isRegeneratingKey, setIsRegeneratingKey] = useState<boolean>(false);
   const [showRegenerateConfirm, setShowRegenerateConfirm] = useState<boolean>(false);
 
-  // DeepSeek AI Server Configuration states
+  // AI Server Configuration states (DeepSeek + Google Gemini)
   const [showAiKeyModal, setShowAiKeyModal] = useState<boolean>(false);
   const [aiKeyConfigured, setAiKeyConfigured] = useState<boolean>(false);
+  const [geminiConfigured, setGeminiConfigured] = useState<boolean>(false);
+  const [deepseekConfigured, setDeepseekConfigured] = useState<boolean>(false);
   const [maskedAiKey, setMaskedAiKey] = useState<string>('');
+  const [maskedGeminiKey, setMaskedGeminiKey] = useState<string>('');
   const [inputAiKey, setInputAiKey] = useState<string>('');
+  const [inputGeminiKey, setInputGeminiKey] = useState<string>('');
   const [isSavingAiKey, setIsSavingAiKey] = useState<boolean>(false);
+
+  // AI Automation Command Center & Roadmap states
+  const [showAutomationHub, setShowAutomationHub] = useState<boolean>(false);
+  const [showRoadmapModal, setShowRoadmapModal] = useState<boolean>(false);
+  const [automationLogs, setAutomationLogs] = useState<AutomationLogEntry[]>([]);
+  const [isTriggeringAutomation, setIsTriggeringAutomation] = useState<boolean>(false);
+  const [selectedProvider, setSelectedProvider] = useState<'auto' | 'gemini' | 'deepseek'>('auto');
+  const [automationTopic, setAutomationTopic] = useState<string>('');
 
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [aiTopicInput, setAiTopicInput] = useState('');
@@ -106,6 +131,12 @@ export const AdminBlogs: React.FC = () => {
         if (data.ai_configured !== undefined) {
           setAiKeyConfigured(data.ai_configured);
         }
+        if (data.gemini_configured !== undefined) {
+          setGeminiConfigured(!!data.gemini_configured);
+        }
+        if (data.deepseek_configured !== undefined) {
+          setDeepseekConfigured(!!data.deepseek_configured);
+        }
       })
       .catch(() => {});
   }, []);
@@ -116,10 +147,19 @@ export const AdminBlogs: React.FC = () => {
       .then((data) => {
         if (data.success) {
           setAiKeyConfigured(data.configured);
-          setMaskedAiKey(data.masked_key || '');
+          setGeminiConfigured(!!data.gemini_configured);
+          setDeepseekConfigured(!!data.deepseek_configured);
+          setMaskedAiKey(data.deepseek_masked || data.masked_key || '');
+          setMaskedGeminiKey(data.gemini_masked || '');
         }
       })
       .catch(() => {});
+  };
+
+  const loadAutomationLogs = () => {
+    fetchAutomationLogs().then((logs) => {
+      setAutomationLogs(logs);
+    });
   };
 
   // Fetch remote publishing API key and AI key status when authenticated
@@ -136,35 +176,65 @@ export const AdminBlogs: React.FC = () => {
         .catch(() => {});
 
       fetchAiKeyStatus();
+      loadAutomationLogs();
     }
   }, [isAuthenticated]);
 
   const handleSaveAiKey = async () => {
-    if (!inputAiKey.trim() && !aiKeyConfigured) {
-      window.showToast?.('Please enter your DeepSeek API key.', 'error');
+    if (!inputAiKey.trim() && !inputGeminiKey.trim()) {
+      window.showToast?.('Please enter at least one API key to save.', 'error');
       return;
     }
     setIsSavingAiKey(true);
     try {
+      const payload: Record<string, string> = {};
+      if (inputAiKey.trim()) payload.deepseek_api_key = inputAiKey.trim();
+      if (inputGeminiKey.trim()) payload.gemini_api_key = inputGeminiKey.trim();
+
       const res = await fetch('/api/auth.php?action=save_ai_key', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ deepseek_api_key: inputAiKey.trim() })
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        window.showToast?.(data.message || 'API key saved securely on server!', 'success');
+        window.showToast?.(data.message || 'AI keys saved securely on server!', 'success');
         setInputAiKey('');
+        setInputGeminiKey('');
         fetchAiKeyStatus();
         setShowAiKeyModal(false);
       } else {
-        window.showToast?.(data.error || 'Failed to save API key.', 'error');
+        window.showToast?.(data.error || 'Failed to save API keys.', 'error');
       }
     } catch {
-      window.showToast?.('Error saving API key to server.', 'error');
+      window.showToast?.('Error saving API keys to server.', 'error');
     } finally {
       setIsSavingAiKey(false);
+    }
+  };
+
+  const handleTriggerAutonomousPublish = async () => {
+    setIsTriggeringAutomation(true);
+    try {
+      window.showToast?.('🤖 AI Publisher working: Selecting topic, researching & drafting 2,000+ words...', 'success');
+      const result = await triggerAutonomousPublish({
+        provider: selectedProvider,
+        topic: automationTopic.trim() || undefined,
+        force: true
+      });
+      if (result.success) {
+        window.showToast?.(`✓ Successfully Published: "${result.article.title}" (${result.article.word_count} words)`, 'success');
+        setAutomationTopic('');
+        loadAutomationLogs();
+        blogStorage.syncWithServer().then(() => {
+          setBlogs(blogStorage.getBlogs());
+        });
+      }
+    } catch (err: any) {
+      window.showToast?.(err.message || 'Autonomous run failed', 'error');
+    } finally {
+      setIsTriggeringAutomation(false);
     }
   };
 
@@ -732,28 +802,78 @@ You MUST output the article using the following XML-like custom tag structure wi
 
         <div style={styles.topBarRight}>
           <button
-            onClick={() => setShowAiKeyModal(true)}
-            className="liquid-glass-btn-secondary"
+            onClick={() => {
+              loadAutomationLogs();
+              setShowAutomationHub(true);
+            }}
+            className="liquid-glass-btn-primary"
             style={{
-              padding: '8px 14px',
+              padding: '8px 16px',
               fontSize: '0.85rem',
-              color: aiKeyConfigured ? 'var(--emerald)' : '#F59E0B',
-              borderColor: aiKeyConfigured ? 'rgba(16, 185, 129, 0.35)' : 'rgba(245, 158, 11, 0.35)',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
+              gap: '7px',
+              background: 'linear-gradient(135deg, rgba(0, 242, 254, 0.25), rgba(79, 172, 254, 0.25))',
+              borderColor: 'rgba(0, 242, 254, 0.5)',
+              color: '#00F2FE',
+              fontWeight: 700
             }}
-            title="Configure or rotate server-side DeepSeek AI API key"
+            title="Open AI Autopilot & Autonomous Publishing Center"
           >
-            <Sparkles size={14} />
-            <span>DeepSeek Key</span>
+            <Bot size={15} />
+            <span>AI Automation Hub</span>
             <span
               style={{
                 width: '7px',
                 height: '7px',
                 borderRadius: '50%',
-                background: aiKeyConfigured ? '#10B981' : '#F59E0B',
-                boxShadow: aiKeyConfigured ? '0 0 6px #10B981' : '0 0 6px #F59E0B'
+                background: (geminiConfigured || deepseekConfigured) ? '#10B981' : '#F59E0B',
+                boxShadow: (geminiConfigured || deepseekConfigured) ? '0 0 6px #10B981' : '0 0 6px #F59E0B'
+              }}
+            />
+          </button>
+
+          <button
+            onClick={() => setShowRoadmapModal(true)}
+            className="liquid-glass-btn-secondary"
+            style={{
+              padding: '8px 14px',
+              fontSize: '0.85rem',
+              color: '#A78BFA',
+              borderColor: 'rgba(167, 139, 250, 0.35)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+            title="View 60-Day Organic Traffic & SEO Growth Blueprint"
+          >
+            <TrendingUp size={14} />
+            <span>60-Day Roadmap</span>
+          </button>
+
+          <button
+            onClick={() => setShowAiKeyModal(true)}
+            className="liquid-glass-btn-secondary"
+            style={{
+              padding: '8px 14px',
+              fontSize: '0.85rem',
+              color: (geminiConfigured || deepseekConfigured) ? 'var(--emerald)' : '#F59E0B',
+              borderColor: (geminiConfigured || deepseekConfigured) ? 'rgba(16, 185, 129, 0.35)' : 'rgba(245, 158, 11, 0.35)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+            title="Configure or rotate server-side Gemini & DeepSeek API keys"
+          >
+            <Sparkles size={14} />
+            <span>AI Engine Keys</span>
+            <span
+              style={{
+                width: '7px',
+                height: '7px',
+                borderRadius: '50%',
+                background: (geminiConfigured || deepseekConfigured) ? '#10B981' : '#F59E0B',
+                boxShadow: (geminiConfigured || deepseekConfigured) ? '0 0 6px #10B981' : '0 0 6px #F59E0B'
               }}
             />
           </button>
@@ -1597,21 +1717,24 @@ You MUST output the article using the following XML-like custom tag structure wi
       {/* =================================================================== */}
       {/* DEEPSEEK AI SERVER KEY CONFIGURATION MODAL                           */}
       {/* =================================================================== */}
+      {/* =================================================================== */}
+      {/* DUAL AI SERVER KEY CONFIGURATION MODAL (GEMINI & DEEPSEEK)           */}
+      {/* =================================================================== */}
       {showAiKeyModal && (
         <div style={styles.modalOverlay} onClick={() => setShowAiKeyModal(false)}>
           <div
             className="liquid-glass-card"
-            style={{ ...styles.confirmModal, maxWidth: '560px', textAlign: 'left' }}
+            style={{ ...styles.confirmModal, maxWidth: '620px', textAlign: 'left' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-                  <Sparkles size={20} style={{ color: 'var(--emerald)' }} />
+                <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(0, 242, 254, 0.15)', border: '1px solid rgba(0, 242, 254, 0.3)' }}>
+                  <Sparkles size={20} style={{ color: '#00F2FE' }} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '1.2rem', margin: 0, color: '#ffffff' }}>DeepSeek AI Server Configuration</h3>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Secure server-side API key for AI Autopilot blog drafting</span>
+                  <h3 style={{ fontSize: '1.2rem', margin: 0, color: '#ffffff' }}>AI Engine Server Configuration</h3>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Secure server-side API keys for Google Gemini & DeepSeek AI</span>
                 </div>
               </div>
               <button
@@ -1622,38 +1745,63 @@ You MUST output the article using the following XML-like custom tag structure wi
               </button>
             </div>
 
-            <div style={{ padding: '12px 14px', borderRadius: '10px', background: 'rgba(0, 240, 255, 0.05)', border: '1px solid rgba(0, 240, 255, 0.15)', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#e2e8f0' }}>Server Key Status:</span>
-                <span style={{ fontSize: '0.78rem', fontWeight: 600, color: aiKeyConfigured ? '#10B981' : '#F59E0B' }}>
-                  {aiKeyConfigured ? '✓ Configured & Active' : '⚠️ Not Configured'}
-                </span>
-              </div>
-              {aiKeyConfigured && maskedAiKey && (
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
-                  Active Key: <span style={{ color: '#38bdf8' }}>{maskedAiKey}</span>
-                </div>
-              )}
-            </div>
-
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: '14px', lineHeight: 1.5 }}>
-              Your DeepSeek key is stored in server-side configuration outside the public web root (<code>quantum_data/config.json</code>). It is <strong>never exposed</strong> to client browsers, visitors, or Git repositories.
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: '16px', lineHeight: 1.5 }}>
+              Your API keys are stored server-side in <code>quantum_data/config.json</code> outside the public web root. They are <strong>never exposed</strong> to visitors, client browsers, or Git repositories.
             </p>
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
-                {aiKeyConfigured ? 'UPDATE / ROTATE DEEPSEEK API KEY' : 'ENTER DEEPSEEK API KEY (sk-...)'}
-              </label>
+            {/* Google Gemini Card */}
+            <div style={{ padding: '14px', borderRadius: '12px', background: 'rgba(56, 189, 248, 0.05)', border: '1px solid rgba(56, 189, 248, 0.2)', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Zap size={16} style={{ color: '#38BDF8' }} />
+                  <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#F8FAFC' }}>Google Gemini AI (gemini-2.5-flash)</span>
+                </div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: geminiConfigured ? '#10B981' : '#F59E0B' }}>
+                  {geminiConfigured ? '✓ Active & Connected' : '⚠️ Missing Key'}
+                </span>
+              </div>
+              {geminiConfigured && maskedGeminiKey && (
+                <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', fontFamily: 'monospace', marginBottom: '8px' }}>
+                  Current: <span style={{ color: '#38BDF8' }}>{maskedGeminiKey}</span>
+                </div>
+              )}
               <input
                 type="password"
-                placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                placeholder={geminiConfigured ? 'Enter new Gemini key to rotate (AIzaSy...)' : 'Enter Gemini API key (AIzaSy...)'}
+                value={inputGeminiKey}
+                onChange={(e) => setInputGeminiKey(e.target.value)}
+                style={{ ...styles.topicInput, fontFamily: 'monospace', fontSize: '0.85rem', marginBottom: '6px' }}
+              />
+              <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                Get free Gemini API key from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: '#38BDF8' }}>Google AI Studio</a>
+              </span>
+            </div>
+
+            {/* DeepSeek Card */}
+            <div style={{ padding: '14px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.2)', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Cpu size={16} style={{ color: '#10B981' }} />
+                  <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#F8FAFC' }}>DeepSeek AI (deepseek-chat V3)</span>
+                </div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: deepseekConfigured ? '#10B981' : '#F59E0B' }}>
+                  {deepseekConfigured ? '✓ Active & Connected' : '⚠️ Missing Key'}
+                </span>
+              </div>
+              {deepseekConfigured && maskedAiKey && (
+                <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', fontFamily: 'monospace', marginBottom: '8px' }}>
+                  Current: <span style={{ color: '#10B981' }}>{maskedAiKey}</span>
+                </div>
+              )}
+              <input
+                type="password"
+                placeholder={deepseekConfigured ? 'Enter new DeepSeek key to rotate (sk-...)' : 'Enter DeepSeek API key (sk-...)'}
                 value={inputAiKey}
                 onChange={(e) => setInputAiKey(e.target.value)}
-                style={{ ...styles.topicInput, fontFamily: 'monospace', fontSize: '0.88rem' }}
-                autoFocus
+                style={{ ...styles.topicInput, fontFamily: 'monospace', fontSize: '0.85rem', marginBottom: '6px' }}
               />
-              <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                Get or regenerate your key anytime at <a href="https://platform.deepseek.com/" target="_blank" rel="noreferrer" style={{ color: '#38bdf8' }}>platform.deepseek.com</a>
+              <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                Get DeepSeek API key from <a href="https://platform.deepseek.com/" target="_blank" rel="noreferrer" style={{ color: '#10B981' }}>platform.deepseek.com</a>
               </span>
             </div>
 
@@ -1668,9 +1816,356 @@ You MUST output the article using the following XML-like custom tag structure wi
               <button
                 onClick={handleSaveAiKey}
                 className="liquid-glass-btn-primary"
-                disabled={isSavingAiKey || (!inputAiKey.trim() && !aiKeyConfigured)}
+                disabled={isSavingAiKey || (!inputAiKey.trim() && !inputGeminiKey.trim())}
               >
                 {isSavingAiKey ? 'Saving...' : 'Save to Server Config'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =================================================================== */}
+      {/* AI AUTOMATION COMMAND CENTER MODAL                                   */}
+      {/* =================================================================== */}
+      {showAutomationHub && (
+        <div style={styles.modalOverlay} onClick={() => setShowAutomationHub(false)}>
+          <div
+            className="liquid-glass-card"
+            style={{ ...styles.confirmModal, maxWidth: '780px', maxHeight: '88vh', overflowY: 'auto', textAlign: 'left' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ padding: '10px', borderRadius: '12px', background: 'linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(79, 172, 254, 0.2))', border: '1px solid rgba(0, 242, 254, 0.4)' }}>
+                  <Bot size={24} style={{ color: '#00F2FE' }} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.3rem', margin: 0, color: '#ffffff' }}>AI Automation Hub</h3>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Fully autonomous AI publishing, SEO ranking, and traffic management</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAutomationHub(false)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '6px' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* AI Engine Status Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+              <div style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(56, 189, 248, 0.06)', border: '1px solid rgba(56, 189, 248, 0.25)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '0.78rem', color: '#94A3B8', fontWeight: 600 }}>PRIMARY GENERATOR</div>
+                  <div style={{ fontSize: '0.92rem', color: '#F8FAFC', fontWeight: 700 }}>Google Gemini 2.5 Flash</div>
+                </div>
+                <span className="liquid-glass-pill" style={{ color: geminiConfigured ? '#10B981' : '#F59E0B', borderColor: geminiConfigured ? 'rgba(16,185,129,0.3)' : 'rgba(245,158,11,0.3)', fontSize: '0.74rem' }}>
+                  {geminiConfigured ? '● Active' : '○ Missing Key'}
+                </span>
+              </div>
+
+              <div style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.25)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '0.78rem', color: '#94A3B8', fontWeight: 600 }}>REASONING ENGINE</div>
+                  <div style={{ fontSize: '0.92rem', color: '#F8FAFC', fontWeight: 700 }}>DeepSeek V3 Chat</div>
+                </div>
+                <span className="liquid-glass-pill" style={{ color: deepseekConfigured ? '#10B981' : '#F59E0B', borderColor: deepseekConfigured ? 'rgba(16,185,129,0.3)' : 'rgba(245,158,11,0.3)', fontSize: '0.74rem' }}>
+                  {deepseekConfigured ? '● Active' : '○ Missing Key'}
+                </span>
+              </div>
+            </div>
+
+            {/* Run Autonomous Publisher Now Section */}
+            <div style={{ padding: '18px', borderRadius: '16px', background: 'radial-gradient(circle at top left, rgba(0, 242, 254, 0.1), rgba(15, 23, 42, 0.8))', border: '1px solid rgba(0, 242, 254, 0.35)', marginBottom: '22px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <h4 style={{ margin: 0, color: '#F8FAFC', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Play size={16} style={{ color: '#00F2FE' }} />
+                  <span>One-Click Autonomous Publisher</span>
+                </h4>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  {(['auto', 'gemini', 'deepseek'] as const).map((prov) => (
+                    <button
+                      key={prov}
+                      onClick={() => setSelectedProvider(prov)}
+                      style={{
+                        padding: '4px 10px',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        background: selectedProvider === prov ? '#00F2FE' : 'rgba(255,255,255,0.06)',
+                        color: selectedProvider === prov ? '#000000' : '#94A3B8',
+                        border: selectedProvider === prov ? '1px solid #00F2FE' : '1px solid rgba(255,255,255,0.1)'
+                      }}
+                    >
+                      {prov.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <p style={{ fontSize: '0.82rem', color: '#94A3B8', marginBottom: '14px', lineHeight: 1.5 }}>
+                When triggered, the AI selects the highest-potential unwritten keyword from Quantum Qbit's SEO master matrix, researches it, writes 2,000+ words with rich schema, embeds the matching tool CTA card, inserts into MySQL and JSON, updates <code>sitemap.xml</code>, and pings Google!
+              </p>
+
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
+                <input
+                  type="text"
+                  placeholder="Optional custom keyword (Leave empty for smart auto-selection)..."
+                  value={automationTopic}
+                  onChange={(e) => setAutomationTopic(e.target.value)}
+                  style={{ ...styles.topicInput, flex: 1, fontSize: '0.85rem' }}
+                />
+                <button
+                  onClick={handleTriggerAutonomousPublish}
+                  disabled={isTriggeringAutomation || (!geminiConfigured && !deepseekConfigured)}
+                  className="liquid-glass-btn-primary"
+                  style={{
+                    padding: '10px 22px',
+                    fontWeight: 700,
+                    fontSize: '0.88rem',
+                    whiteSpace: 'nowrap',
+                    background: 'linear-gradient(135deg, #00F2FE 0%, #4FACFE 100%)',
+                    color: '#000000',
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  {isTriggeringAutomation ? (
+                    <>
+                      <RefreshCw size={15} className="spin" />
+                      <span>Writing 2,000+ Words...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Zap size={15} />
+                      <span>Generate & Publish Now</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Hostinger Automated Cron Instructions */}
+            <div style={{ padding: '16px', borderRadius: '14px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', marginBottom: '22px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#38BDF8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Calendar size={14} /> HOSTINGER AUTOMATED CRON JOB (DAILY 100% UNATTENDED)
+                </div>
+                <button
+                  onClick={() => {
+                    const cmd = '/usr/bin/php /home/u567483959/domains/quantumqbit.in/public_html/api/cron_publish.php';
+                    navigator.clipboard.writeText(cmd);
+                    window.showToast?.('Hostinger Cron command copied to clipboard!', 'success');
+                  }}
+                  style={{ background: 'transparent', border: 'none', color: '#38BDF8', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  Copy Cron Command
+                </button>
+              </div>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 10px 0', lineHeight: 1.45 }}>
+                In Hostinger hPanel under <strong>Advanced → Cron Jobs</strong>, create a custom cron job running at <code>0 6 * * *</code> (every morning) with this command:
+              </p>
+              <code style={{ display: 'block', fontSize: '0.78rem', color: '#00F2FE', fontFamily: 'monospace', padding: '10px 12px', background: 'rgba(0,0,0,0.5)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)', overflowX: 'auto', whiteSpace: 'nowrap' }}>
+                /usr/bin/php /home/u567483959/domains/quantumqbit.in/public_html/api/cron_publish.php
+              </code>
+
+              <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>Or trigger via Webhook:</span>
+                <button
+                  onClick={() => {
+                    const hook = `https://quantumqbit.in/api/cron_publish.php?key=${apiKey || 'YOUR_KEY'}`;
+                    navigator.clipboard.writeText(hook);
+                    window.showToast?.('Secure Webhook URL copied!', 'success');
+                  }}
+                  style={{ background: 'transparent', border: 'none', color: '#38BDF8', fontSize: '0.74rem', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  Copy Webhook URL
+                </button>
+              </div>
+            </div>
+
+            {/* Automation Execution Logs Table */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <h4 style={{ margin: 0, color: '#F8FAFC', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <BarChart3 size={15} style={{ color: '#10B981' }} />
+                  <span>Recent Automation History</span>
+                </h4>
+                <button
+                  onClick={loadAutomationLogs}
+                  style={{ background: 'transparent', border: 'none', color: '#94A3B8', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <RefreshCw size={12} /> Refresh Logs
+                </button>
+              </div>
+
+              {automationLogs.length === 0 ? (
+                <div style={{ padding: '20px', textAlign: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '10px', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                  No automated executions logged yet. Click &quot;Generate &amp; Publish Now&quot; above to trigger your first autonomous article!
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-muted)', textAlign: 'left' }}>
+                        <th style={{ padding: '8px 10px' }}>Date</th>
+                        <th style={{ padding: '8px 10px' }}>Article Title</th>
+                        <th style={{ padding: '8px 10px' }}>Engine</th>
+                        <th style={{ padding: '8px 10px' }}>Words</th>
+                        <th style={{ padding: '8px 10px' }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {automationLogs.map((log, idx) => (
+                        <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                          <td style={{ padding: '8px 10px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{log.date || new Date(log.timestamp * 1000).toLocaleDateString()}</td>
+                          <td style={{ padding: '8px 10px', color: '#F8FAFC', fontWeight: 600 }}>
+                            <a href={log.url} target="_blank" rel="noreferrer" style={{ color: '#38BDF8', textDecoration: 'none' }}>
+                              {log.title}
+                            </a>
+                          </td>
+                          <td style={{ padding: '8px 10px', color: '#A78BFA' }}>{log.provider}</td>
+                          <td style={{ padding: '8px 10px', color: '#10B981' }}>{log.word_count?.toLocaleString()}</td>
+                          <td style={{ padding: '8px 10px' }}>
+                            <span style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '0.72rem', background: 'rgba(16,185,129,0.15)', color: '#10B981', fontWeight: 600 }}>
+                              ✓ Published
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', paddingTop: '14px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <button
+                onClick={() => {
+                  setShowAutomationHub(false);
+                  setShowRoadmapModal(true);
+                }}
+                className="liquid-glass-btn-secondary"
+                style={{ fontSize: '0.82rem', color: '#A78BFA', borderColor: 'rgba(167, 139, 250, 0.35)' }}
+              >
+                <TrendingUp size={13} />
+                <span>Open 60-Day Organic Growth Roadmap</span>
+              </button>
+
+              <button
+                onClick={() => setShowAutomationHub(false)}
+                className="liquid-glass-btn-secondary"
+                style={{ fontSize: '0.85rem' }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =================================================================== */}
+      {/* 60-DAY ORGANIC GROWTH ROADMAP MODAL                                  */}
+      {/* =================================================================== */}
+      {showRoadmapModal && (
+        <div style={styles.modalOverlay} onClick={() => setShowRoadmapModal(false)}>
+          <div
+            className="liquid-glass-card"
+            style={{ ...styles.confirmModal, maxWidth: '820px', maxHeight: '88vh', overflowY: 'auto', textAlign: 'left' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ padding: '10px', borderRadius: '12px', background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.2), rgba(139, 92, 246, 0.2))', border: '1px solid rgba(167, 139, 250, 0.4)' }}>
+                  <TrendingUp size={24} style={{ color: '#A78BFA' }} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.3rem', margin: 0, color: '#ffffff' }}>60-Day Organic Growth &amp; SEO Roadmap</h3>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>From Zero to 10,000–50,000+ Monthly Organic Traffic</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowRoadmapModal(false)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '6px' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* 4 Phases Overview */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Phase 1 */}
+              <div style={{ padding: '16px', borderRadius: '14px', background: 'rgba(0, 242, 254, 0.05)', border: '1px solid rgba(0, 242, 254, 0.2)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#00F2FE' }}>PHASE 1: DAYS 1 – 15</span>
+                  <span className="liquid-glass-pill" style={{ color: '#00F2FE', fontSize: '0.72rem' }}>FOUNDATION</span>
+                </div>
+                <h4 style={{ margin: '0 0 6px 0', color: '#F8FAFC', fontSize: '1rem' }}>Technical SEO, Indexing &amp; AI Engine Configuration</h4>
+                <ul style={{ margin: 0, paddingLeft: '18px', color: 'var(--text-secondary)', fontSize: '0.82rem', lineHeight: 1.6 }}>
+                  <li><strong>Setup Hostinger Daily Cron:</strong> Enables unattended 06:00 AM UTC AI publishing.</li>
+                  <li><strong>Submit Sitemap to GSC:</strong> Add <code>https://quantumqbit.in/sitemap.xml</code> to Google Search Console.</li>
+                  <li><strong>Real-time Schema Injection:</strong> Validated Article and FAQPage Rich Snippet JSON-LD.</li>
+                  <li><strong>Initial Target:</strong> 15 high-intent technical pages indexed with zero crawl errors.</li>
+                </ul>
+              </div>
+
+              {/* Phase 2 */}
+              <div style={{ padding: '16px', borderRadius: '14px', background: 'rgba(56, 189, 248, 0.05)', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#38BDF8' }}>PHASE 2: DAYS 16 – 30</span>
+                  <span className="liquid-glass-pill" style={{ color: '#38BDF8', fontSize: '0.72rem' }}>CONTENT FLYWHEEL</span>
+                </div>
+                <h4 style={{ margin: '0 0 6px 0', color: '#F8FAFC', fontSize: '1rem' }}>The Content-to-Tool Flywheel &amp; Long-Tail Keywords</h4>
+                <ul style={{ margin: 0, paddingLeft: '18px', color: 'var(--text-secondary)', fontSize: '0.82rem', lineHeight: 1.6 }}>
+                  <li><strong>High-Intent Sizing Queries:</strong> &quot;Compress photo to 20KB for SSC CGL online&quot;, &quot;Passport photo 300 DPI maker&quot;.</li>
+                  <li><strong>Zero-Upload Privacy Queries:</strong> &quot;Merge confidential PDF without server upload&quot;, &quot;Offline OCR PDF to Word&quot;.</li>
+                  <li><strong>Automated Tool CTAs:</strong> Every blog article funnels 35%+ of readers directly into the matching free tool.</li>
+                  <li><strong>Target:</strong> 30+ URLs indexed, first wave of ranking in top 5 for low-competition long-tail queries.</li>
+                </ul>
+              </div>
+
+              {/* Phase 3 */}
+              <div style={{ padding: '16px', borderRadius: '14px', background: 'rgba(167, 139, 250, 0.05)', border: '1px solid rgba(167, 139, 250, 0.2)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#A78BFA' }}>PHASE 3: DAYS 31 – 45</span>
+                  <span className="liquid-glass-pill" style={{ color: '#A78BFA', fontSize: '0.72rem' }}>COMPETITOR CONQUEST</span>
+                </div>
+                <h4 style={{ margin: '0 0 6px 0', color: '#F8FAFC', fontSize: '1rem' }}>Competitor Alternatives &amp; Student Portals</h4>
+                <ul style={{ margin: 0, paddingLeft: '18px', color: 'var(--text-secondary)', fontSize: '0.82rem', lineHeight: 1.6 }}>
+                  <li><strong>Conquesting Competitors:</strong> Target &quot;ILovePDF free alternative offline&quot;, &quot;TinyPNG file limit reached&quot;.</li>
+                  <li><strong>ISRO &amp; Exam Traffic:</strong> Leverage the ISRO TA Computer Science PYQ tool in student telegram groups and forums.</li>
+                  <li><strong>FAQ Rich Snippet Dominance:</strong> Capture Google Question boxes directly above search results.</li>
+                  <li><strong>Target:</strong> 5,000–15,000 monthly search impressions.</li>
+                </ul>
+              </div>
+
+              {/* Phase 4 */}
+              <div style={{ padding: '16px', borderRadius: '14px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#10B981' }}>PHASE 4: DAYS 46 – 60</span>
+                  <span className="liquid-glass-pill" style={{ color: '#10B981', fontSize: '0.72rem' }}>VIRAL SCALE</span>
+                </div>
+                <h4 style={{ margin: '0 0 6px 0', color: '#F8FAFC', fontSize: '1rem' }}>High-DA Backlinks &amp; Viral Developer Syndication</h4>
+                <ul style={{ margin: 0, paddingLeft: '18px', color: 'var(--text-secondary)', fontSize: '0.82rem', lineHeight: 1.6 }}>
+                  <li><strong>Directory Submissions:</strong> AlternativeTo, SaaSHub, Toolify.ai, ProductHunt launch.</li>
+                  <li><strong>Show HN &amp; Reddit:</strong> Post technical breakdowns (&quot;I built web tools that process in RAM without uploading&quot;) on r/webdev and r/privacy.</li>
+                  <li><strong>Organic Growth Scale:</strong> 10,000 to 50,000+ monthly active visitors.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', paddingTop: '14px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <button
+                onClick={() => setShowRoadmapModal(false)}
+                className="liquid-glass-btn-primary"
+                style={{ fontSize: '0.85rem' }}
+              >
+                Close Roadmap
               </button>
             </div>
           </div>

@@ -5,6 +5,8 @@ export interface ChatMessage {
 
 export interface DeepSeekChatResponse {
   id: string;
+  provider?: 'gemini' | 'deepseek';
+  model?: string;
   choices: {
     index: number;
     message: ChatMessage;
@@ -17,28 +19,43 @@ export interface DeepSeekChatResponse {
   };
 }
 
+export interface AutomationLogEntry {
+  timestamp: number;
+  date: string;
+  title: string;
+  slug: string;
+  url: string;
+  provider: string;
+  model: string;
+  word_count: number;
+  read_time: string;
+  duration_seconds: number;
+  status: string;
+}
+
 /**
- * Send a multi-turn chat request to the secure server-side DeepSeek proxy.
- * Secret API keys are kept strictly in server-side storage and never exposed to the client browser.
+ * Send a multi-turn chat request to the secure server-side AI proxy.
+ * Supports Google Gemini and DeepSeek with automatic failover.
+ * Secret API keys are kept strictly in server-side storage (quantum_data/config.json).
  */
 export async function sendDeepSeekChat(
-  messages: ChatMessage[]
+  messages: ChatMessage[],
+  provider: 'auto' | 'gemini' | 'deepseek' = 'auto'
 ): Promise<string> {
   const fullMessages = [
     {
       role: 'system' as const,
-      content: `You are DeepSeek AI Editorial Director & Lead Writer for Quantum Qbit.
-Your main job is to assist the developer/editor with drafting, writing, and researching world-class blog articles.
+      content: `You are Chief AI Technology Editor & Lead Author for Quantum Qbit (quantumqbit.in).
+Your job is to produce world-class, exhaustive articles of AT LEAST 2,000+ WORDS.
 
 CRITICAL MANDATORY INSTRUCTIONS:
-1. WORD COUNT: Whenever generating or drafting a blog article, you MUST produce an exhaustive, deeply researched long-form piece of AT LEAST 2,000+ WORDS. Never provide brief summaries or truncated overviews. Expand every section with multi-faceted depth, historical/industry context, empirical case studies, comparative metrics, and technical/strategic rigor across 6 to 10 comprehensive sections.
-2. DYNAMIC CONTEXTUAL CALLOUTS (NO REPETITIVE "PRO-TIP"): Never repeat prefixes like "Pro-Tip: Pro-Tip:". Contextualize all highlight callouts inside <tip>...</tip> directly to the article subject:
-   - For Geopolitics & Defense: <tip>Strategic Insight: ...</tip> or <tip>Diplomatic Context: ...</tip>
-   - For Gaming & Tech: <tip>Gamer's Intel: ...</tip> or <tip>Buyer's Note: ...</tip>
+1. WORD COUNT: Produce an exhaustive, deeply researched long-form piece of AT LEAST 2,000+ WORDS across 6 to 8 structured sections.
+2. DYNAMIC CONTEXTUAL CALLOUTS: Use topic-specific callouts inside <tip>...</tip>:
    - For Security & Privacy: <tip>Security Advisory: ...</tip>
-   - For Markets & Economy: <tip>Market Signal: ...</tip>
-   - For Software & Engineering: <tip>Engineering Advisory: ...</tip>
-3. RICH FORMATTING: Include rich <h2> and <h3> subheadings, multi-column <table> comparison matrices, contextual <tip> callouts, and <takeaways>. Always format outputs cleanly with custom tags or HTML.`
+   - For Web Technology: <tip>Engineering Advisory: ...</tip>
+   - For Photo & Media: <tip>Optimization Intel: ...</tip>
+   - For Career & Exam Portals: <tip>Candidate Advisory: ...</tip>
+3. RICH FORMATTING: Include rich <h2> and <h3> subheadings, multi-column <table> comparison matrices, contextual <tip> callouts, step-by-step guides, and <takeaways>. Always format outputs cleanly with custom tags or HTML.`
     },
     ...messages
   ];
@@ -47,7 +64,7 @@ CRITICAL MANDATORY INSTRUCTIONS:
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify({ messages: fullMessages, max_tokens: 8192 })
+    body: JSON.stringify({ messages: fullMessages, provider, max_tokens: 8192 })
   });
 
   const rawJson = await proxyRes.json().catch(() => ({}));
@@ -65,6 +82,77 @@ CRITICAL MANDATORY INSTRUCTIONS:
   }
 
   return data.choices[0].message.content;
+}
+
+/**
+ * Trigger Autonomous AI Publication Engine on Hostinger backend
+ */
+export async function triggerAutonomousPublish(options?: {
+  provider?: 'auto' | 'gemini' | 'deepseek';
+  topic?: string;
+  force?: boolean;
+}): Promise<any> {
+  const params = new URLSearchParams();
+  if (options?.provider) params.set('provider', options.provider);
+  if (options?.topic) params.set('topic', options.topic);
+  if (options?.force) params.set('force', '1');
+
+  const res = await fetch(`/api/cron_publish.php?${params.toString()}`, {
+    method: 'POST',
+    credentials: 'include'
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.success) {
+    throw new Error(data.error || data.message || `Server returned HTTP ${res.status}`);
+  }
+
+  return data;
+}
+
+/**
+ * Fetch automation execution logs
+ */
+export async function fetchAutomationLogs(): Promise<AutomationLogEntry[]> {
+  try {
+    const res = await fetch('/api/cron_publish.php?action=logs', {
+      credentials: 'include'
+    });
+    const data = await res.json();
+    return data.success && Array.isArray(data.logs) ? data.logs : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Fetch automation system status
+ */
+export async function fetchAutomationStatus(): Promise<{
+  gemini_configured: boolean;
+  deepseek_configured: boolean;
+  ready: boolean;
+  last_run: AutomationLogEntry | null;
+}> {
+  try {
+    const res = await fetch('/api/cron_publish.php?action=status', {
+      credentials: 'include'
+    });
+    const data = await res.json();
+    return {
+      gemini_configured: !!data.gemini_configured,
+      deepseek_configured: !!data.deepseek_configured,
+      ready: !!data.ready,
+      last_run: data.last_run || null
+    };
+  } catch {
+    return {
+      gemini_configured: false,
+      deepseek_configured: false,
+      ready: false,
+      last_run: null
+    };
+  }
 }
 
 /**

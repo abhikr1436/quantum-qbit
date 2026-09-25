@@ -53,7 +53,9 @@ switch ($action) {
     case 'status':
         $authenticated = isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
         $dbRes = [];
-        $aiConfigured = !empty($config['deepseek_api_key']);
+        $hasDeepseek = !empty($config['deepseek_api_key']);
+        $hasGemini = !empty($config['gemini_api_key']);
+        $aiConfigured = $hasDeepseek || $hasGemini;
 
         $apiKey = '';
         if ($authenticated) {
@@ -72,7 +74,9 @@ switch ($action) {
             'authenticated' => $authenticated,
             'api_key' => $apiKey,
             'db' => $dbRes,
-            'ai_configured' => $aiConfigured
+            'ai_configured' => $aiConfigured,
+            'deepseek_configured' => $hasDeepseek,
+            'gemini_configured' => $hasGemini
         ]);
         break;
         
@@ -262,20 +266,24 @@ switch ($action) {
             break;
         }
 
-        $rawKey = isset($config['deepseek_api_key']) ? trim($config['deepseek_api_key']) : '';
-        $isConfigured = !empty($rawKey);
-        $masked = '';
-        if ($isConfigured) {
-            $len = strlen($rawKey);
-            $prefix = substr($rawKey, 0, 7);
-            $suffix = substr($rawKey, -4);
-            $masked = $prefix . str_repeat('•', max(4, $len - 11)) . $suffix;
-        }
+        $deepseekKey = isset($config['deepseek_api_key']) ? trim($config['deepseek_api_key']) : '';
+        $geminiKey = isset($config['gemini_api_key']) ? trim($config['gemini_api_key']) : '';
+
+        $maskKey = function($k) {
+            if (empty($k)) return '';
+            $len = strlen($k);
+            if ($len <= 8) return '••••••••';
+            return substr($k, 0, 4) . str_repeat('•', max(4, $len - 8)) . substr($k, -4);
+        };
 
         echo json_encode([
             'success' => true,
-            'configured' => $isConfigured,
-            'masked_key' => $masked
+            'configured' => (!empty($deepseekKey) || !empty($geminiKey)),
+            'deepseek_configured' => !empty($deepseekKey),
+            'deepseek_masked' => $maskKey($deepseekKey),
+            'gemini_configured' => !empty($geminiKey),
+            'gemini_masked' => $maskKey($geminiKey),
+            'masked_key' => $maskKey($deepseekKey ?: $geminiKey)
         ]);
         break;
 
@@ -286,17 +294,28 @@ switch ($action) {
             break;
         }
 
-        $newKey = isset($input['deepseek_api_key']) ? trim($input['deepseek_api_key']) : '';
-        $config['deepseek_api_key'] = $newKey;
+        $changed = false;
+        if (isset($input['deepseek_api_key'])) {
+            $config['deepseek_api_key'] = trim($input['deepseek_api_key']);
+            $changed = true;
+        }
+        if (isset($input['gemini_api_key'])) {
+            $config['gemini_api_key'] = trim($input['gemini_api_key']);
+            $changed = true;
+        }
 
-        if (@file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT))) {
-            echo json_encode([
-                'success' => true,
-                'message' => empty($newKey) ? 'DeepSeek API key removed.' : 'DeepSeek API key saved securely on server!'
-            ]);
+        if ($changed) {
+            if (@file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT))) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'AI keys updated securely on server!'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'error' => 'Failed to write configuration file on server.']);
+            }
         } else {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Failed to write configuration file on server.']);
+            echo json_encode(['success' => true, 'message' => 'No changes made.']);
         }
         break;
 

@@ -1,8 +1,10 @@
 <?php
 // Prevent browser and proxy caching for the HTML landing/router page
-header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP 1.1
-header("Pragma: no-cache"); // HTTP 1.0
-header("Expires: 0"); // Proxies
+header("Cache-Control: no-cache, no-store, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: 0");
+
+require_once __DIR__ . '/api/db_config.php';
 
 // Parse request URI
 $requestUri = $_SERVER['REQUEST_URI'];
@@ -12,6 +14,9 @@ $path = parse_url($requestUri, PHP_URL_PATH);
 $title = "Quantum Qbit | Premium Privacy-First Web Tools & Utilities";
 $description = "Quantum Qbit is a free, modern suite of client-side web utility tools. Edit images, convert/read PDFs, perform base conversions, and solve math formulas with complete data privacy and sub-second execution speeds.";
 $canonicalPath = $path;
+$ogType = "website";
+$articleSchema = null;
+$faqSchema = null;
 
 // Routing for SEO Meta tags
 if (preg_match('#^/tools/image-compressor#', $path) || preg_match('#^/tools/photo-compressor#', $path)) {
@@ -35,6 +40,9 @@ if (preg_match('#^/tools/image-compressor#', $path) || preg_match('#^/tools/phot
 } elseif (preg_match('#^/tools/math-calculators#', $path)) {
     $title = "Scientific Calculator & Base Converter Online Free | Quantum Qbit";
     $description = "Interactive scientific calculator, real-time Binary/Hex/Octal base converter, and unit converter. Runs 100% locally in your browser.";
+} elseif (preg_match('#^/isro-ta-computer-science-pyq#', $path)) {
+    $title = "ISRO Technical Assistant Computer Science PYQ Online Mock Test | Quantum Qbit";
+    $description = "Practice official ISRO Technical Assistant Computer Science previous year question papers in an interactive examination interface with timers, marking scheme, and detailed solution reviews.";
 } elseif (preg_match('#^/tools#', $path)) {
     $title = "Web Applications & Tools Directory | Quantum Qbit";
     $description = "Browse our collection of free client-side utility applications. Compress images, merge/convert PDFs, and perform base math offline.";
@@ -52,51 +60,110 @@ if (preg_match('#^/tools/image-compressor#', $path) || preg_match('#^/tools/phot
     $description = "Terms of service for utilizing the free tools and utility libraries on the Quantum Qbit workspace.";
 } elseif (preg_match('#^/blogs/([^/]+)#', $path, $matches)) {
     $blogId = $matches[1];
-    $blogFound = false;
-    
-    // Attempt to load blog metadata from JSON fallback first
-    $blogsJsonFile = __DIR__ . '/api/data/blogs.json';
-    if (file_exists($blogsJsonFile)) {
-        $blogsData = json_decode(file_get_contents($blogsJsonFile), true);
-        if (is_array($blogsData)) {
-            foreach ($blogsData as $post) {
-                if ($post['id'] === $blogId) {
-                    $title = $post['title'] . " | Quantum Qbit Blog";
-                    $description = $post['excerpt'];
-                    $blogFound = true;
-                    break;
+    $blogPost = null;
+    $ogType = "article";
+
+    // 1. Try MySQL Database
+    $pdo = getDBConnection();
+    if ($pdo) {
+        try {
+            $stmt = $pdo->prepare("SELECT title, excerpt, content, author, date, created_at, updated_at FROM blogs WHERE id = :id LIMIT 1");
+            $stmt->execute(['id' => $blogId]);
+            $blogPost = $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {}
+    }
+
+    // 2. Try Persistent and Local JSON Files
+    if (!$blogPost) {
+        $persistentBlogs = getQuantumDataDir() . '/blogs.json';
+        $localBlogs = __DIR__ . '/api/data/blogs.json';
+        foreach ([$persistentBlogs, $localBlogs] as $f) {
+            if (file_exists($f)) {
+                $arr = json_decode(file_get_contents($f), true);
+                if (is_array($arr)) {
+                    foreach ($arr as $p) {
+                        $pId = !empty($p['slug']) ? $p['slug'] : (!empty($p['id']) ? $p['id'] : '');
+                        if ($pId === $blogId) {
+                            $blogPost = [
+                                'title' => $p['title'] ?? '',
+                                'excerpt' => $p['summary'] ?? ($p['excerpt'] ?? ''),
+                                'content' => $p['htmlContent'] ?? '',
+                                'author' => $p['author'] ?? 'Quantum Qbit Editorial Team',
+                                'date' => $p['date'] ?? date('M d, Y'),
+                                'created_at' => !empty($p['publishedAt']) ? date('c', intval($p['publishedAt'] / 1000)) : date('c')
+                            ];
+                            break 2;
+                        }
+                    }
                 }
             }
         }
     }
-    
-    // If not found in JSON, attempt MySQL query
-    if (!$blogFound) {
-        $configFile = __DIR__ . '/api/data/config.json';
-        if (file_exists($configFile)) {
-            $config = json_decode(file_get_contents($configFile), true);
-            if ($config && !empty($config['db_host']) && !empty($config['db_name']) && !empty($config['db_user'])) {
-                try {
-                    $dsn = "mysql:host=" . $config['db_host'] . ";dbname=" . $config['db_name'] . ";charset=utf8mb4";
-                    $pdo = new PDO($dsn, $config['db_user'], $config['db_pass'], [
-                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-                    ]);
-                    $stmt = $pdo->prepare("SELECT title, excerpt FROM blogs WHERE id = :id");
-                    $stmt->execute(['id' => $blogId]);
-                    $post = $stmt->fetch();
-                    if ($post) {
-                        $title = $post['title'] . " | Quantum Qbit Blog";
-                        $description = $post['excerpt'];
+
+    if ($blogPost) {
+        $title = $blogPost['title'] . " | Quantum Qbit";
+        $description = !empty($blogPost['excerpt']) ? $blogPost['excerpt'] : substr(strip_tags($blogPost['content'] ?? ''), 0, 160);
+        $pubDate = !empty($blogPost['created_at']) ? $blogPost['created_at'] : date('c');
+
+        // Structured JSON-LD Article Schema
+        $articleSchema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'BlogPosting',
+            'headline' => $blogPost['title'],
+            'description' => $description,
+            'author' => [
+                '@type' => 'Organization',
+                'name' => $blogPost['author'] ?: 'Quantum Qbit Editorial Team',
+                'url' => 'https://quantumqbit.in'
+            ],
+            'publisher' => [
+                '@type' => 'Organization',
+                'name' => 'Quantum Qbit',
+                'logo' => [
+                    '@type' => 'ImageObject',
+                    'url' => 'https://quantumqbit.in/logo.png'
+                ]
+            ],
+            'datePublished' => $pubDate,
+            'dateModified' => !empty($blogPost['updated_at']) ? $blogPost['updated_at'] : $pubDate,
+            'mainEntityOfPage' => [
+                '@type' => 'WebPage',
+                '@id' => 'https://quantumqbit.in' . $canonicalPath
+            ]
+        ];
+
+        // Extract FAQ items for Google Rich Snippets FAQPage schema if present
+        $rawHtml = $blogPost['content'] ?? '';
+        if (stripos($rawHtml, '<h3>') !== false && stripos($rawHtml, 'faq') !== false) {
+            preg_match_all('/<h3>(.*?)<\/h3>\s*<p>(.*?)<\/p>/is', $rawHtml, $faqMatches, PREG_SET_ORDER);
+            if (!empty($faqMatches)) {
+                $faqEntities = [];
+                foreach (array_slice($faqMatches, 0, 5) as $fm) {
+                    $q = strip_tags(trim($fm[1]));
+                    $a = strip_tags(trim($fm[2]));
+                    if (strlen($q) > 8 && strlen($a) > 10) {
+                        $faqEntities[] = [
+                            '@type' => 'Question',
+                            'name' => $q,
+                            'acceptedAnswer' => [
+                                '@type' => 'Answer',
+                                'text' => $a
+                            ]
+                        ];
                     }
-                } catch (Exception $e) {
-                    // Ignore DB error, use default fallback
+                }
+                if (!empty($faqEntities)) {
+                    $faqSchema = [
+                        '@context' => 'https://schema.org',
+                        '@type' => 'FAQPage',
+                        'mainEntity' => $faqEntities
+                    ];
                 }
             }
         }
     }
 } elseif (preg_match('#^/blogs#', $path)) {
-    $title = "Quantum Qbit Blogs & Articles";
+    $title = "Quantum Qbit Blogs & Articles - Privacy, Web Utilities & Technical Guides";
     $description = "Explore blogs and articles on privacy-first web utilities, local browser tools, and client-side technology written by the Quantum Engineering Team.";
 }
 
@@ -119,6 +186,11 @@ if (file_exists($htmlFile)) {
         $html = preg_replace('/<meta\s+property="og:description"\s+content=".*?"\s*\/?>/is', '<meta property="og:description" content="' . htmlspecialchars($description) . '" />', $html);
     }
     
+    // Replace og:type
+    if (preg_match('/<meta\s+property="og:type"\s+content=".*?"\s*\/?>/is', $html)) {
+        $html = preg_replace('/<meta\s+property="og:type"\s+content=".*?"\s*\/?>/is', '<meta property="og:type" content="' . htmlspecialchars($ogType) . '" />', $html);
+    }
+
     // Replace og:url
     $siteUrl = 'https://quantumqbit.in';
     if (preg_match('/<meta\s+property="og:url"\s+content=".*?"\s*\/?>/is', $html)) {
@@ -131,6 +203,19 @@ if (file_exists($htmlFile)) {
         $html = preg_replace('/<link\s+rel="canonical"\s+href=".*?"\s*\/?>/is', $canonicalTag, $html);
     } else {
         $html = str_replace('</head>', '  ' . $canonicalTag . "\n</head>", $html);
+    }
+
+    // Inject JSON-LD Rich Structured Data if available
+    $schemasToInject = '';
+    if ($articleSchema) {
+        $schemasToInject .= "\n  <script type=\"application/ld+json\">\n" . json_encode($articleSchema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . "\n  </script>";
+    }
+    if ($faqSchema) {
+        $schemasToInject .= "\n  <script type=\"application/ld+json\">\n" . json_encode($faqSchema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . "\n  </script>";
+    }
+
+    if (!empty($schemasToInject)) {
+        $html = str_replace('</head>', $schemasToInject . "\n</head>", $html);
     }
 
     echo $html;
